@@ -1,12 +1,10 @@
 language: go
 go:
  - 1.18.x
- - main
-
-# env:
-#  - CODECOV_TOKEN=4fbe21ac-e1f7-4975-b1e1-2491c49baa25
+ - master
  
 script:
+ - go build main.go
  - go test ./... -race -covermode=atomic -coverprofile=coverage.out
  
 after_success:

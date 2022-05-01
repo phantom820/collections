@@ -1,7 +1,7 @@
 language: go
 go:
  - 1.18.x
- - master
+ - main
 
 # env:
 #  - CODECOV_TOKEN=4fbe21ac-e1f7-4975-b1e1-2491c49baa25

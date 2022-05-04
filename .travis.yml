@@ -1,6 +1,6 @@
 language: go
 go:
- - 1.18.x
+ - 1.18
  - master
  
 script:

@@ -4,7 +4,7 @@ go:
  - master
  
 script:
- - go build main.go
+#  - go build main.go
  - go test ./... -race -covermode=atomic -coverprofile=coverage.out
  
 after_success:

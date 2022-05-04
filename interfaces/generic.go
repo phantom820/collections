@@ -9,7 +9,6 @@ type Equitable[T any] interface {
 type Hashable[T any] interface {
 	HashCode() int
 	Equitable[T]
-	Comparable[T]
 }
 
 // Comparable interface to allow comparison operators.

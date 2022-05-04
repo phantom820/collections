@@ -1,7 +1,8 @@
-package tree
+package rbt
 
 import (
 	"collections/interfaces"
+	"collections/tree"
 	"fmt"
 	"strings"
 )
@@ -21,6 +22,14 @@ type redBlackNode[K interfaces.Comparable[K], V any] struct {
 	value  V
 }
 
+// color gets the color of a node as a string.
+func (n *redBlackNode[K, V]) Color() string {
+	if n.color {
+		return "(B)"
+	}
+	return "(R)"
+}
+
 // newRedBlackNode constructs a new rbt node.
 func newRedBlackNode[K interfaces.Comparable[K], V any](k K, v V, Nil *redBlackNode[K, V]) *redBlackNode[K, V] {
 	return &redBlackNode[K, V]{parent: Nil, left: Nil, right: Nil, key: k, value: v}
@@ -28,19 +37,33 @@ func newRedBlackNode[K interfaces.Comparable[K], V any](k K, v V, Nil *redBlackN
 
 // RedBlackTree rbt datastructure with tree functions.
 type RedBlackTree[K interfaces.Comparable[K], V any] interface {
-	Tree[K, V]
+	tree.Tree[K, V]
 }
 
 // redBlackTree struct for the rbt.
 type redBlackTree[K interfaces.Comparable[K], V any] struct {
 	root *redBlackNode[K, V]
 	Nil  *redBlackNode[K, V]
+	len  int
 }
 
 // NewRedBlackTree creates an empty rbt.
 func NewRedBlackTree[K interfaces.Comparable[K], V any]() RedBlackTree[K, V] {
 	Nil := redBlackNode[K, V]{parent: nil, left: nil, right: nil, color: Black}
 	return &redBlackTree[K, V]{root: &Nil, Nil: &Nil}
+}
+
+// Update updates the old node value with key k with the new value v. Returns the old value associated with the key and trueif it exists otherwise
+// zero value and false.
+func (t *redBlackTree[K, V]) Update(k K, v V) (V, bool) {
+	n := t.search(k)
+	if n != t.Nil {
+		temp := n.value
+		n.value = v
+		return temp, true
+	}
+	var e V
+	return e, false
 }
 
 // insert adds the node z to t.
@@ -64,77 +87,6 @@ func (t *redBlackTree[K, V]) insert(z *redBlackNode[K, V]) {
 		y.right = z
 	}
 	z.color = Red
-}
-
-// Update updates the old node value with key k with the new node value v.
-func (t *redBlackTree[K, V]) Update(k K, v V) bool {
-	n := t.search(k)
-	if n != t.Nil {
-		n.value = v
-		return true
-	}
-	return false
-}
-
-// Insert adds the key k with value v to t.
-func (t *redBlackTree[K, V]) Insert(k K, v V) bool {
-	x := newRedBlackNode(k, v, t.Nil)
-	t.insert(x)
-	t.insertFix(x)
-	return true
-}
-
-// Delete deletes the key k from t.
-func (t *redBlackTree[K, V]) Delete(k K) bool {
-	x := t.search(k)
-	if x != t.Nil {
-		t.delete(x)
-		return true
-	}
-	return false
-}
-
-// leftRotate performs a left rotation on node x of t.
-func (t *redBlackTree[K, V]) leftRotate(x *redBlackNode[K, V]) {
-	y := x.right
-	x.right = y.left
-
-	if y.left != t.Nil {
-		y.left.parent = x
-	}
-
-	y.parent = x.parent
-
-	if x.parent == t.Nil {
-		t.root = y
-	} else if x == x.parent.left {
-		x.parent.left = y
-	} else {
-		x.parent.right = y
-	}
-	y.left = x
-	x.parent = y
-}
-
-// rightRotate performs a right rotation on the node y of t.
-func (t *redBlackTree[K, V]) rightRotate(y *redBlackNode[K, V]) {
-	x := y.left
-	y.left = x.right
-
-	if x.right != t.Nil {
-		x.right.parent = y
-	}
-
-	x.parent = y.parent
-
-	if y.parent == t.Nil {
-		t.root = x
-	} else if y == y.parent.left {
-		y.parent.left = x
-	}
-
-	x.right = y
-	y.parent = x
 }
 
 // insertFix fixes t after an insertion.
@@ -179,6 +131,58 @@ func (t *redBlackTree[K, V]) insertFix(z *redBlackNode[K, V]) {
 		}
 	}
 	t.root.color = Black
+}
+
+// Insert adds the key k with value v to t.
+func (t *redBlackTree[K, V]) Insert(k K, v V) bool {
+	x := newRedBlackNode(k, v, t.Nil)
+	t.insert(x)
+	t.insertFix(x)
+	t.len++
+	return true
+}
+
+// leftRotate performs a left rotation on node x of t.
+func (t *redBlackTree[K, V]) leftRotate(x *redBlackNode[K, V]) {
+	y := x.right
+	x.right = y.left
+
+	if y.left != t.Nil {
+		y.left.parent = x
+	}
+
+	y.parent = x.parent
+
+	if x.parent == t.Nil {
+		t.root = y
+	} else if x == x.parent.left {
+		x.parent.left = y
+	} else {
+		x.parent.right = y
+	}
+	y.left = x
+	x.parent = y
+}
+
+// rightRotate performs a right rotation on the node y of t.
+func (t *redBlackTree[K, V]) rightRotate(x *redBlackNode[K, V]) {
+	y := x.left
+	x.left = y.right
+
+	if y.right != t.Nil {
+		y.right.parent = x
+	}
+
+	y.parent = x.parent
+	if x.parent == t.Nil {
+		t.root = y
+	} else if x == x.parent.left {
+		x.parent.left = y
+	} else {
+		x.parent.right = y
+	}
+	y.right = x
+	x.parent = y
 }
 
 // transplant performs transplant operation on t.
@@ -235,68 +239,22 @@ func (t *redBlackTree[K, V]) Get(k K) (V, bool) {
 	return e, false
 }
 
-// deleteFix fixes t after a delete operation.
-func (tree *redBlackTree[K, V]) deleteFix(x *redBlackNode[K, V]) {
-	t := tree.root
-	for x != tree.Nil && x != t && x.color == Black {
-		if x == x.parent.left {
-			w := x.parent.right
-
-			if w.color == Red {
-				w.color = Black
-				x.parent.color = Red
-				tree.leftRotate(x.parent)
-				w = x.parent.right
-			}
-
-			if w.left.color == Black && w.right.color == Black {
-				w.color = Red
-				x = x.parent
-			} else if w.right.color == Black {
-				w.left.color = Black
-				w.color = Red
-				tree.rightRotate(w)
-				w = x.parent.right
-			}
-			w.color = x.parent.color
-			x.parent.color = Black
-			w.right.color = Black
-			tree.leftRotate(x.parent)
-			x = t
-		} else if x == x.parent.right {
-			w := x.parent.left
-			if w.color == false {
-				w.color = Black
-				w.parent.color = Red
-				tree.rightRotate(x.parent)
-				w = x.parent.right
-			}
-
-			if w.left.color == Black && w.right.color == Black {
-				w.color = Red
-				x = x.parent
-			} else if w.left.color == Black {
-				w.right.color = Black
-				w.color = Red
-				tree.leftRotate(w)
-				w = x.parent.left
-			}
-
-			w.color = x.parent.color
-			w.left.color = Black
-			tree.leftRotate(x.parent)
-			x = t
-		}
+// Delete deletes the key k from t.
+func (t *redBlackTree[K, V]) Delete(k K) bool {
+	x := t.search(k)
+	if x != t.Nil {
+		t.delete(x)
+		t.len--
+		return true
 	}
-	x.color = Black
+	return false
 }
 
 // Delete deletes the node z from t.
 func (t *redBlackTree[K, V]) delete(z *redBlackNode[K, V]) {
-	y := z
-	var x *redBlackNode[K, V]
+	var x, y *redBlackNode[K, V]
+	y = z
 	yOriginalColor := y.color
-
 	if z.left == t.Nil {
 		x = z.right
 		t.transplant(z, z.right)
@@ -314,53 +272,118 @@ func (t *redBlackTree[K, V]) delete(z *redBlackNode[K, V]) {
 			y.right = z.right
 			y.right.parent = y
 		}
+
 		t.transplant(z, y)
 		y.left = z.left
 		y.left.parent = y
 		y.color = z.color
 	}
-
 	if yOriginalColor == Black {
 		t.deleteFix(x)
 	}
 }
 
+// deleteFix fixes t after a delete operation.
+func (t *redBlackTree[K, V]) deleteFix(x *redBlackNode[K, V]) {
+	var s *redBlackNode[K, V]
+	for x != t.root && x.color == Black {
+		if x == x.parent.left {
+			s = x.parent.right
+			if s.color == Red {
+				s.color = Black
+				x.parent.color = Red
+				t.leftRotate(x.parent)
+				s = x.parent.right
+			}
+
+			if s.left.color == Black && s.right.color == Black {
+				s.color = Red
+				x = x.parent
+			} else {
+				if s.right.color == Black {
+					s.left.color = Black
+					s.color = Red
+					t.rightRotate(s)
+					s = x.parent.right
+				}
+
+				s.color = x.parent.color
+				x.parent.color = Black
+				s.right.color = Black
+				t.leftRotate(x.parent)
+				x = t.root
+			}
+		} else {
+			s = x.parent.left
+			if s.color == Red {
+				s.color = Black
+				x.parent.color = Red
+				t.rightRotate(x.parent)
+				s = x.parent.left
+			}
+
+			if s.left.color == Black && s.right.color == Black {
+				s.color = Red
+				x = x.parent
+			} else {
+				if s.left.color == Black {
+					s.right.color = Black
+					s.color = Red
+					t.leftRotate(s)
+					s = x.parent.left
+				}
+
+				s.color = x.parent.color
+				x.parent.color = Black
+				s.left.color = Black
+				t.rightRotate(x.parent)
+				x = t.root
+			}
+		}
+	}
+	x.color = Black
+}
+
 // inOrdeTraversal performs an in order traversal of t appending resuls to string.
-func (t *redBlackTree[K, V]) inOrderTraversal(n *redBlackNode[K, V], sb *strings.Builder) {
-	if n.left != t.Nil {
-		t.inOrderTraversal(n.left, sb)
+func (t *redBlackTree[K, V]) inOrderTraversal(n *redBlackNode[K, V], data *[]K) {
+	if n == t.Nil {
+		return
 	}
-	sb.WriteString(fmt.Sprint(n.value) + " ")
+	if n.left != t.Nil {
+		t.inOrderTraversal(n.left, data)
+	}
+	*data = append(*data, n.key)
 	if n.right != t.Nil {
-		t.inOrderTraversal(n.right, sb)
+		t.inOrderTraversal(n.right, data)
 	}
 }
 
-// InOrderTraversal an in order traversal of t with results returned as a string.
-func (t *redBlackTree[K, V]) InOrderTraversal() string {
-	var sb strings.Builder
-	if t.root == t.Nil {
-		return ""
-	}
-	t.inOrderTraversal(t.root, &sb)
-	return strings.TrimSpace(sb.String())
+// InOrderTraversal an in order traversal of t with results (values) returned as a slice.
+func (t *redBlackTree[K, V]) InOrderTraversal() []K {
+	data := []K{}
+	t.inOrderTraversal(t.root, &data)
+	return data
 }
 
-// collect collects values in t into a slice using an in order traversal.
-func (t *redBlackTree[K, V]) collect(n *redBlackNode[K, V], data *[]V) {
+// values collects values in t into a slice using an in order traversal.
+func (t *redBlackTree[K, V]) values(n *redBlackNode[K, V], data *[]V) {
+	if n == t.Nil {
+		return
+	}
+
 	if n.left != t.Nil {
-		t.collect(n.left, data)
+		t.values(n.left, data)
 	}
 	*data = append(*data, n.value)
 	if n.right != t.Nil {
-		t.collect(n.right, data)
+		t.values(n.right, data)
 	}
 }
 
-// collects values in t into a slice using an in order traversal.
-func (t *redBlackTree[K, V]) Collect() []V {
+// Values collects values in t into a slice using an in order traversal.
+func (t *redBlackTree[K, V]) Values() []V {
 	data := []V{}
-	t.collect(t.root, &data)
+	t.values(t.root, &data)
 	return data
 }
 
@@ -369,11 +392,6 @@ func (t *redBlackTree[K, V]) Keys() []K {
 	data := []K{}
 	t.keys(t.root, &data)
 	return data
-}
-
-// lazy evaluation
-func (t *redBlackNode[K, V]) tr() {
-
 }
 
 // keys collects the keys in t into a slice using an in order traversal.
@@ -390,7 +408,40 @@ func (t *redBlackTree[K, V]) keys(n *redBlackNode[K, V], data *[]K) {
 	}
 }
 
+// Len returns number of nodes in the tree t.
+func (t *redBlackTree[K, V]) Len() int {
+	return t.len
+}
+
+// Clear deletes all the nodes in the tree t.
+func (t *redBlackTree[K, V]) Clear() {
+	keys := t.Keys()
+	for _, k := range keys {
+		t.Delete(k)
+	}
+}
+
 // Empty checks if t has no elements.
 func (t *redBlackTree[L, V]) Empty() bool {
 	return t.root == t.Nil
+}
+
+func (t *redBlackTree[K, V]) printInOrder(n *redBlackNode[K, V], sb *strings.Builder) {
+	if n == t.Nil {
+		return
+	}
+	if n.left != t.Nil {
+		t.printInOrder(n.left, sb)
+	}
+	sb.WriteString(fmt.Sprint(n.key) + n.Color() + " ")
+	if n.right != t.Nil {
+		t.printInOrder(n.right, sb)
+	}
+}
+
+// String for pretty printing the tree t.
+func (t *redBlackTree[K, V]) String() string {
+	var sb strings.Builder
+	t.printInOrder(t.root, &sb)
+	return strings.TrimSpace(sb.String())
 }

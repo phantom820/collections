@@ -2,7 +2,6 @@ package wrapper
 
 import (
 	"collections/interfaces"
-	"math"
 )
 
 type Integer int
@@ -18,11 +17,16 @@ func (i Integer) Equals(other Integer) bool {
 type String string
 
 func (s String) HashCode() int {
+	const (
+		m = 1e9 + 9
+		p = 53
+	)
+	p_pow := 1
 	runes := []rune(s)
 	code := 0
-	for i, r := range runes {
-		v := float64(int(r))
-		code = code + int(v*(math.Pow(2.0, float64(len(runes)-i))))
+	for _, r := range runes {
+		code = (code + p_pow*(int(r)+1)) % m
+		p_pow = (p_pow * p) % m
 	}
 	return code
 }
@@ -31,9 +35,9 @@ func (s String) Equals(other String) bool {
 	return s == other
 }
 
-func (s String) Less(other String) bool {
-	return s < other
-}
+// func (s String) Less(other String) bool {
+// 	return s < other
+// }
 
 func (x Integer) Less(y Integer) bool {
 	return x < y

@@ -87,6 +87,8 @@ func TestEquals(t *testing.T) {
 	l := NewList[wrapper.Integer]()
 	other := NewList[wrapper.Integer]()
 
+	assert.Equal(t, true, l.Equals(other)) // two empty list are equal.
+
 	for i := 1; i < 6; i++ {
 		other.Add(wrapper.Integer(i))
 	}
@@ -410,4 +412,5 @@ func TestString(t *testing.T) {
 	l.Add(10)
 
 	assert.Equal(t, "{2, 3, 4, 5, 10}", fmt.Sprint(l))
+
 }

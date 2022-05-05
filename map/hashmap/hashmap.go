@@ -318,7 +318,8 @@ func (m *hashMap[K, V]) Clear() {
 }
 
 // Equals check if map m is equal to map n. This checks that the two maps have the same entries (k,v), the values are compared
-// using the specified equals function for tow values. Keys are compared using their corresponding Equals method.
+// using the specified equals function for two values. Keys are compared using their corresponding Equals method.
+// Only returns true if the 2 maps are the same reference or have the same size and entries.
 func (m *hashMap[K, V]) Equals(other HashMap[K, V], equals func(a V, b V) bool) bool {
 	if m == other {
 		return true

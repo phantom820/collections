@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestAddFront covers tests for Front and  AddFront
-func TestAddFront(t *testing.T) {
+// TestForwardAddFront covers tests for Front and  AddFront
+func TestForwardAddFront(t *testing.T) {
 
-	l := NewList[wrapper.Integer]()
+	l := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Empty list jhas no front and should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -34,10 +34,10 @@ func TestAddFront(t *testing.T) {
 
 }
 
-// TestAddBack covers tests Back and AddBack.
-func TestAddBack(t *testing.T) {
+// TestForwardAddBack covers tests Back and AddBack.
+func TestForwardAddBack(t *testing.T) {
 
-	l := NewList[wrapper.Integer]()
+	l := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Empty list has no back element should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -61,9 +61,9 @@ func TestAddBack(t *testing.T) {
 
 }
 
-// TestAt covers tests for At
-func TestAt(t *testing.T) {
-	l := NewList[wrapper.Integer]()
+// TestForwardAt covers tests for At
+func TestForwardAt(t *testing.T) {
+	l := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Empty list should not be indexable.
 	t.Run("panics", func(t *testing.T) {
@@ -85,11 +85,11 @@ func TestAt(t *testing.T) {
 
 }
 
-// TestEquals for Equals method of lists.
-func TestEquals(t *testing.T) {
+// TestForwardEquals for Equals method of lists.
+func TestForwardEquals(t *testing.T) {
 
-	l := NewList[wrapper.Integer]()
-	other := NewList[wrapper.Integer]()
+	l := NewForwardList[wrapper.Integer]()
+	other := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : A list is equal to its self.
 	assert.Equal(t, true, l.Equals(l))
@@ -122,10 +122,10 @@ func TestEquals(t *testing.T) {
 
 }
 
-// TestAdd covers tests for Add, AddAll
-func TestAdd(t *testing.T) {
-	l := NewList[wrapper.Integer]()
-	other := NewList[wrapper.Integer]()
+// TestForwardAdd covers tests for Add, AddAll
+func TestForwardAdd(t *testing.T) {
+	l := NewForwardList[wrapper.Integer]()
+	other := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Just add should add at back.
 	l.Add(1)
@@ -143,9 +143,9 @@ func TestAdd(t *testing.T) {
 
 }
 
-// TestAddAt covers tests for AddAt adding at specified index.
-func TestAddAt(t *testing.T) {
-	l := NewList[wrapper.Integer]()
+// TestForwardAddAt covers tests for AddAt adding at specified index.
+func TestForwardAddAt(t *testing.T) {
+	l := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Adding out of bounds.
 	t.Run("panics", func(t *testing.T) {
@@ -173,9 +173,9 @@ func TestAddAt(t *testing.T) {
 
 }
 
-// TestSwap covers tests for Swap swapping elements at specified indices.
-func TestSwap(t *testing.T) {
-	l := NewList[wrapper.Integer]()
+// TestForwardSwap covers tests for Swap swapping elements at specified indices.
+func TestForwardSwap(t *testing.T) {
+	l := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Swapping out of bounds should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -207,10 +207,10 @@ func TestSwap(t *testing.T) {
 
 }
 
-// TestRemoveFront covers test for RemoveFront
-func TestRemoveFront(t *testing.T) {
+// TestForwardRemoveFront covers test for RemoveFront
+func TestForwardRemoveFront(t *testing.T) {
 
-	l := NewList[wrapper.Integer]()
+	l := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Removing front from empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -232,10 +232,10 @@ func TestRemoveFront(t *testing.T) {
 
 }
 
-// TestSet covers tests for Set overriding value at specified index.
-func TestSet(t *testing.T) {
+// TestForwardSet covers tests for Set overriding value at specified index.
+func TestForwardSet(t *testing.T) {
 
-	l := NewList[wrapper.Integer]()
+	l := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : set on empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -259,8 +259,8 @@ func TestSet(t *testing.T) {
 
 }
 
-func TestRemoveBack(t *testing.T) {
-	l := NewList[wrapper.Integer]()
+func TestForwardRemoveBack(t *testing.T) {
+	l := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Removing back from empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -288,10 +288,10 @@ func TestRemoveBack(t *testing.T) {
 
 }
 
-// TestRemoveAt covers tests for RemoveAt.
-func TestRemoveAt(t *testing.T) {
+// TestForwardRemoveAt covers tests for RemoveAt.
+func TestForwardRemoveAt(t *testing.T) {
 
-	l := NewList[wrapper.Integer]()
+	l := NewForwardList[wrapper.Integer]()
 
 	/// Case 1 : Remmoving at in empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -330,10 +330,10 @@ func TestRemoveAt(t *testing.T) {
 
 }
 
-// TestRemove covers tests for Remove.
-func TestRemove(t *testing.T) {
-	l := NewList[wrapper.Integer]()
-	other := NewList[wrapper.Integer]()
+// TestForwardRemove covers tests for Remove.
+func TestForwardRemove(t *testing.T) {
+	l := NewForwardList[wrapper.Integer]()
+	other := NewForwardList[wrapper.Integer]()
 
 	l.Add(1)
 	l.Add(2)
@@ -360,10 +360,10 @@ func TestRemove(t *testing.T) {
 	assert.Equal(t, true, l.Empty())
 }
 
-// TestIterator covers tests for Iterator.
-func TestIterator(t *testing.T) {
+// TestForwardIterator covers tests for Iterator.
+func TestForwardIterator(t *testing.T) {
 
-	l := NewList[wrapper.Integer]()
+	l := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Iterator on empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -392,9 +392,9 @@ func TestIterator(t *testing.T) {
 
 }
 
-// TestMapFilter covers tests for Map and Filter.
-func TestMapFilter(t *testing.T) {
-	l := NewList[wrapper.Integer]()
+// TestForwardMapFilter covers tests for Map and Filter.
+func TestForwardMapFilter(t *testing.T) {
+	l := NewForwardList[wrapper.Integer]()
 
 	for i := 0; i < 6; i++ {
 		l.Add(wrapper.Integer(i))
@@ -416,9 +416,9 @@ func TestMapFilter(t *testing.T) {
 
 }
 
-// TestClear covers tests for Clear.
-func TestClear(t *testing.T) {
-	l := NewList[wrapper.Integer]()
+// TestForwardClear covers tests for Clear.
+func TestForwardClear(t *testing.T) {
+	l := NewForwardList[wrapper.Integer]()
 
 	for i := 0; i < 20; i++ {
 		l.Add(wrapper.Integer(i))
@@ -430,10 +430,10 @@ func TestClear(t *testing.T) {
 
 }
 
-// TestString covers tests for String used in printing.
-func TestString(t *testing.T) {
+// TestForwardString covers tests for String used in printing.
+func TestForwardString(t *testing.T) {
 
-	l := NewList[wrapper.Integer]()
+	l := NewForwardList[wrapper.Integer]()
 
 	l.Add(2)
 	l.Add(3)

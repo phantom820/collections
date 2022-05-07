@@ -1,8 +1,7 @@
-package rbt
+package tree
 
 import (
 	"collections/interfaces"
-	"collections/tree"
 	"fmt"
 	"strings"
 )
@@ -12,7 +11,13 @@ const (
 	Red   bool = false
 )
 
-// redBlackNode a struct representing how node of an rbt looks like.
+// RedBlackTree interface to abstract away concrete data. Provides various method for interaccting with
+// underlying concrete data.
+type RedBlackTree[K interfaces.Comparable[K], V any] interface {
+	Tree[K, V]
+}
+
+// redBlackNode represent a node for an red black tree. Stores a key k and and associated data.
 type redBlackNode[K interfaces.Comparable[K], V any] struct {
 	parent *redBlackNode[K, V]
 	left   *redBlackNode[K, V]
@@ -22,7 +27,7 @@ type redBlackNode[K interfaces.Comparable[K], V any] struct {
 	value  V
 }
 
-// color gets the color of a node as a string.
+// color gets the color of a node as a string. for pretty printing.
 func (n *redBlackNode[K, V]) Color() string {
 	if n.color {
 		return "(B)"
@@ -35,12 +40,7 @@ func newRedBlackNode[K interfaces.Comparable[K], V any](k K, v V, Nil *redBlackN
 	return &redBlackNode[K, V]{parent: Nil, left: Nil, right: Nil, key: k, value: v}
 }
 
-// RedBlackTree rbt datastructure with tree functions.
-type RedBlackTree[K interfaces.Comparable[K], V any] interface {
-	tree.Tree[K, V]
-}
-
-// redBlackTree struct for the rbt.
+// redBlackTree actual red black tree type.
 type redBlackTree[K interfaces.Comparable[K], V any] struct {
 	root *redBlackNode[K, V]
 	Nil  *redBlackNode[K, V]
@@ -53,7 +53,7 @@ func NewRedBlackTree[K interfaces.Comparable[K], V any]() RedBlackTree[K, V] {
 	return &redBlackTree[K, V]{root: &Nil, Nil: &Nil}
 }
 
-// Update updates the old node value with key k with the new value v. Returns the old value associated with the key and trueif it exists otherwise
+// Update replaces the old node value with key k with the new value v. Returns the old value associated with the key and true if it exists otherwise
 // zero value and false.
 func (t *redBlackTree[K, V]) Update(k K, v V) (V, bool) {
 	n := t.search(k)
@@ -66,7 +66,7 @@ func (t *redBlackTree[K, V]) Update(k K, v V) (V, bool) {
 	return e, false
 }
 
-// insert adds the node z to t.
+// insert adds the node z to the tree t.
 func (t *redBlackTree[K, V]) insert(z *redBlackNode[K, V]) {
 	var y *redBlackNode[K, V] = t.Nil
 	x := t.root
@@ -89,7 +89,7 @@ func (t *redBlackTree[K, V]) insert(z *redBlackNode[K, V]) {
 	z.color = Red
 }
 
-// insertFix fixes t after an insertion.
+// insertFix fixes the tree t after an insertion.
 func (t *redBlackTree[K, V]) insertFix(z *redBlackNode[K, V]) {
 	var y *redBlackNode[K, V]
 	for z.parent.color == Red {
@@ -133,7 +133,7 @@ func (t *redBlackTree[K, V]) insertFix(z *redBlackNode[K, V]) {
 	t.root.color = Black
 }
 
-// Insert adds the key k with value v to t.
+// Insert adds the key k with value v to the tree t.
 func (t *redBlackTree[K, V]) Insert(k K, v V) bool {
 	x := newRedBlackNode(k, v, t.Nil)
 	t.insert(x)
@@ -197,7 +197,7 @@ func (t *redBlackTree[K, V]) transplant(u *redBlackNode[K, V], v *redBlackNode[K
 	v.parent = u.parent
 }
 
-// minimum retrieves node with smallest key value.
+// minimum retrieves node with smallest key value in t.
 func (t *redBlackTree[K, V]) minimum(r *redBlackNode[K, V]) *redBlackNode[K, V] {
 	if r.left == t.Nil {
 		return r
@@ -245,6 +245,9 @@ func (t *redBlackTree[K, V]) Delete(k K) bool {
 	if x != t.Nil {
 		t.delete(x)
 		t.len--
+		x.left = nil
+		x.right = nil
+		x = nil
 		return true
 	}
 	return false

@@ -1,10 +1,8 @@
-package hashset
+package set
 
 import (
 	"collections/interfaces"
 	_map "collections/map"
-	"collections/map/hashmap"
-	"collections/set"
 	"errors"
 	"fmt"
 
@@ -17,19 +15,19 @@ var (
 
 // set the actual underlying set.
 type hashSet[T interfaces.Hashable[T]] struct {
-	data hashmap.HashMap[T, bool]
+	data _map.HashMap[T, bool]
 }
 
 // HashSet implements Set interface with some type T and all operations that result in a set
 // will return a HashSet.
 type HashSet[T interfaces.Hashable[T]] interface {
-	set.Set[T, HashSet[T]]
+	Set[T, HashSet[T]]
 	Equals(other HashSet[T]) bool
 }
 
 // NewHashSet creates a new empty set with default initial capacity(16) and load factor limit(0.75).
 func NewHashSet[T interfaces.Hashable[T]]() HashSet[T] {
-	data := hashmap.NewHashMap[T, bool]()
+	data := _map.NewHashMap[T, bool]()
 	s := hashSet[T]{data: data}
 	return &s
 }

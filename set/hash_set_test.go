@@ -1,4 +1,4 @@
-package hashset
+package set
 
 import (
 	"collections/list"

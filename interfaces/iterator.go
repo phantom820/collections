@@ -1,13 +1,13 @@
 package interfaces
 
-// Iterator interface for how we can get elements of a data structure.
+// Iterator specifies methods a collection must implement to allow iterating through it.
 type Iterator[T any] interface {
-	HasNext() bool
-	Next() T
+	HasNext() bool // Checks if the iterator has not been exhausted.
+	Next() T       // Retrieves the next element from the iterator.
 	Cycle()
 }
 
-// Iterable anything that can be collected to a slice and iterated on.
+// Iterable effectively anything that can be converted to a slice and can be iterated on.
 type Iterable[T any] interface {
 	Collect() []T
 	Iterator() Iterator[T]

@@ -1,9 +1,8 @@
-package hashmap
+package _map
 
 import (
 	"collections/interfaces"
-	_map "collections/map"
-	"collections/tree/rbt"
+	"collections/tree"
 	"errors"
 )
 
@@ -16,8 +15,15 @@ const (
 	Capacity        = 16
 )
 
+// HashMap a hashmap with allowed keys of type K that are associated with values of type V.
+type HashMap[K interfaces.Hashable[K], V any] interface {
+	Map[K, V] // See this for available methods.
+	interfaces.Functional[MapEntry[K, V], HashMap[K, V]]
+	Equals(other HashMap[K, V], equals func(a V, b V) bool) bool
+}
+
 // key a struct used to represent an underlying key for a HashMap. The actual supplied key and its hash value so that it can
-// be used in a red black tree that needs values to compare for operations.
+// be used in a red black tree that needs values to compare keys for operations.
 type key[K interfaces.Hashable[K]] struct {
 	key  K
 	hash int
@@ -33,33 +39,26 @@ func (k key[K]) Equals(other key[K]) bool {
 	return k.key.Equals(other.key)
 }
 
-// HashMap a hashmap with allowed keys of type K that are associated with values of type V.
-type HashMap[K interfaces.Hashable[K], V any] interface {
-	_map.Map[K, V] // See this for available methods.
-	interfaces.Functional[_map.MapEntry[K, V], HashMap[K, V]]
-	Equals(other HashMap[K, V], equals func(a V, b V) bool) bool
-}
-
 // hashMap underlying concrete implementation for a Hashmap.
 // capacity -> initial number of buckets, loadFactorLimit -> dictates when should expansion take place.
 // buckets -> slice with actual underlying containers (Red Black Trees) in this case. len -> no keys stored.
 type hashMap[K interfaces.Hashable[K], V any] struct {
 	capacity        int
 	loadFactorLimit float32
-	buckets         []rbt.RedBlackTree[key[K], V]
+	buckets         []tree.RedBlackTree[key[K], V]
 	len             int
 }
 
 // NewHashMap creates a new empty HashMap with default initial capacity and load factor limit.
 func NewHashMap[K interfaces.Hashable[K], V any]() HashMap[K, V] {
-	buckets := make([]rbt.RedBlackTree[key[K], V], Capacity)
+	buckets := make([]tree.RedBlackTree[key[K], V], Capacity)
 	m := hashMap[K, V]{capacity: Capacity, loadFactorLimit: LoadFactorLimit, buckets: buckets, len: 0}
 	return &m
 }
 
 // NewHashMapWith creates a new empty HashMap with the specified capacity and load factor limit.
 func NewHashMapWith[K interfaces.Hashable[K], V any](capacity int, loadFactorLimit float32) HashMap[K, V] {
-	buckets := make([]rbt.RedBlackTree[key[K], V], capacity)
+	buckets := make([]tree.RedBlackTree[key[K], V], capacity)
 	m := hashMap[K, V]{capacity: capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0}
 	return &m
 }
@@ -73,7 +72,7 @@ type hashMapIterator[K interfaces.Hashable[K], V any] struct {
 	values     []V
 	keys       int
 	maxkeys    int
-	nextBucket func(i int) rbt.RedBlackTree[key[K], V]
+	nextBucket func(i int) tree.RedBlackTree[key[K], V]
 }
 
 // Cycle resets the iterator.
@@ -96,11 +95,11 @@ func (it *hashMapIterator[K, V]) HasNext() bool {
 // until the container is exhausted, then move on to next container. Now what happens when someone calls next on an exhausted iterator ??
 // they should get the zero value up until the iterator is cycled back. Calling Next in the worst case scenarion is O(m) where m is
 // the average number of items in a bucket.
-func (it *hashMapIterator[K, V]) Next() _map.MapEntry[K, V] {
+func (it *hashMapIterator[K, V]) Next() MapEntry[K, V] {
 	if !it.HasNext() {
 		panic(NoNextElementError)
 	}
-	next := func() _map.MapEntry[K, V] {
+	next := func() MapEntry[K, V] {
 
 		if it.bucket != nil && len(it.bucket) > 0 {
 			k := it.bucket[0].key
@@ -108,7 +107,7 @@ func (it *hashMapIterator[K, V]) Next() _map.MapEntry[K, V] {
 			it.keys++
 			it.bucket = it.bucket[1:len(it.bucket)]
 			it.values = it.values[1:len(it.values)]
-			entry := _map.NewMapEntry(k, v)
+			entry := NewMapEntry(k, v)
 			return entry
 		} else {
 			// find a non empty bucket and take values from it. This should be somewhat quick, O(m) collecting keys, O(m) collecting values
@@ -130,16 +129,16 @@ func (it *hashMapIterator[K, V]) Next() _map.MapEntry[K, V] {
 				}
 			}
 
-			entry := _map.NewMapEntry(k, v)
+			entry := NewMapEntry(k, v)
 			return entry
 		}
 	}
 	return next()
 }
 
-// Iterator returns an iterator on the keys of the map m.
-func (m *hashMap[K, V]) Iterator() _map.MapIterator[K, V] {
-	nextBucket := func(i int) rbt.RedBlackTree[key[K], V] {
+// Iterator returns an iterator on the entries of the map m.
+func (m *hashMap[K, V]) Iterator() MapIterator[K, V] {
+	nextBucket := func(i int) tree.RedBlackTree[key[K], V] {
 		if i < len(m.buckets) {
 			return m.buckets[i]
 		}
@@ -150,7 +149,7 @@ func (m *hashMap[K, V]) Iterator() _map.MapIterator[K, V] {
 	return &it
 }
 
-// resize expnds the capacity of the map m when we exceed the load factor limit. This creates a new map with twice the capacity of the
+// resize expands the capacity of the map m when we exceed the load factor limit. This creates a new map with twice the capacity of the
 // old map but with the same load factor limit. Can we be more clever here ??
 func (m *hashMap[K, V]) resize() {
 	newMap := NewHashMapWith[K, V](m.capacity*2, m.loadFactorLimit)
@@ -166,7 +165,7 @@ func (m *hashMap[K, V]) Capacity() int {
 	return m.capacity
 }
 
-// Put associates the specified value with the specified key in m and. If the key alreaady exists then its value will be updated. It
+// Put associates the specified value with the specified key in m and. If the key already exists then its value will be updated. It
 // returns the old value associated with the key or zero value if no previous association.
 func (m *hashMap[K, V]) Put(k K, v V) V {
 	if m.LoadFactor() >= m.loadFactorLimit { // if we have crossed the load factor limit resize.
@@ -176,7 +175,7 @@ func (m *hashMap[K, V]) Put(k K, v V) V {
 	_key := key[K]{key: k, hash: k.HashCode()} // internal key for use by undelring container.
 	index := _key.hash % m.capacity
 	if m.buckets[index] == nil {
-		m.buckets[index] = rbt.NewRedBlackTree[key[K], V]()
+		m.buckets[index] = tree.NewRedBlackTree[key[K], V]()
 		m.buckets[index].Insert(_key, v)
 		m.len++
 		var e V
@@ -209,7 +208,7 @@ func (m *hashMap[K, V]) PutIfAbsent(k K, v V) bool {
 
 // PutAll adds all the values from other map into the map m. Note this has the side effect that if a key
 // is present in m and other then the associated value  in m will be replaced by the associated value  in other.
-func (m *hashMap[K, V]) PutAll(other _map.Map[K, V]) {
+func (m *hashMap[K, V]) PutAll(other Map[K, V]) {
 	for _, k := range other.Keys() {
 		v, _ := other.Get(k)
 		m.Put(k, v)
@@ -259,7 +258,7 @@ func (m *hashMap[K, V]) Remove(k K) bool {
 	return r
 }
 
-// RemoveAll removes all keys that in the specified iterable from m. This could be potentially slow (iterator perfomance) ?? just remove things from outside ?
+// RemoveAll removes all keys that in the specified iterable from m.
 func (m *hashMap[K, V]) RemoveAll(keys interfaces.Iterable[K]) {
 	it := keys.Iterator()
 	for it.HasNext() {
@@ -340,9 +339,9 @@ func (m *hashMap[K, V]) Equals(other HashMap[K, V], equals func(a V, b V) bool) 
 	}
 }
 
-// Map applies a transformation on an entry of m i.e f((k,v)) -> (k*,v*) , using some function f and returns a new hashmap of which its keys
+// Map applies a transformation on an entry of m i.e f((k,v)) -> (k*,v*) , using some function f and returns a new HashMap of which its keys
 // and values have been transformed.
-func (m hashMap[K, V]) Map(f func(e _map.MapEntry[K, V]) _map.MapEntry[K, V]) HashMap[K, V] {
+func (m hashMap[K, V]) Map(f func(e MapEntry[K, V]) MapEntry[K, V]) HashMap[K, V] {
 	newMap := NewHashMap[K, V]()
 	it := m.Iterator()
 	for it.HasNext() {
@@ -353,9 +352,9 @@ func (m hashMap[K, V]) Map(f func(e _map.MapEntry[K, V]) _map.MapEntry[K, V]) Ha
 	return newMap
 }
 
-// Filter filters the hashmmap m using some predicate function that indicates whether an entry should be kept or not in a
-// hashmap to be returned.
-func (m hashMap[K, V]) Filter(f func(e _map.MapEntry[K, V]) bool) HashMap[K, V] {
+// Filter filters the HashMap m using some predicate function that indicates whether an entry should be kept or not in a
+// HashMap to be returned.
+func (m hashMap[K, V]) Filter(f func(e MapEntry[K, V]) bool) HashMap[K, V] {
 	newMap := NewHashMap[K, V]()
 	it := m.Iterator()
 	for it.HasNext() {

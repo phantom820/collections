@@ -1,16 +1,24 @@
 package main
 
 import (
-	"collections/set"
+	"collections/queue"
 	"collections/wrapper"
 	"fmt"
 )
 
 func main() {
 	// // Haha my own collections.
-	s := set.NewHashSet[wrapper.Integer]()
-	s.Add(1)
-	s.Add(1)
+	q := queue.NewSliceQueue[wrapper.Integer]()
+	q.Add(1)
+	q.Add(2)
+	q.Add(3)
 
-	fmt.Println(s)
+	fmt.Println(q)
+	c := q.Collect()
+	fmt.Println(c)
+	c = c[1:]
+	fmt.Println(q)
+	q.Remove(2)
+	fmt.Println(q)
+
 }

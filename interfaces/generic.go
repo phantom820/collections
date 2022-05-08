@@ -10,7 +10,7 @@ type Equitable[T any] interface {
 // If x and y are of type T and satisy x.Equals(y) then they must also sastify x.HashCode() == y.HashCode().
 type Hashable[T any] interface {
 	HashCode() int
-	Equitable[T] // see .
+	Equitable[T]
 }
 
 // Comparable specifies methods that a type must implement in order to allow ordering between 2 members of that type.

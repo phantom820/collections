@@ -1,6 +1,20 @@
+// Package _map provides an interface an implementation of a map should satisfy and types that are useful for map implementation.
+//Currently a HashMap has been implemented.
 package _map
 
-import "collections/interfaces"
+import (
+	"collections/interfaces"
+	"errors"
+)
+
+var (
+	NoNextElementError = errors.New("Iterator has no next element.")
+)
+
+const (
+	LoadFactorLimit = 0.75
+	Capacity        = 16
+)
 
 type MapIterator[K interfaces.Hashable[K], V any] interface {
 	HasNext() bool

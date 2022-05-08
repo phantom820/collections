@@ -1,3 +1,4 @@
+// Package set provides an interface that an implementation of a set must satisfy.
 package set
 
 import "collections/interfaces"

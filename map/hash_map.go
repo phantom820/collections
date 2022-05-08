@@ -3,19 +3,10 @@ package _map
 import (
 	"collections/interfaces"
 	"collections/tree"
-	"errors"
 )
 
-var (
-	NoNextElementError = errors.New("Iterator has no next element.")
-)
-
-const (
-	LoadFactorLimit = 0.75
-	Capacity        = 16
-)
-
-// HashMap a hashmap with allowed keys of type K that are associated with values of type V.
+// HashMap a hashmap with allowed keys of type K that are associated with values of type V. Th=e backing container for buckets is a
+// Red Black Tree.
 type HashMap[K interfaces.Hashable[K], V any] interface {
 	Map[K, V] // See this for available methods.
 	interfaces.Functional[MapEntry[K, V], HashMap[K, V]]

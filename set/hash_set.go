@@ -13,16 +13,16 @@ var (
 	NoNextElementError = errors.New("Iterator has no next element.")
 )
 
-// set the actual underlying set.
-type hashSet[T interfaces.Hashable[T]] struct {
-	data _map.HashMap[T, bool]
-}
-
 // HashSet implements Set interface with some type T and all operations that result in a set
 // will return a HashSet.
 type HashSet[T interfaces.Hashable[T]] interface {
 	Set[T, HashSet[T]]
 	Equals(other HashSet[T]) bool
+}
+
+// set the actual underlying set.
+type hashSet[T interfaces.Hashable[T]] struct {
+	data _map.HashMap[T, bool]
 }
 
 // NewHashSet creates a new empty set with default initial capacity(16) and load factor limit(0.75).

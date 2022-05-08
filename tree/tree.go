@@ -1,3 +1,4 @@
+// Package tree provides an interface that a tree based data structure must satisfy.
 package tree
 
 // Tree interface for tree based data structures

@@ -1,23 +1,17 @@
+// ForwardList based implementation of a queue.
 package queue
 
 import (
 	"collections/interfaces"
 	"collections/list"
-	"errors"
 )
 
-// Errors for operations that may be inapplicable on a queue.
-var (
-	NoFrontElementError = errors.New("queue has no front element.")
-)
-
-// ListQueue view of a queue providing an interface to operate on underlying list queue.
+// ListQueue view of a queue providing an interface to operate on underlying list based queue.
 type ListQueue[T interfaces.Equitable[T]] interface {
 	Queue[T]
 }
 
-// listQueue actual concrete implementation of a queue backed by a doubly linked list.
-// In future should use a singly linked list for better memory efficiency.
+// listQueue actual concrete implementation of a queue backed by a singly linked list.
 type listQueue[T interfaces.Equitable[T]] struct {
 	list list.ForwardList[T]
 }

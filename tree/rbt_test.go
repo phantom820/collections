@@ -4,8 +4,6 @@ import (
 	"collections/wrapper"
 	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestInsert(t *testing.T) {

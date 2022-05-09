@@ -1,24 +1,23 @@
 package main
 
 import (
-	"collections/queue"
+	"collections/list"
 	"collections/wrapper"
 	"fmt"
 )
 
 func main() {
 	// // Haha my own collections.
-	q := queue.NewSliceQueue[wrapper.Integer]()
-	q.Add(1)
-	q.Add(2)
-	q.Add(3)
+	l := list.NewList[wrapper.Integer]()
+	l.Add(1)
+	l.Add(2)
+	l.Add(3)
 
-	fmt.Println(q)
-	c := q.Collect()
-	fmt.Println(c)
-	c = c[1:]
-	fmt.Println(q)
-	q.Remove(2)
-	fmt.Println(q)
+	fmt.Println(l)
+	r := l.Reverse()
+	fmt.Println(r)
+	r.RemoveFront()
+	fmt.Println(r)
+	fmt.Println(l)
 
 }

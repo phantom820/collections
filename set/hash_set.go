@@ -1,41 +1,38 @@
 package set
 
 import (
-	"collections/interfaces"
+	"collections/iterator"
 	_map "collections/map"
-	"errors"
+	"collections/types"
 	"fmt"
 
 	"strings"
 )
 
-var (
-	NoNextElementError = errors.New("Iterator has no next element.")
-)
-
-// HashSet implements Set interface with some type T and all operations that result in a set
-// will return a HashSet.
-type HashSet[T interfaces.Hashable[T]] interface {
+// HashSet an interface providing  hashmap based implementation of a set.
+type HashSet[T types.Hashable[T]] interface {
 	Set[T, HashSet[T]]
 	Equals(other HashSet[T]) bool
 }
 
-// set the actual underlying set.
-type hashSet[T interfaces.Hashable[T]] struct {
+// hashSet concrete type for a hashset.
+type hashSet[T types.Hashable[T]] struct {
 	data _map.HashMap[T, bool]
 }
 
-// NewHashSet creates a new empty set with default initial capacity(16) and load factor limit(0.75).
-func NewHashSet[T interfaces.Hashable[T]]() HashSet[T] {
+// NewHashSet creates an empty HashSet with default initial capacity(16) and load factor limit(0.75).
+func NewHashSet[T types.Hashable[T]]() HashSet[T] {
 	data := _map.NewHashMap[T, bool]()
 	s := hashSet[T]{data: data}
 	return &s
 }
 
-type hashSetIterator[T interfaces.Hashable[T]] struct {
+// hashSetIterator concrete type to implement an iterator for a hashSet.
+type hashSetIterator[T types.Hashable[T]] struct {
 	_it _map.MapIterator[T, bool]
 }
 
+// HasNext check if the oterator has a next element to yield.
 func (it *hashSetIterator[T]) HasNext() bool {
 	if it._it.HasNext() {
 		return true
@@ -43,16 +40,18 @@ func (it *hashSetIterator[T]) HasNext() bool {
 	return false
 }
 
+// Next yields the next element in the iterator.
 func (it *hashSetIterator[T]) Next() T {
 	entry := it._it.Next()
 	return entry.Key()
 }
 
+// Cycle resets the iterator.
 func (it *hashSetIterator[T]) Cycle() {
 	it._it.Cycle()
 }
 
-func (s hashSet[T]) Iterator() interfaces.Iterator[T] {
+func (s hashSet[T]) Iterator() iterator.Iterator[T] {
 	return &hashSetIterator[T]{s.data.Iterator()}
 }
 
@@ -84,10 +83,17 @@ func (s *hashSet[T]) Add(e T) bool {
 }
 
 // AddAll adds all elements from an iterable it to the set s.
-func (s *hashSet[T]) AddAll(it interfaces.Iterable[T]) {
+func (s *hashSet[T]) AddAll(it iterator.Iterable[T]) {
 	iter := it.Iterator()
 	for iter.HasNext() {
 		s.Add(iter.Next())
+	}
+}
+
+// AddSlice adds element from some slice sl into the set s.
+func (s *hashSet[T]) AddSlice(sl []T) {
+	for _, e := range sl {
+		s.Add(e)
 	}
 }
 
@@ -97,7 +103,7 @@ func (s *hashSet[T]) Remove(e T) bool {
 }
 
 // RemoveAll removes all entries from some iterable it from set s.
-func (s *hashSet[T]) RemoveAll(it interfaces.Iterable[T]) {
+func (s *hashSet[T]) RemoveAll(it iterator.Iterable[T]) {
 	s.data.RemoveAll(it)
 }
 

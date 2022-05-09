@@ -1,7 +1,8 @@
+// Red Black Tree implementation.
 package tree
 
 import (
-	"collections/interfaces"
+	"collections/types"
 	"fmt"
 	"strings"
 )
@@ -13,12 +14,12 @@ const (
 
 // RedBlackTree interface to abstract away concrete data. Provides various method for interaccting with
 // underlying concrete data.
-type RedBlackTree[K interfaces.Comparable[K], V any] interface {
+type RedBlackTree[K types.Comparable[K], V any] interface {
 	Tree[K, V]
 }
 
 // redBlackNode represent a node for an red black tree. Stores a key k and and associated data.
-type redBlackNode[K interfaces.Comparable[K], V any] struct {
+type redBlackNode[K types.Comparable[K], V any] struct {
 	parent *redBlackNode[K, V]
 	left   *redBlackNode[K, V]
 	right  *redBlackNode[K, V]
@@ -36,19 +37,19 @@ func (n *redBlackNode[K, V]) Color() string {
 }
 
 // newRedBlackNode constructs a new rbt node.
-func newRedBlackNode[K interfaces.Comparable[K], V any](k K, v V, Nil *redBlackNode[K, V]) *redBlackNode[K, V] {
+func newRedBlackNode[K types.Comparable[K], V any](k K, v V, Nil *redBlackNode[K, V]) *redBlackNode[K, V] {
 	return &redBlackNode[K, V]{parent: Nil, left: Nil, right: Nil, key: k, value: v}
 }
 
 // redBlackTree actual red black tree type.
-type redBlackTree[K interfaces.Comparable[K], V any] struct {
+type redBlackTree[K types.Comparable[K], V any] struct {
 	root *redBlackNode[K, V]
 	Nil  *redBlackNode[K, V]
 	len  int
 }
 
 // NewRedBlackTree creates an empty rbt.
-func NewRedBlackTree[K interfaces.Comparable[K], V any]() RedBlackTree[K, V] {
+func NewRedBlackTree[K types.Comparable[K], V any]() RedBlackTree[K, V] {
 	Nil := redBlackNode[K, V]{parent: nil, left: nil, right: nil, color: Black}
 	return &redBlackTree[K, V]{root: &Nil, Nil: &Nil}
 }

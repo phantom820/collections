@@ -2,12 +2,19 @@ package _map
 
 import (
 	"collections/interfaces"
+	"collections/iterator"
 	"collections/tree"
+	"collections/types"
 )
 
-// HashMap a hashmap with allowed keys of type K that are associated with values of type V. Th=e backing container for buckets is a
+const (
+	LoadFactorLimit = 0.75
+	Capacity        = 16
+)
+
+// HashMap a hashmap with allowed keys of type K that are associated with values of type V. The backing container for buckets is a
 // Red Black Tree.
-type HashMap[K interfaces.Hashable[K], V any] interface {
+type HashMap[K types.Hashable[K], V any] interface {
 	Map[K, V] // See this for available methods.
 	interfaces.Functional[MapEntry[K, V], HashMap[K, V]]
 	Equals(other HashMap[K, V], equals func(a V, b V) bool) bool
@@ -15,7 +22,7 @@ type HashMap[K interfaces.Hashable[K], V any] interface {
 
 // key a struct used to represent an underlying key for a HashMap. The actual supplied key and its hash value so that it can
 // be used in a red black tree that needs values to compare keys for operations.
-type key[K interfaces.Hashable[K]] struct {
+type key[K types.Hashable[K]] struct {
 	key  K
 	hash int
 }
@@ -33,29 +40,29 @@ func (k key[K]) Equals(other key[K]) bool {
 // hashMap underlying concrete implementation for a Hashmap.
 // capacity -> initial number of buckets, loadFactorLimit -> dictates when should expansion take place.
 // buckets -> slice with actual underlying containers (Red Black Trees) in this case. len -> no keys stored.
-type hashMap[K interfaces.Hashable[K], V any] struct {
+type hashMap[K types.Hashable[K], V any] struct {
 	capacity        int
 	loadFactorLimit float32
 	buckets         []tree.RedBlackTree[key[K], V]
 	len             int
 }
 
-// NewHashMap creates a new empty HashMap with default initial capacity and load factor limit.
-func NewHashMap[K interfaces.Hashable[K], V any]() HashMap[K, V] {
+// NewHashMap creates an empty HashMap with default initial capacity and load factor limit.
+func NewHashMap[K types.Hashable[K], V any]() HashMap[K, V] {
 	buckets := make([]tree.RedBlackTree[key[K], V], Capacity)
 	m := hashMap[K, V]{capacity: Capacity, loadFactorLimit: LoadFactorLimit, buckets: buckets, len: 0}
 	return &m
 }
 
-// NewHashMapWith creates a new empty HashMap with the specified capacity and load factor limit.
-func NewHashMapWith[K interfaces.Hashable[K], V any](capacity int, loadFactorLimit float32) HashMap[K, V] {
+// NewHashMapWith creates an empty HashMap with the specified capacity and load factor limit.
+func NewHashMapWith[K types.Hashable[K], V any](capacity int, loadFactorLimit float32) HashMap[K, V] {
 	buckets := make([]tree.RedBlackTree[key[K], V], capacity)
 	m := hashMap[K, V]{capacity: capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0}
 	return &m
 }
 
 // hashMapIterator an iterator for moving through the keys and value of a HashMap.
-type hashMapIterator[K interfaces.Hashable[K], V any] struct {
+type hashMapIterator[K types.Hashable[K], V any] struct {
 	index      int
 	maxIndex   int
 	exhausted  bool // check if the iterator has been used up (parsed all values)
@@ -88,7 +95,7 @@ func (it *hashMapIterator[K, V]) HasNext() bool {
 // the average number of items in a bucket.
 func (it *hashMapIterator[K, V]) Next() MapEntry[K, V] {
 	if !it.HasNext() {
-		panic(NoNextElementError)
+		panic(iterator.NoNextElementError)
 	}
 	next := func() MapEntry[K, V] {
 
@@ -250,7 +257,7 @@ func (m *hashMap[K, V]) Remove(k K) bool {
 }
 
 // RemoveAll removes all keys that in the specified iterable from m.
-func (m *hashMap[K, V]) RemoveAll(keys interfaces.Iterable[K]) {
+func (m *hashMap[K, V]) RemoveAll(keys iterator.Iterable[K]) {
 	it := keys.Iterator()
 	for it.HasNext() {
 		m.Remove(it.Next())

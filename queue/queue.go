@@ -4,17 +4,17 @@ package queue
 
 import (
 	"collections/interfaces"
+	"collections/types"
 	"errors"
 )
 
 // Errors for operations that may be inapplicable on a queue.
 var (
 	NoFrontElementError = errors.New("queue has no front element.")
-	NoNextElementError  = errors.New("iterator has no next element.")
 )
 
 // Queue interface specifying a list of methods a queue implementation is expected to provide.
-type Queue[T interfaces.Equitable[T]] interface {
+type Queue[T types.Equitable[T]] interface {
 	interfaces.Collection[T]
 	Front() T
 	RemoveFront() T

@@ -4,18 +4,18 @@ package list
 
 import (
 	"collections/interfaces"
+	"collections/types"
 	"errors"
 )
 
 // Errors for operations that may be inapplicable on a list.
 var (
-	EmptyListError     = errors.New("cannot remove from an empty list.")
-	OutOfBoundsError   = errors.New("index out of bounds.")
-	NoNextElementError = errors.New("iterator has no next element.")
+	EmptyListError   = errors.New("cannot remove from an empty list.")
+	OutOfBoundsError = errors.New("index out of bounds.")
 )
 
 // _List interface specifying methods that an implementation of a linked list must provide.
-type _List[T interfaces.Equitable[T]] interface {
+type _List[T types.Equitable[T]] interface {
 	interfaces.Collection[T]
 	AddFront(e T)
 	Front() T

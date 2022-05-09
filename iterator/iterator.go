@@ -1,4 +1,12 @@
-package interfaces
+// Package iterator provides an interface which specifies methods to be specified for implementing in iterator
+// over a collection.
+package iterator
+
+import "errors"
+
+var (
+	NoNextElementError = errors.New("iterator has no next element.")
+)
 
 // Iterator specifies methods a collection must implement to allow iterating through it.
 type Iterator[T any] interface {

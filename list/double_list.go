@@ -2,47 +2,51 @@ package list
 
 import (
 	"collections/interfaces"
+	"collections/iterator"
+	"collections/types"
+
 	"fmt"
 	"strings"
 )
 
 // List interface to abstract away underlying concrete data. Provides various methods to operate on
 // the underlying  doubly linked list.
-type List[T interfaces.Equitable[T]] interface {
+type List[T types.Equitable[T]] interface {
 	interfaces.Functional[T, List[T]]
 	_List[T]
-	Equals(other List[T]) bool
+	Equals(other List[T]) bool // Check if other list is equals to the list.
+	Reverse() List[T]          // Returns a new list that is the reverse of the current list.
 }
 
 // node a link for a doubly linked list. Stores a value of some type T along with prev and next pointer. This type is for internal use
 // in the implementation of a doubly linked list.
-type node[T interfaces.Equitable[T]] struct {
+type node[T types.Equitable[T]] struct {
 	prev  *node[T]
 	next  *node[T]
 	value T
 }
 
 // newNode creates a new node with the value v.
-func newNode[T interfaces.Equitable[T]](v T) *node[T] {
+func newNode[T types.Equitable[T]](v T) *node[T] {
 	return &node[T]{value: v, prev: nil, next: nil}
 }
 
 // list actual concrete type for a doubly linked list.
 // head -> head node of the list , tail -> tail node of the list , len -> size of the list.
-type list[T interfaces.Equitable[T]] struct {
+type list[T types.Equitable[T]] struct {
 	head *node[T]
 	tail *node[T]
 	len  int
 }
 
-// NewList creates a new empty list that can store values of type T.
-func NewList[T interfaces.Equitable[T]]() List[T] {
+// NewList creates an empty list that can store values of type T.
+func NewList[T types.Equitable[T]]() List[T] {
 	l := list[T]{head: nil, len: 0}
 	return &l
 }
 
 // listIterator struct to implement an iterator for a list.
-type listIterator[T interfaces.Equitable[T]] struct {
+type listIterator[T types.Equitable[T]] struct {
 	n     *node[T] // Used for Next() and HasNext().
 	start *node[T] // Used to cycle an iterator.
 }
@@ -58,7 +62,7 @@ func (it *listIterator[T]) HasNext() bool {
 // Next returns the next element in the iterator it. Panics if called on an iterator that has been exhausted.
 func (it *listIterator[T]) Next() T {
 	if !it.HasNext() {
-		panic(NoNextElementError)
+		panic(iterator.NoNextElementError)
 	}
 	n := it.n
 	it.n = it.n.next
@@ -71,7 +75,7 @@ func (it *listIterator[T]) Cycle() {
 }
 
 // Iterator returns a listIterator for the list l.
-func (l *list[T]) Iterator() interfaces.Iterator[T] {
+func (l *list[T]) Iterator() iterator.Iterator[T] {
 	return &listIterator[T]{n: l.head, start: l.head}
 }
 
@@ -247,10 +251,17 @@ func (l *list[T]) Set(i int, e T) T {
 }
 
 // AddAll adds all elements from some iterable elements to the list l.
-func (l *list[T]) AddAll(elements interfaces.Iterable[T]) {
+func (l *list[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		l.Add(it.Next())
+	}
+}
+
+// AddSlice adds element from a slice s into the list l.
+func (l *list[T]) AddSlice(s []T) {
+	for _, e := range s {
+		l.Add(e)
 	}
 }
 
@@ -365,7 +376,7 @@ func (l *list[T]) Remove(e T) bool {
 }
 
 // RemoveAll removes all the elements from some iterable.
-func (l *list[T]) RemoveAll(elements interfaces.Iterable[T]) {
+func (l *list[T]) RemoveAll(elements iterator.Iterable[T]) {
 	defer func() {
 		if r := recover(); r != nil {
 			// do nothing just fail safe if l ends up empty from the removals.
@@ -375,6 +386,18 @@ func (l *list[T]) RemoveAll(elements interfaces.Iterable[T]) {
 	for it.HasNext() {
 		l.Remove(it.Next())
 	}
+}
+
+// Reverse makes a new list that is the reverse of l. This uses extra memory since we inserting to a new list.
+func (l *list[T]) Reverse() List[T] {
+	r := NewList[T]()
+	h := l.head
+	for h != nil {
+		r.AddFront(h.value)
+		h = h.next
+	}
+	return r
+
 }
 
 // Clear removes all elements from the list.
@@ -427,7 +450,7 @@ func (l *list[T]) traversal() string {
 	for e := l.head; e != nil; e = e.next {
 		sb = append(sb, fmt.Sprint(e.value))
 	}
-	return "{" + strings.Join(sb, ", ") + "}"
+	return "[" + strings.Join(sb, " ") + "]"
 }
 
 // String string formats for a list l.

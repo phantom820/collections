@@ -1,6 +1,7 @@
 package list
 
 import (
+	"collections/iterator"
 	"collections/wrapper"
 	"fmt"
 	"testing"
@@ -8,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestAddFront covers tests for Front and  AddFront
+// TestAddFront covers tests for Front and  AddFront.
 func TestAddFront(t *testing.T) {
 
 	l := NewList[wrapper.Integer]()
@@ -122,7 +123,7 @@ func TestEquals(t *testing.T) {
 
 }
 
-// TestAdd covers tests for Add, AddAll
+// TestAdd covers tests for Add, AddAll, AddSlice
 func TestAdd(t *testing.T) {
 	l := NewList[wrapper.Integer]()
 	other := NewList[wrapper.Integer]()
@@ -141,6 +142,33 @@ func TestAdd(t *testing.T) {
 	l.AddAll(other)
 	assert.Equal(t, true, l.Equals(other))
 
+	l.Clear()
+
+	// Case 4 : AddSlice should behave accordingly.
+	s := []wrapper.Integer{1, 2, 3, 4}
+	l.AddSlice(s)
+
+	assert.ElementsMatch(t, s, l.Collect())
+}
+
+// TestReverse covers tests for Reverse.
+func TestReverse(t *testing.T) {
+
+	l := NewList[wrapper.Integer]()
+
+	assert.Equal(t, true, l.Equals(l.Reverse()))
+
+	l.Add(1)
+	l.Add(2)
+	l.Add(3)
+
+	r := NewList[wrapper.Integer]()
+	r.Add(3)
+	r.Add(2)
+	r.Add(1)
+
+	assert.Equal(t, true, l.Reverse().Equals(r))
+	assert.Equal(t, true, l.Equals(r.Reverse()))
 }
 
 // TestAddAt covers tests for AddAt adding at specified index.
@@ -369,7 +397,7 @@ func TestIterator(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, NoNextElementError, r.(error))
+				assert.Equal(t, iterator.NoNextElementError, r.(error))
 			}
 		}()
 		it := l.Iterator()
@@ -441,6 +469,6 @@ func TestString(t *testing.T) {
 	l.Add(5)
 	l.Add(10)
 
-	assert.Equal(t, "{2, 3, 4, 5, 10}", fmt.Sprint(l))
+	assert.Equal(t, "[2 3 4 5 10]", fmt.Sprint(l))
 
 }

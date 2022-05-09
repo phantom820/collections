@@ -1,6 +1,7 @@
 package list
 
 import (
+	"collections/iterator"
 	"collections/wrapper"
 	"fmt"
 	"testing"
@@ -122,7 +123,7 @@ func TestForwardEquals(t *testing.T) {
 
 }
 
-// TestForwardAdd covers tests for Add, AddAll
+// TestForwardAdd covers tests for Add, AddAll, AddSlice.
 func TestForwardAdd(t *testing.T) {
 	l := NewForwardList[wrapper.Integer]()
 	other := NewForwardList[wrapper.Integer]()
@@ -140,6 +141,14 @@ func TestForwardAdd(t *testing.T) {
 
 	l.AddAll(other)
 	assert.Equal(t, true, l.Equals(other))
+
+	l.Clear()
+
+	// Case 4 : AddSlice should behave accordingly.
+	s := []wrapper.Integer{1, 2, 3, 4}
+	l.AddSlice(s)
+
+	assert.ElementsMatch(t, s, l.Collect())
 
 }
 
@@ -207,7 +216,7 @@ func TestForwardSwap(t *testing.T) {
 
 }
 
-// TestForwardRemoveFront covers test for RemoveFront
+// TestForwardRemoveFront covers test for RemoveFront.
 func TestForwardRemoveFront(t *testing.T) {
 
 	l := NewForwardList[wrapper.Integer]()
@@ -369,7 +378,7 @@ func TestForwardIterator(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, NoNextElementError, r.(error))
+				assert.Equal(t, iterator.NoNextElementError, r.(error))
 			}
 		}()
 		it := l.Iterator()
@@ -441,6 +450,6 @@ func TestForwardString(t *testing.T) {
 	l.Add(5)
 	l.Add(10)
 
-	assert.Equal(t, "{2, 3, 4, 5, 10}", fmt.Sprint(l))
+	assert.Equal(t, "[2 3 4 5 10]", fmt.Sprint(l))
 
 }

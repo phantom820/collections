@@ -2,13 +2,15 @@ package list
 
 import (
 	"collections/interfaces"
+	"collections/iterator"
+	"collections/types"
 	"fmt"
 	"strings"
 )
 
 // ForwadList interface to abstract away underlying concrete data. Provides various methods to operate on
 // the underlying singly linked list with a tail pointer.
-type ForwardList[T interfaces.Equitable[T]] interface {
+type ForwardList[T types.Equitable[T]] interface {
 	_List[T]
 	interfaces.Functional[T, ForwardList[T]]
 	Equals(other ForwardList[T]) bool
@@ -16,32 +18,32 @@ type ForwardList[T interfaces.Equitable[T]] interface {
 
 // singleNode a link for a singly linked list. Stores a value of some type T along with next pointer. This type is for internal use
 // in the implementation of a singly linked list.
-type singleNode[T interfaces.Equitable[T]] struct {
+type singleNode[T types.Equitable[T]] struct {
 	next  *singleNode[T]
 	value T
 }
 
 // newSingleNode creates a new singleNode with the value v.
-func newSingleNode[T interfaces.Equitable[T]](v T) *singleNode[T] {
+func newSingleNode[T types.Equitable[T]](v T) *singleNode[T] {
 	return &singleNode[T]{value: v, next: nil}
 }
 
 // list actual concrete type for a singly linked list.
 // head -> head node of the list , tail -> tail node of the list , len -> size of the list.
-type forwardList[T interfaces.Equitable[T]] struct {
+type forwardList[T types.Equitable[T]] struct {
 	head *singleNode[T]
 	tail *singleNode[T]
 	len  int
 }
 
-// NewForwardList creates a new empty singy linked list that can store values of type T.
-func NewForwardList[T interfaces.Equitable[T]]() ForwardList[T] {
+// NewForwardList creates an empty singy linked list that can store values of type T.
+func NewForwardList[T types.Equitable[T]]() ForwardList[T] {
 	l := forwardList[T]{head: nil, len: 0}
 	return &l
 }
 
 // forwadListIterator struct to implement an iterator for a forwardList.
-type forwardListIterator[T interfaces.Equitable[T]] struct {
+type forwardListIterator[T types.Equitable[T]] struct {
 	n     *singleNode[T] // Used for Next() and HasNext().
 	start *singleNode[T] // Used to cycle an iterator.
 }
@@ -57,7 +59,7 @@ func (it *forwardListIterator[T]) HasNext() bool {
 // Next returns the next element in the iterator it. Panics if called on an iterator that has been exhausted.
 func (it *forwardListIterator[T]) Next() T {
 	if !it.HasNext() {
-		panic(NoNextElementError)
+		panic(iterator.NoNextElementError)
 	}
 	n := it.n
 	it.n = it.n.next
@@ -70,7 +72,7 @@ func (it *forwardListIterator[T]) Cycle() {
 }
 
 // Iterator returns a listIterator for the list l.
-func (l *forwardList[T]) Iterator() interfaces.Iterator[T] {
+func (l *forwardList[T]) Iterator() iterator.Iterator[T] {
 	return &forwardListIterator[T]{n: l.head, start: l.head}
 }
 
@@ -235,10 +237,17 @@ func (l *forwardList[T]) Set(i int, e T) T {
 }
 
 // AddAll adds all elements from some iterable elements to the list l.
-func (l *forwardList[T]) AddAll(elements interfaces.Iterable[T]) {
+func (l *forwardList[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		l.Add(it.Next())
+	}
+}
+
+// AddSlice adds element from a slice s into the list l.
+func (l *forwardList[T]) AddSlice(s []T) {
+	for _, e := range s {
+		l.Add(e)
 	}
 }
 
@@ -357,7 +366,7 @@ func (l *forwardList[T]) Remove(e T) bool {
 }
 
 // RemoveAll removes all the elements from some iterable.
-func (l *forwardList[T]) RemoveAll(elements interfaces.Iterable[T]) {
+func (l *forwardList[T]) RemoveAll(elements iterator.Iterable[T]) {
 	defer func() {
 		if r := recover(); r != nil {
 			// do nothing just fail safe if l ends up empty from the removals.
@@ -419,7 +428,7 @@ func (l *forwardList[T]) traversal() string {
 	for e := l.head; e != nil; e = e.next {
 		sb = append(sb, fmt.Sprint(e.value))
 	}
-	return "{" + strings.Join(sb, ", ") + "}"
+	return "[" + strings.Join(sb, " ") + "]"
 }
 
 // String string formats for a list l.

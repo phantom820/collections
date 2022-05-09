@@ -1,6 +1,7 @@
 package set
 
 import (
+	"collections/iterator"
 	"collections/list"
 	"collections/wrapper"
 	"fmt"
@@ -9,12 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestAdd covers tests for Add,AddAll and AddSlice.
 func TestAdd(t *testing.T) {
 
 	s := NewHashSet[wrapper.Integer]()
 
-	// adding of individual elements, and try adding alements already in the set.
 	assert.Equal(t, true, s.Empty())
+
+	// Case 1 : Add to an empty set.
 	s.Add(1)
 	assert.Equal(t, 1, s.Len())
 	assert.Equal(t, false, s.Add(1))
@@ -24,7 +27,7 @@ func TestAdd(t *testing.T) {
 	assert.Equal(t, true, s.Contains(1))
 	assert.Equal(t, true, s.Contains(2))
 
-	// adding of elements coming from another iterable
+	// Case 2 : Add multiple elements from another iterable.
 	s = NewHashSet[wrapper.Integer]()
 	l := list.NewList[wrapper.Integer]()
 	for i := 0; i < 10; i++ {
@@ -39,6 +42,16 @@ func TestAdd(t *testing.T) {
 	for it.HasNext() {
 		assert.Equal(t, true, s.Contains(it.Next()))
 	}
+
+	// Case 3 Adding a slice should work accordingly.
+	s.Clear()
+
+	sl := []wrapper.Integer{1, 1, 2, 3, 4, 5}
+	s.AddSlice(sl)
+
+	sm := []wrapper.Integer{1, 2, 3, 4, 5}
+	assert.ElementsMatch(t, sm, s.Collect())
+
 }
 
 func TestIterator(t *testing.T) {
@@ -49,7 +62,7 @@ func TestIterator(t *testing.T) {
 		// return a non nil value.
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, NoNextElementError, r.(error))
+				assert.Equal(t, iterator.NoNextElementError, r.(error))
 			}
 		}()
 		it := s.Iterator()
@@ -95,6 +108,7 @@ func TestRemove(t *testing.T) {
 
 }
 
+// TestMapFilter covers tests for Map and Filter
 func TestMapFilter(t *testing.T) {
 
 	s := NewHashSet[wrapper.Integer]()
@@ -116,6 +130,7 @@ func TestMapFilter(t *testing.T) {
 
 }
 
+// TestEquals covers tests for Equals.
 func TestEquals(t *testing.T) {
 
 	s := NewHashSet[wrapper.Integer]()
@@ -133,6 +148,7 @@ func TestEquals(t *testing.T) {
 
 }
 
+// TestString covers tests for String.
 func TestString(t *testing.T) {
 
 	s := NewHashSet[wrapper.Integer]()

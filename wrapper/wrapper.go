@@ -1,9 +1,5 @@
 package wrapper
 
-import (
-	"collections/interfaces"
-)
-
 type Integer int
 
 func (i Integer) HashCode() int {
@@ -35,17 +31,10 @@ func (s String) Equals(other String) bool {
 	return s == other
 }
 
-// func (s String) Less(other String) bool {
-// 	return s < other
-// }
+func (s String) Less(other String) bool {
+	return s < other
+}
 
 func (x Integer) Less(y Integer) bool {
 	return x < y
-}
-
-type Slice[T interfaces.Equitable[T]] []T
-
-func (s Slice[T]) Collect() []T {
-	slice := []T(s)
-	return slice
 }

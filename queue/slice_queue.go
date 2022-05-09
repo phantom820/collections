@@ -1,15 +1,22 @@
+// Slice based implementation of a queue.
 package queue
 
-import "collections/interfaces"
+import (
+	"collections/iterator"
+	"collections/types"
+	"fmt"
+)
 
-type SliceQueue[T interfaces.Equitable[T]] interface {
+// SliceQueue an interface providing a slice based implementation of a queue. This interface serves as an  abstraction for
+// operating on an underlying slice.
+type SliceQueue[T types.Equitable[T]] interface {
 	Queue[T]
 }
 
-type sliceQueue[T interfaces.Equitable[T]] []T
+type sliceQueue[T types.Equitable[T]] []T
 
-// NewSliceQueue creates a new slice based queue.
-func NewSliceQueue[T interfaces.Equitable[T]]() SliceQueue[T] {
+// NewSliceQueue creates an empty slice based queue.
+func NewSliceQueue[T types.Equitable[T]]() SliceQueue[T] {
 	var q sliceQueue[T]
 	return &q
 }
@@ -21,10 +28,17 @@ func (q *sliceQueue[T]) Add(e T) bool {
 }
 
 // AddAll adds the elements from some iterable elements to the queue q.
-func (q *sliceQueue[T]) AddAll(elements interfaces.Iterable[T]) {
+func (q *sliceQueue[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		q.Add(it.Next())
+	}
+}
+
+// AddSlice adds element from a slice s into the queue q.
+func (q *sliceQueue[T]) AddSlice(s []T) {
+	for _, e := range s {
+		q.Add(e)
 	}
 }
 
@@ -61,11 +75,13 @@ func (q *sliceQueue[T]) Front() T {
 	return (*q)[0]
 }
 
-type sliceQueueIterator[T interfaces.Equitable[T]] struct {
+// sliceQueueIterator model for implementing an iterator on a slice based queue.
+type sliceQueueIterator[T types.Equitable[T]] struct {
 	slice []T
 	i     int
 }
 
+// HasNext check if the iterator has next element to produce.
 func (it *sliceQueueIterator[T]) HasNext() bool {
 	if it.slice == nil || it.i >= len(it.slice) {
 		return false
@@ -73,21 +89,23 @@ func (it *sliceQueueIterator[T]) HasNext() bool {
 	return true
 }
 
+// Next yields the next element from the iterator.
 func (it *sliceQueueIterator[T]) Next() T {
 	if !it.HasNext() {
-		panic(NoNextElementError)
+		panic(iterator.NoNextElementError)
 	}
 	e := it.slice[it.i]
 	it.i++
 	return e
 }
 
+// Cycle resets the iterator.
 func (it *sliceQueueIterator[T]) Cycle() {
 	it.i = 0
 }
 
 // Iterator returns an iterator for iterating through queue q.
-func (q *sliceQueue[T]) Iterator() interfaces.Iterator[T] {
+func (q *sliceQueue[T]) Iterator() iterator.Iterator[T] {
 	return &sliceQueueIterator[T]{slice: *q, i: 0}
 }
 
@@ -115,7 +133,7 @@ func (q *sliceQueue[T]) Remove(e T) bool {
 }
 
 // RemoveAll removes all the elements from some iterable elements that are in the queue q.
-func (q *sliceQueue[T]) RemoveAll(elements interfaces.Iterable[T]) {
+func (q *sliceQueue[T]) RemoveAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		q.Remove(it.Next())
@@ -130,4 +148,9 @@ func (q *sliceQueue[T]) RemoveFront() T {
 	f := (*q)[0]
 	*q = (*q)[1:]
 	return f
+}
+
+// String for pretty printing a slice based queue.
+func (q *sliceQueue[T]) String() string {
+	return fmt.Sprint(*q)
 }

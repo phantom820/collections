@@ -3,40 +3,31 @@
 package _map
 
 import (
-	"collections/interfaces"
-	"errors"
+	"collections/iterator"
+	"collections/types"
 )
 
-var (
-	NoNextElementError = errors.New("Iterator has no next element.")
-)
-
-const (
-	LoadFactorLimit = 0.75
-	Capacity        = 16
-)
-
-type MapIterator[K interfaces.Hashable[K], V any] interface {
+type MapIterator[K types.Hashable[K], V any] interface {
 	HasNext() bool
 	Next() MapEntry[K, V]
 	Cycle()
 }
 
 // Iterable iterable for a map.
-type MapIterable[K interfaces.Hashable[K], V any] interface {
+type MapIterable[K types.Hashable[K], V any] interface {
 	Keys() []K
 	Values() []V
 	Iterator() MapIterator[K, V]
 }
 
 // MapEntry wraps around the key and value of a map. For uniformity in terms of functional
-type MapEntry[K interfaces.Hashable[K], V any] struct {
+type MapEntry[K types.Hashable[K], V any] struct {
 	key   K
 	value V
 }
 
 // NewMapEntry creates a new MapEntry with specified key and value.
-func NewMapEntry[K interfaces.Hashable[K], V any](k K, v V) MapEntry[K, V] {
+func NewMapEntry[K types.Hashable[K], V any](k K, v V) MapEntry[K, V] {
 	return MapEntry[K, V]{key: k, value: v}
 }
 
@@ -51,7 +42,7 @@ func (entry *MapEntry[K, V]) Value() V {
 }
 
 // Map interface for what an implementation of a map should provide.
-type Map[K interfaces.Hashable[K], V any] interface {
+type Map[K types.Hashable[K], V any] interface {
 	MapIterable[K, V]
 	Put(k K, v V) V
 	PutIfAbsent(k K, v V) bool
@@ -63,7 +54,7 @@ type Map[K interfaces.Hashable[K], V any] interface {
 	Keys() []K
 	Contains(k K) bool
 	Remove(k K) bool
-	RemoveAll(c interfaces.Iterable[K])
+	RemoveAll(c iterator.Iterable[K])
 	Clear()
 	Empty() bool
 }

@@ -1,6 +1,7 @@
 package _map
 
 import (
+	"collections/iterator"
 	"collections/list"
 	"collections/wrapper"
 	"strconv"
@@ -158,7 +159,7 @@ func TestIterator(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, NoNextElementError, r.(error))
+				assert.Equal(t, iterator.NoNextElementError, r.(error))
 			}
 		}()
 

@@ -2,22 +2,25 @@
 package queue
 
 import (
-	"collections/interfaces"
+	"collections/iterator"
 	"collections/list"
+	"collections/types"
+	"fmt"
 )
 
-// ListQueue view of a queue providing an interface to operate on underlying list based queue.
-type ListQueue[T interfaces.Equitable[T]] interface {
+// ListQueue an interface providing singly linked list based implementation of a queue. This interface serves as an  abstraction for
+// operating on an underlying list.
+type ListQueue[T types.Equitable[T]] interface {
 	Queue[T]
 }
 
-// listQueue actual concrete implementation of a queue backed by a singly linked list.
-type listQueue[T interfaces.Equitable[T]] struct {
+// listQueue concrete type for a singly linked list based queue.
+type listQueue[T types.Equitable[T]] struct {
 	list list.ForwardList[T]
 }
 
-// NewListQueue creates a new list (linkded list) based queue.
-func NewListQueue[T interfaces.Equitable[T]]() ListQueue[T] {
+// NewListQueue creates an empty list based queue.
+func NewListQueue[T types.Equitable[T]]() ListQueue[T] {
 	q := listQueue[T]{list: list.NewForwardList[T]()}
 	return &q
 }
@@ -28,11 +31,16 @@ func (q *listQueue[T]) Add(e T) bool {
 }
 
 // AddAll adds the elements from some iterable elements to the queue q.
-func (q *listQueue[T]) AddAll(elements interfaces.Iterable[T]) {
+func (q *listQueue[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		q.Add(it.Next())
 	}
+}
+
+// AddSlice adds element from some slice s into the queue q.
+func (q *listQueue[T]) AddSlice(s []T) {
+	q.list.AddSlice(s)
 }
 
 // Remove removes the element e from the queue q .
@@ -71,7 +79,7 @@ func (q *listQueue[T]) Front() T {
 }
 
 // Iterator returns an iterator for iterating through queue q.
-func (q *listQueue[T]) Iterator() interfaces.Iterator[T] {
+func (q *listQueue[T]) Iterator() iterator.Iterator[T] {
 	return q.list.Iterator()
 }
 
@@ -81,7 +89,7 @@ func (q *listQueue[T]) Len() int {
 }
 
 // RemoveAll removes all the elements from some iterable elements that are in the queue q.
-func (q *listQueue[T]) RemoveAll(elements interfaces.Iterable[T]) {
+func (q *listQueue[T]) RemoveAll(elements iterator.Iterable[T]) {
 	q.list.RemoveAll(elements)
 }
 
@@ -93,4 +101,9 @@ func (q *listQueue[T]) RemoveFront() T {
 		}
 	}()
 	return q.list.RemoveFront()
+}
+
+// String for printing the queue q.
+func (q listQueue[T]) String() string {
+	return fmt.Sprint(q.list)
 }

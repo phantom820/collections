@@ -1,9 +1,10 @@
 package tree
 
 import (
-	"collections/types"
 	"fmt"
 	"strings"
+
+	"github.com/phantom820/collections/types"
 )
 
 const (

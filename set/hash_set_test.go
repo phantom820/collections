@@ -1,11 +1,12 @@
 package set
 
 import (
-	"collections/iterator"
-	"collections/list"
-	"collections/types"
 	"fmt"
 	"testing"
+
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/list"
+	"github.com/phantom820/collections/types"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -1,10 +1,11 @@
 package set
 
 import (
-	"collections/iterator"
-	_map "collections/map"
-	"collections/types"
 	"fmt"
+
+	"github.com/phantom820/collections/iterator"
+	_map "github.com/phantom820/collections/map"
+	"github.com/phantom820/collections/types"
 
 	"strings"
 )

@@ -1,10 +1,11 @@
 package list
 
 import (
-	"collections/iterator"
-	"collections/types"
 	"fmt"
 	"strings"
+
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/types"
 )
 
 // ForwardList an implementation of a singly linked list.

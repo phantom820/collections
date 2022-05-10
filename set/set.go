@@ -2,9 +2,9 @@
 package set
 
 import (
-	"collections/interfaces"
-	"collections/iterator"
-	"collections/types"
+	"github.com/phantom820/collections/interfaces"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/types"
 )
 
 // Set interface specifying a list of methods a set implementation is expected to provide.

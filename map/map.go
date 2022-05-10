@@ -2,8 +2,8 @@
 package _map
 
 import (
-	"collections/iterator"
-	"collections/types"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/types"
 )
 
 // MapIterator an interface that an iterator implementation for a map must satisfy.

@@ -1,8 +1,8 @@
 package stack
 
 import (
-	"collections/iterator"
-	"collections/types"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/types"
 )
 
 // SliceStack a slice based implementation of a stack.

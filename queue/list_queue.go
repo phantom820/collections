@@ -2,10 +2,11 @@
 package queue
 
 import (
-	"collections/iterator"
-	"collections/list"
-	"collections/types"
 	"fmt"
+
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/list"
+	"github.com/phantom820/collections/types"
 )
 
 // ListQueue a list based implementation of a queue.

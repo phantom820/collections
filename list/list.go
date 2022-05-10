@@ -2,9 +2,10 @@
 package list
 
 import (
-	"collections/iterator"
-	"collections/types"
 	"errors"
+
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/types"
 
 	"fmt"
 	"strings"

@@ -1,4 +1,4 @@
-module collections
+module github.com/phantom820/collections
 
 go 1.18
 

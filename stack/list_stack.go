@@ -1,9 +1,9 @@
 package stack
 
 import (
-	"collections/iterator"
-	"collections/list"
-	"collections/types"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/list"
+	"github.com/phantom820/collections/types"
 )
 
 // ListStack singly linked list based implementation of a stack.

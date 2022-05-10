@@ -2,9 +2,10 @@
 package queue
 
 import (
-	"collections/iterator"
-	"collections/types"
 	"fmt"
+
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/types"
 )
 
 // SliceQueue slice based implementation of a queue.

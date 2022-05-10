@@ -1,9 +1,9 @@
 package _map
 
 import (
-	"collections/iterator"
-	"collections/tree"
-	"collections/types"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/tree"
+	"github.com/phantom820/collections/types"
 )
 
 const (

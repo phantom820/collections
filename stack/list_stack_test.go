@@ -1,9 +1,10 @@
 package stack
 
 import (
-	"collections/list"
-	"collections/types"
 	"testing"
+
+	"github.com/phantom820/collections/list"
+	"github.com/phantom820/collections/types"
 
 	"github.com/stretchr/testify/assert"
 )

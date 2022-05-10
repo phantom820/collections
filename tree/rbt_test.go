@@ -1,9 +1,10 @@
 package tree
 
 import (
-	"collections/types"
 	"fmt"
 	"testing"
+
+	"github.com/phantom820/collections/types"
 
 	"github.com/stretchr/testify/assert"
 )

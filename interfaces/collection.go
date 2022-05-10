@@ -2,8 +2,8 @@
 package interfaces
 
 import (
-	"collections/iterator"
-	"collections/types"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/types"
 )
 
 // Collection a blue print for which methods a collection must implement. A collection is a linear

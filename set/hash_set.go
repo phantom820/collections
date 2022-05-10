@@ -9,21 +9,16 @@ import (
 	"strings"
 )
 
-// HashSet an interface providing  hashmap based implementation of a set.
-type HashSet[T types.Hashable[T]] interface {
-	Set[T, HashSet[T]]
-	Equals(other HashSet[T]) bool
+// HashSet an implementation of a hashset based on a HashMap.
+type HashSet[T types.Hashable[T]] struct {
+	data *_map.HashMap[T, bool]
 }
 
-// hashSet concrete type for a hashset.
-type hashSet[T types.Hashable[T]] struct {
-	data _map.HashMap[T, bool]
-}
-
-// NewHashSet creates an empty HashSet with default initial capacity(16) and load factor limit(0.75).
-func NewHashSet[T types.Hashable[T]]() HashSet[T] {
+// NewHashSet creates a HashSet with the specified elements, if there none an empty set is returned.
+func NewHashSet[T types.Hashable[T]](elements ...T) *HashSet[T] {
 	data := _map.NewHashMap[T, bool]()
-	s := hashSet[T]{data: data}
+	s := HashSet[T]{data: data}
+	s.AddSlice(elements)
 	return &s
 }
 
@@ -32,12 +27,9 @@ type hashSetIterator[T types.Hashable[T]] struct {
 	_it _map.MapIterator[T, bool]
 }
 
-// HasNext check if the oterator has a next element to yield.
+// HasNext check if the iterator it has a next element to yield.
 func (it *hashSetIterator[T]) HasNext() bool {
-	if it._it.HasNext() {
-		return true
-	}
-	return false
+	return it._it.HasNext()
 }
 
 // Next yields the next element in the iterator.
@@ -51,12 +43,12 @@ func (it *hashSetIterator[T]) Cycle() {
 	it._it.Cycle()
 }
 
-func (s hashSet[T]) Iterator() iterator.Iterator[T] {
+func (s HashSet[T]) Iterator() iterator.Iterator[T] {
 	return &hashSetIterator[T]{s.data.Iterator()}
 }
 
 // String formats the set for pretty printing.
-func (s hashSet[T]) String() string {
+func (s HashSet[T]) String() string {
 	sb := make([]string, 0, s.data.Len())
 	for _, k := range s.data.Keys() {
 		sb = append(sb, fmt.Sprint(k))
@@ -66,24 +58,24 @@ func (s hashSet[T]) String() string {
 }
 
 // Len returns the size of the set.
-func (s *hashSet[T]) Len() int {
+func (s *HashSet[T]) Len() int {
 	return s.data.Len()
 }
 
 // Contains checks if an element is in the set.
-func (s *hashSet[T]) Contains(e T) bool {
+func (s *HashSet[T]) Contains(e T) bool {
 	_, p := s.data.Get(e)
 	return p
 }
 
 // Add adds the element  e if its not already in the set s.
-func (s *hashSet[T]) Add(e T) bool {
+func (s *HashSet[T]) Add(e T) bool {
 	p := s.data.PutIfAbsent(e, true)
 	return p
 }
 
 // AddAll adds all elements from an iterable it to the set s.
-func (s *hashSet[T]) AddAll(it iterator.Iterable[T]) {
+func (s *HashSet[T]) AddAll(it iterator.Iterable[T]) {
 	iter := it.Iterator()
 	for iter.HasNext() {
 		s.Add(iter.Next())
@@ -91,34 +83,34 @@ func (s *hashSet[T]) AddAll(it iterator.Iterable[T]) {
 }
 
 // AddSlice adds element from some slice sl into the set s.
-func (s *hashSet[T]) AddSlice(sl []T) {
+func (s *HashSet[T]) AddSlice(sl []T) {
 	for _, e := range sl {
 		s.Add(e)
 	}
 }
 
 // Remove removes the element from the set s if it is present.
-func (s *hashSet[T]) Remove(e T) bool {
+func (s *HashSet[T]) Remove(e T) bool {
 	return s.data.Remove(e)
 }
 
 // RemoveAll removes all entries from some iterable it from set s.
-func (s *hashSet[T]) RemoveAll(it iterator.Iterable[T]) {
+func (s *HashSet[T]) RemoveAll(it iterator.Iterable[T]) {
 	s.data.RemoveAll(it)
 }
 
 // Clear clears the set s by removing all elements.
-func (s *hashSet[T]) Clear() {
+func (s *HashSet[T]) Clear() {
 	s.data.Clear()
 }
 
 // Empty checks if the set is empty.
-func (s *hashSet[T]) Empty() bool {
+func (s *HashSet[T]) Empty() bool {
 	return s.data.Empty()
 }
 
 // Collect collects all elements of the set into a slice.
-func (s *hashSet[T]) Collect() []T {
+func (s *HashSet[T]) Collect() []T {
 	data := make([]T, s.data.Len())
 	i := 0
 	for _, e := range s.data.Keys() {
@@ -128,8 +120,8 @@ func (s *hashSet[T]) Collect() []T {
 	return data
 }
 
-// Map applies some transformation on elements of the set s to produce a new set.
-func (s *hashSet[T]) Map(f func(e T) T) HashSet[T] {
+// Map applies a transformation on elements of using a function f and returns a new set with transformed elements.
+func (s *HashSet[T]) Map(f func(e T) T) *HashSet[T] {
 	other := NewHashSet[T]()
 	for _, e := range s.data.Keys() {
 		other.Add(f(e))
@@ -137,8 +129,8 @@ func (s *hashSet[T]) Map(f func(e T) T) HashSet[T] {
 	return other
 }
 
-// Filter filters this set and produces a new set.
-func (s *hashSet[T]) Filter(f func(e T) bool) HashSet[T] {
+// Filter filters set s using a predicate function f and returns a new set with elements satisfying the predicate.
+func (s *HashSet[T]) Filter(f func(e T) bool) *HashSet[T] {
 	other := NewHashSet[T]()
 	for _, e := range s.data.Keys() {
 		if f(e) {
@@ -150,7 +142,7 @@ func (s *hashSet[T]) Filter(f func(e T) bool) HashSet[T] {
 
 // Equals check if the set s is equals the other set. This is true only if they are the same reference or they are of the same size with the
 // same elements.
-func (s *hashSet[T]) Equals(other HashSet[T]) bool {
+func (s *HashSet[T]) Equals(other *HashSet[T]) bool {
 	if s == other {
 		return true
 	} else if s.Len() != other.Len() {

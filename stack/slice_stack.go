@@ -5,22 +5,18 @@ import (
 	"collections/types"
 )
 
-// SliceStack an interface providing slice based implementation of a stack. This interface serves as an  abstraction for
-// operating on an underlying slice.
-type SliceStack[T types.Equitable[T]] interface {
-	Stack[T]
-}
+// SliceStack a slice based implementation of a stack.
+type SliceStack[T types.Equitable[T]] []T
 
-type sliceStack[T types.Equitable[T]] []T
-
-// NewSliceStack creates an empty slice based stack.
-func NewSliceStack[T types.Equitable[T]]() ListStack[T] {
-	var s sliceStack[T]
+// NewSliceStack creates a slice based stack with the specified elements, if there are none an empty stack is created.
+func NewSliceStack[T types.Equitable[T]](elements ...T) *SliceStack[T] {
+	var s SliceStack[T]
+	s.AddSlice(elements)
 	return &s
 }
 
 // Peek returns the top element of stack s without removing it. Will panic if s has no top element.
-func (s *sliceStack[T]) Peek() T {
+func (s *SliceStack[T]) Peek() T {
 	if s.Empty() {
 		panic(NoTopElementError)
 	}
@@ -29,7 +25,7 @@ func (s *sliceStack[T]) Peek() T {
 }
 
 // Pop removes and returns the top element of stack s. Will panic if s has no top element.
-func (s *sliceStack[T]) Pop() T {
+func (s *SliceStack[T]) Pop() T {
 	if s.Empty() {
 		panic(NoTopElementError)
 	}
@@ -39,13 +35,13 @@ func (s *sliceStack[T]) Pop() T {
 }
 
 // Add pushes the element e to the stack s.
-func (s *sliceStack[T]) Add(e T) bool {
+func (s *SliceStack[T]) Add(e T) bool {
 	*s = append(*s, e)
 	return true
 }
 
 // AddAll pushes elements from iterable elements onto the stack s.
-func (s *sliceStack[T]) AddAll(elements iterator.Iterable[T]) {
+func (s *SliceStack[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		s.Add(it.Next())
@@ -53,24 +49,24 @@ func (s *sliceStack[T]) AddAll(elements iterator.Iterable[T]) {
 }
 
 // AddSlice adds element from a slice s into the stack q.
-func (s *sliceStack[T]) AddSlice(slice []T) {
+func (s *SliceStack[T]) AddSlice(slice []T) {
 	for _, e := range slice {
 		s.Add(e)
 	}
 }
 
 // Clear removes all elements in the stack q.
-func (q *sliceStack[T]) Clear() {
+func (q *SliceStack[T]) Clear() {
 	*q = nil
 }
 
 // Collect converts stack s into a slice.
-func (s *sliceStack[T]) Collect() []T {
+func (s *SliceStack[T]) Collect() []T {
 	return *s
 }
 
 // Contains checks if the element e is in the stack s.
-func (s *sliceStack[T]) Contains(e T) bool {
+func (s *SliceStack[T]) Contains(e T) bool {
 	for i, _ := range *s {
 		if (*s)[i].Equals(e) {
 			return true
@@ -80,7 +76,7 @@ func (s *sliceStack[T]) Contains(e T) bool {
 }
 
 // Empty checks if the stack s is empty.
-func (s *sliceStack[T]) Empty() bool {
+func (s *SliceStack[T]) Empty() bool {
 	return len(*s) == 0
 }
 
@@ -114,17 +110,17 @@ func (it *sliceStackIterator[T]) Cycle() {
 }
 
 // Iterator returns an iterator for iterating through stack q.
-func (s *sliceStack[T]) Iterator() iterator.Iterator[T] {
+func (s *SliceStack[T]) Iterator() iterator.Iterator[T] {
 	return &sliceStackIterator[T]{slice: *s, i: len(*s) - 1}
 }
 
 // Len returns the size of the stack s.
-func (s *sliceStack[T]) Len() int {
+func (s *SliceStack[T]) Len() int {
 	return len(*s)
 }
 
 // indexOf finds the index of an element e in the stack q. Gives -1 if the element is not present.
-func (s *sliceStack[T]) indexOf(e T) int {
+func (s *SliceStack[T]) indexOf(e T) int {
 	for i, _ := range *s {
 		if (*s)[i].Equals(e) {
 			return i
@@ -134,7 +130,7 @@ func (s *sliceStack[T]) indexOf(e T) int {
 }
 
 // Removes the first occurence of element e from the stack s.
-func (s *sliceStack[T]) Remove(e T) bool {
+func (s *SliceStack[T]) Remove(e T) bool {
 	i := s.indexOf(e)
 	if i != -1 {
 		*s = append((*s)[0:i], (*s)[i+1:]...)
@@ -144,7 +140,7 @@ func (s *sliceStack[T]) Remove(e T) bool {
 }
 
 // RemoveAll removes all the elements from some iterable elements that are in the stack s.
-func (s *sliceStack[T]) RemoveAll(elements iterator.Iterable[T]) {
+func (s *SliceStack[T]) RemoveAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		s.Remove(it.Next())

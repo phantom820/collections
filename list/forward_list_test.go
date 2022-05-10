@@ -2,7 +2,7 @@ package list
 
 import (
 	"collections/iterator"
-	"collections/wrapper"
+	"collections/types"
 	"fmt"
 	"testing"
 
@@ -12,7 +12,7 @@ import (
 // TestForwardAddFront covers tests for Front and  AddFront
 func TestForwardAddFront(t *testing.T) {
 
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	// Case 1 : Empty list jhas no front and should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -27,10 +27,10 @@ func TestForwardAddFront(t *testing.T) {
 
 	// Case 2 : Elements added to front should be reflected by Front().
 	l.AddFront(22)
-	assert.Equal(t, wrapper.Integer(22), l.Front())
+	assert.Equal(t, types.Integer(22), l.Front())
 	assert.Equal(t, 1, l.Len())
 	l.AddFront(23)
-	assert.Equal(t, wrapper.Integer(23), l.Front())
+	assert.Equal(t, types.Integer(23), l.Front())
 	assert.Equal(t, 2, l.Len())
 
 }
@@ -38,7 +38,7 @@ func TestForwardAddFront(t *testing.T) {
 // TestForwardAddBack covers tests Back and AddBack.
 func TestForwardAddBack(t *testing.T) {
 
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	// Case 1 : Empty list has no back element should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -54,17 +54,37 @@ func TestForwardAddBack(t *testing.T) {
 
 	// Case 2 : Elements added to the back should be reflected by Back().
 	l.AddBack(22)
-	assert.Equal(t, wrapper.Integer(22), l.Back())
+	assert.Equal(t, types.Integer(22), l.Back())
 	assert.Equal(t, 1, l.Len())
 	l.AddBack(23)
-	assert.Equal(t, wrapper.Integer(23), l.Back())
+	assert.Equal(t, types.Integer(23), l.Back())
 	assert.Equal(t, 2, l.Len()) // len of the ;list should change accordingly.
 
 }
 
+// TestReverse covers tests for Reverse.
+func TestForwardReverse(t *testing.T) {
+
+	l := NewForwardList[types.Integer]()
+
+	assert.Equal(t, true, l.Equals(l.Reverse()))
+
+	l.Add(1)
+	l.Add(2)
+	l.Add(3)
+
+	r := NewForwardList[types.Integer]()
+	r.Add(3)
+	r.Add(2)
+	r.Add(1)
+
+	assert.Equal(t, true, l.Reverse().Equals(r))
+	assert.Equal(t, true, l.Equals(r.Reverse()))
+}
+
 // TestForwardAt covers tests for At
 func TestForwardAt(t *testing.T) {
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	// Case 1 : Empty list should not be indexable.
 	t.Run("panics", func(t *testing.T) {
@@ -80,17 +100,17 @@ func TestForwardAt(t *testing.T) {
 	l.AddBack(1)
 	l.AddBack(2)
 	l.AddBack(3)
-	assert.Equal(t, wrapper.Integer(1), l.At(0))
-	assert.Equal(t, wrapper.Integer(2), l.At(1))
-	assert.Equal(t, wrapper.Integer(3), l.At(2))
+	assert.Equal(t, types.Integer(1), l.At(0))
+	assert.Equal(t, types.Integer(2), l.At(1))
+	assert.Equal(t, types.Integer(3), l.At(2))
 
 }
 
 // TestForwardEquals for Equals method of lists.
 func TestForwardEquals(t *testing.T) {
 
-	l := NewForwardList[wrapper.Integer]()
-	other := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
+	other := NewForwardList[types.Integer]()
 
 	// Case 1 : A list is equal to its self.
 	assert.Equal(t, true, l.Equals(l))
@@ -100,14 +120,14 @@ func TestForwardEquals(t *testing.T) {
 
 	// Case 3 : lists of unequal sizes should not be equal.
 	for i := 1; i < 6; i++ {
-		other.Add(wrapper.Integer(i))
+		other.Add(types.Integer(i))
 	}
 
 	assert.Equal(t, false, l.Equals(other))
 
 	// Case 4 : list of equal sizes but different elements should not be equal.
 	for i := 1; i < 6; i++ {
-		l.Add(wrapper.Integer(i + 1))
+		l.Add(types.Integer(i + 1))
 	}
 
 	assert.Equal(t, false, l.Equals(other))
@@ -116,7 +136,7 @@ func TestForwardEquals(t *testing.T) {
 	// Case 5 : lists with same size and elements should be equal.
 
 	for i := 1; i < 6; i++ {
-		l.Add(wrapper.Integer(i))
+		l.Add(types.Integer(i))
 	}
 
 	assert.Equal(t, true, other.Equals(l))
@@ -125,18 +145,18 @@ func TestForwardEquals(t *testing.T) {
 
 // TestForwardAdd covers tests for Add, AddAll, AddSlice.
 func TestForwardAdd(t *testing.T) {
-	l := NewForwardList[wrapper.Integer]()
-	other := NewForwardList[wrapper.Integer]()
 
 	// Case 1 : Just add should add at back.
-	l.Add(1)
-	l.Add(2)
-	assert.Equal(t, wrapper.Integer(2), l.Back())
+
+	l := NewForwardList[types.Integer](1, 2)
+	other := NewForwardList[types.Integer]()
+
+	assert.Equal(t, types.Integer(2), l.Back())
 	l.Clear()
 
 	// Case 2 : AddAll should add all the elements from another iterable.
 	for i := 1; i < 6; i++ {
-		other.Add(wrapper.Integer(i))
+		other.Add(types.Integer(i))
 	}
 
 	l.AddAll(other)
@@ -145,7 +165,7 @@ func TestForwardAdd(t *testing.T) {
 	l.Clear()
 
 	// Case 4 : AddSlice should behave accordingly.
-	s := []wrapper.Integer{1, 2, 3, 4}
+	s := []types.Integer{1, 2, 3, 4}
 	l.AddSlice(s)
 
 	assert.ElementsMatch(t, s, l.Collect())
@@ -154,7 +174,7 @@ func TestForwardAdd(t *testing.T) {
 
 // TestForwardAddAt covers tests for AddAt adding at specified index.
 func TestForwardAddAt(t *testing.T) {
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	// Case 1 : Adding out of bounds.
 	t.Run("panics", func(t *testing.T) {
@@ -174,17 +194,17 @@ func TestForwardAddAt(t *testing.T) {
 	l.Add(30)
 
 	l.AddAt(0, 22)
-	assert.Equal(t, wrapper.Integer(22), l.At(0))
+	assert.Equal(t, types.Integer(22), l.At(0))
 	l.AddAt(l.Len()-1, 25)
-	assert.Equal(t, wrapper.Integer(25), l.At(l.Len()-1))
+	assert.Equal(t, types.Integer(25), l.At(l.Len()-1))
 	l.AddAt(2, -5)
-	assert.Equal(t, wrapper.Integer(-5), l.At(2))
+	assert.Equal(t, types.Integer(-5), l.At(2))
 
 }
 
 // TestForwardSwap covers tests for Swap swapping elements at specified indices.
 func TestForwardSwap(t *testing.T) {
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	// Case 1 : Swapping out of bounds should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -205,21 +225,21 @@ func TestForwardSwap(t *testing.T) {
 	l.Add(10)
 
 	l.Swap(0, 1)
-	assert.Equal(t, wrapper.Integer(3), l.Front())
+	assert.Equal(t, types.Integer(3), l.Front())
 	l.Swap(2, 3)
 	l.Swap(1, 0)
-	assert.Equal(t, wrapper.Integer(5), l.At(2))
+	assert.Equal(t, types.Integer(5), l.At(2))
 	l.Swap(0, l.Len()-1)
-	assert.Equal(t, wrapper.Integer(10), l.At(0))
+	assert.Equal(t, types.Integer(10), l.At(0))
 	l.Swap(l.Len()-1, 0)
-	assert.Equal(t, wrapper.Integer(10), l.At(l.Len()-1))
+	assert.Equal(t, types.Integer(10), l.At(l.Len()-1))
 
 }
 
 // TestForwardRemoveFront covers test for RemoveFront.
 func TestForwardRemoveFront(t *testing.T) {
 
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	// Case 1 : Removing front from empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -235,16 +255,16 @@ func TestForwardRemoveFront(t *testing.T) {
 	l.Add(22)
 	l.Add(23)
 	l.Add(234)
-	assert.Equal(t, wrapper.Integer(22), l.RemoveFront())
-	assert.Equal(t, wrapper.Integer(23), l.RemoveFront())
-	assert.Equal(t, wrapper.Integer(234), l.RemoveFront())
+	assert.Equal(t, types.Integer(22), l.RemoveFront())
+	assert.Equal(t, types.Integer(23), l.RemoveFront())
+	assert.Equal(t, types.Integer(234), l.RemoveFront())
 
 }
 
 // TestForwardSet covers tests for Set overriding value at specified index.
 func TestForwardSet(t *testing.T) {
 
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	// Case 1 : set on empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -262,14 +282,14 @@ func TestForwardSet(t *testing.T) {
 	l.Add(3)
 
 	l.Set(0, 45)
-	assert.Equal(t, wrapper.Integer(45), l.Front())
+	assert.Equal(t, types.Integer(45), l.Front())
 	l.Set(2, -33)
-	assert.Equal(t, wrapper.Integer(-33), l.Back())
+	assert.Equal(t, types.Integer(-33), l.Back())
 
 }
 
 func TestForwardRemoveBack(t *testing.T) {
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	// Case 1 : Removing back from empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -287,20 +307,20 @@ func TestForwardRemoveBack(t *testing.T) {
 	l.Add(234)
 	l.Add(-2)
 
-	assert.Equal(t, wrapper.Integer(-2), l.RemoveBack())
+	assert.Equal(t, types.Integer(-2), l.RemoveBack())
 	assert.Equal(t, l.Len(), 3)
-	assert.Equal(t, wrapper.Integer(234), l.RemoveBack())
+	assert.Equal(t, types.Integer(234), l.RemoveBack())
 	assert.Equal(t, l.Len(), 2)
-	assert.Equal(t, wrapper.Integer(23), l.RemoveBack())
+	assert.Equal(t, types.Integer(23), l.RemoveBack())
 	assert.Equal(t, l.Len(), 1)
-	assert.Equal(t, wrapper.Integer(22), l.RemoveBack())
+	assert.Equal(t, types.Integer(22), l.RemoveBack())
 
 }
 
 // TestForwardRemoveAt covers tests for RemoveAt.
 func TestForwardRemoveAt(t *testing.T) {
 
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	/// Case 1 : Remmoving at in empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -321,11 +341,11 @@ func TestForwardRemoveAt(t *testing.T) {
 	l.Add(80)
 
 	l.RemoveAt(0)
-	assert.Equal(t, wrapper.Integer(2), l.Front())
+	assert.Equal(t, types.Integer(2), l.Front())
 	assert.Equal(t, 5, l.Len())
 	l.RemoveAt(2)
-	assert.Equal(t, wrapper.Integer(9), l.At(2))
-	assert.Equal(t, wrapper.Integer(80), l.RemoveAt(l.Len()-1))
+	assert.Equal(t, types.Integer(9), l.At(2))
+	assert.Equal(t, types.Integer(80), l.RemoveAt(l.Len()-1))
 	assert.Equal(t, 3, l.Len())
 
 	t.Run("panics", func(t *testing.T) {
@@ -341,8 +361,8 @@ func TestForwardRemoveAt(t *testing.T) {
 
 // TestForwardRemove covers tests for Remove.
 func TestForwardRemove(t *testing.T) {
-	l := NewForwardList[wrapper.Integer]()
-	other := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
+	other := NewForwardList[types.Integer]()
 
 	l.Add(1)
 	l.Add(2)
@@ -372,7 +392,7 @@ func TestForwardRemove(t *testing.T) {
 // TestForwardIterator covers tests for Iterator.
 func TestForwardIterator(t *testing.T) {
 
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	// Case 1 : Iterator on empty list should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -387,39 +407,39 @@ func TestForwardIterator(t *testing.T) {
 
 	// Case 2 : Iterator on list with elements.
 	for i := 1; i < 6; i++ {
-		l.Add(wrapper.Integer(i))
+		l.Add(types.Integer(i))
 	}
 	a := l.Collect()
-	b := make([]wrapper.Integer, 0)
+	b := make([]types.Integer, 0)
 	it := l.Iterator()
 	for it.HasNext() {
 		b = append(b, it.Next())
 	}
 	assert.ElementsMatch(t, a, b)
 	it.Cycle()
-	assert.Equal(t, wrapper.Integer(1), it.Next())
+	assert.Equal(t, types.Integer(1), it.Next())
 
 }
 
 // TestForwardMapFilter covers tests for Map and Filter.
 func TestForwardMapFilter(t *testing.T) {
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	for i := 0; i < 6; i++ {
-		l.Add(wrapper.Integer(i))
+		l.Add(types.Integer(i))
 	}
 
 	// Case 1 : Map to a new list.
-	other := l.Map(func(e wrapper.Integer) wrapper.Integer { return e + 10 })
+	other := l.Map(func(e types.Integer) types.Integer { return e + 10 })
 
-	a := []wrapper.Integer{10, 11, 12, 13, 14, 15}
+	a := []types.Integer{10, 11, 12, 13, 14, 15}
 	b := other.Collect()
 
 	assert.ElementsMatch(t, a, b)
 
 	// Case 2 : Filter to create new list.
-	c := []wrapper.Integer{0, 2, 4}
-	other = l.Filter(func(e wrapper.Integer) bool { return e%2 == 0 })
+	c := []types.Integer{0, 2, 4}
+	other = l.Filter(func(e types.Integer) bool { return e%2 == 0 })
 	d := other.Collect()
 	assert.ElementsMatch(t, c, d)
 
@@ -427,10 +447,10 @@ func TestForwardMapFilter(t *testing.T) {
 
 // TestForwardClear covers tests for Clear.
 func TestForwardClear(t *testing.T) {
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	for i := 0; i < 20; i++ {
-		l.Add(wrapper.Integer(i))
+		l.Add(types.Integer(i))
 	}
 
 	assert.Equal(t, 20, l.Len())
@@ -442,7 +462,7 @@ func TestForwardClear(t *testing.T) {
 // TestForwardString covers tests for String used in printing.
 func TestForwardString(t *testing.T) {
 
-	l := NewForwardList[wrapper.Integer]()
+	l := NewForwardList[types.Integer]()
 
 	l.Add(2)
 	l.Add(3)

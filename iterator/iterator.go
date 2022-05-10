@@ -1,5 +1,4 @@
-// Package iterator provides an interface which specifies methods to be specified for implementing in iterator
-// over a collection.
+// Package iterator provides an interface for specifying an iterable. Any type that satisfies this interface is an Iterable.
 package iterator
 
 import "errors"

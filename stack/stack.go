@@ -1,9 +1,7 @@
-// Package stack provides an interface that stack implementation must satisfy.
+// Package stack provides list based and slice based implementations of a stack.
 package stack
 
 import (
-	"collections/interfaces"
-	"collections/types"
 	"errors"
 )
 
@@ -12,8 +10,9 @@ var (
 	NoTopElementError = errors.New("stack has no top element.")
 )
 
-type Stack[T types.Equitable[T]] interface {
-	interfaces.Collection[T]
-	Peek() T
-	Pop() T
-}
+// Stack interface specifying a list of methods a stack implementation is expected to provide.
+// type Stack[T types.Equitable[T]] interface {
+// 	interfaces.Collection[T]
+// 	Peek() T
+// 	Pop() T
+// }

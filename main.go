@@ -2,16 +2,13 @@ package main
 
 import (
 	"collections/list"
-	"collections/wrapper"
+	"collections/types"
 	"fmt"
 )
 
 func main() {
 	// // Haha my own collections.
-	l := list.NewList[wrapper.Integer]()
-	l.Add(1)
-	l.Add(2)
-	l.Add(3)
+	l := list.NewList[types.Integer]()
 
 	fmt.Println(l)
 	r := l.Reverse()

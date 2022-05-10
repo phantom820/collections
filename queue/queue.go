@@ -3,8 +3,6 @@
 package queue
 
 import (
-	"collections/interfaces"
-	"collections/types"
 	"errors"
 )
 
@@ -14,8 +12,8 @@ var (
 )
 
 // Queue interface specifying a list of methods a queue implementation is expected to provide.
-type Queue[T types.Equitable[T]] interface {
-	interfaces.Collection[T]
-	Front() T
-	RemoveFront() T
-}
+// type Queue[T types.Equitable[T]] interface {
+// 	interfaces.Collection[T]
+// 	Front() T
+// 	RemoveFront() T
+// }

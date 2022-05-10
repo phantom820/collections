@@ -1,14 +1,16 @@
 package tree
 
 import (
-	"collections/wrapper"
+	"collections/types"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInsert(t *testing.T) {
 
-	tree := NewRedBlackTree[wrapper.Integer, int]()
+	tree := NewRedBlackTree[types.Integer, int]()
 
 	assert.Equal(t, true, tree.Empty())
 	assert.Equal(t, "", fmt.Sprint(tree))
@@ -32,7 +34,7 @@ func TestInsert(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 
-	tree := NewRedBlackTree[wrapper.Integer, int]()
+	tree := NewRedBlackTree[types.Integer, int]()
 
 	tree.Insert(20, 10)
 	tree.Insert(30, 20)
@@ -93,7 +95,7 @@ func TestDelete(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 
-	tree := NewRedBlackTree[wrapper.Integer, int]()
+	tree := NewRedBlackTree[types.Integer, int]()
 
 	tree.Insert(10, 10)
 	tree.Insert(20, 20)
@@ -109,10 +111,10 @@ func TestUpdate(t *testing.T) {
 
 func TestSearch(t *testing.T) {
 
-	tree := NewRedBlackTree[wrapper.Integer, int]()
+	tree := NewRedBlackTree[types.Integer, int]()
 
 	for i := -10; i < 12; i++ {
-		tree.Insert(wrapper.Integer(i), i)
+		tree.Insert(types.Integer(i), i)
 	}
 
 	assert.Equal(t, true, tree.Search(0))
@@ -126,37 +128,37 @@ func TestSearch(t *testing.T) {
 }
 
 func TestInOrderTraversal(t *testing.T) {
-	tree := NewRedBlackTree[wrapper.Integer, int]()
+	tree := NewRedBlackTree[types.Integer, int]()
 
-	keys := make([]wrapper.Integer, 0)
+	keys := make([]types.Integer, 0)
 	assert.Equal(t, keys, tree.InOrderTraversal())
 
 	tree.Insert(22, 1)
 	tree.Insert(13, 2)
 	tree.Insert(3, 2)
 
-	keys = []wrapper.Integer{3, 13, 22}
+	keys = []types.Integer{3, 13, 22}
 	assert.Equal(t, keys, tree.InOrderTraversal())
 
 }
 
 func TestKeys(t *testing.T) {
 
-	tree := NewRedBlackTree[wrapper.Integer, int]()
+	tree := NewRedBlackTree[types.Integer, int]()
 
-	keys := make([]wrapper.Integer, 0)
+	keys := make([]types.Integer, 0)
 	assert.ElementsMatch(t, keys, tree.Keys())
 	tree.Insert(1, 1)
 	tree.Insert(2, 2)
 	tree.Insert(3, 3)
 
-	keys = []wrapper.Integer{1, 2, 3}
+	keys = []types.Integer{1, 2, 3}
 	assert.ElementsMatch(t, keys, tree.Keys())
 }
 
 func TestValues(t *testing.T) {
 
-	tree := NewRedBlackTree[wrapper.Integer, int]()
+	tree := NewRedBlackTree[types.Integer, int]()
 
 	values := make([]int, 0)
 	assert.ElementsMatch(t, values, tree.Values())

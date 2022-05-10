@@ -3,7 +3,7 @@ package queue
 import (
 	"collections/iterator"
 	"collections/list"
-	"collections/wrapper"
+	"collections/types"
 	"fmt"
 	"testing"
 
@@ -13,7 +13,7 @@ import (
 // TestSliceAdd covers tests for Add, Empty, Contains.
 func TestSliceAdd(t *testing.T) {
 
-	q := NewSliceQueue[wrapper.Integer]()
+	q := NewSliceQueue[types.Integer]()
 
 	// q Starts out as empty.
 	assert.Equal(t, true, q.Empty())
@@ -26,10 +26,10 @@ func TestSliceAdd(t *testing.T) {
 	q.Add(2)
 	assert.Equal(t, true, q.Contains(2))
 
-	l := list.NewList[wrapper.Integer]()
+	l := list.NewForwardList[types.Integer]()
 
 	for i := 3; i <= 10; i++ {
-		l.Add(wrapper.Integer(i))
+		l.Add(types.Integer(i))
 	}
 
 	// Case 2 : Add a number of elements at once.
@@ -38,7 +38,7 @@ func TestSliceAdd(t *testing.T) {
 
 	// Case 3 : Adding a slice should work accordingly
 	q.Clear()
-	s := []wrapper.Integer{1, 2, 3, 4}
+	s := []types.Integer{1, 2, 3, 4}
 	q.AddSlice(s)
 
 	assert.ElementsMatch(t, s, q.Collect())
@@ -48,7 +48,7 @@ func TestSliceAdd(t *testing.T) {
 // TestSliceFront covers tests for Front and RemoveFront.
 func TestSliceFront(t *testing.T) {
 
-	q := NewSliceQueue[wrapper.Integer]()
+	q := NewSliceQueue[types.Integer]()
 
 	// Case 1 : Front on an empty queue should paanic
 	t.Run("panics", func(t *testing.T) {
@@ -62,13 +62,13 @@ func TestSliceFront(t *testing.T) {
 
 	// Case 2 : Front and RemoveFront should behave accordingly.
 	for i := 1; i <= 10; i++ {
-		q.Add(wrapper.Integer(i))
+		q.Add(types.Integer(i))
 	}
 
-	assert.Equal(t, wrapper.Integer(1), q.Front())
-	assert.Equal(t, wrapper.Integer(1), q.RemoveFront())
-	assert.Equal(t, wrapper.Integer(2), q.RemoveFront())
-	assert.Equal(t, wrapper.Integer(3), q.RemoveFront())
+	assert.Equal(t, types.Integer(1), q.Front())
+	assert.Equal(t, types.Integer(1), q.RemoveFront())
+	assert.Equal(t, types.Integer(2), q.RemoveFront())
+	assert.Equal(t, types.Integer(3), q.RemoveFront())
 
 	q.Clear()
 	assert.Equal(t, true, q.Empty())
@@ -87,7 +87,7 @@ func TestSliceFront(t *testing.T) {
 
 // Covers tests for Iterator.
 func TestSliceIterator(t *testing.T) {
-	q := NewSliceQueue[wrapper.Integer]()
+	q := NewSliceQueue[types.Integer]()
 
 	// Case 1 : Next on empty queue should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -102,24 +102,24 @@ func TestSliceIterator(t *testing.T) {
 
 	// Case 2 : Iterator should work accordingly on populated queue.
 	for i := 1; i < 6; i++ {
-		q.Add(wrapper.Integer(i))
+		q.Add(types.Integer(i))
 	}
 	a := q.Collect()
-	b := make([]wrapper.Integer, 0)
+	b := make([]types.Integer, 0)
 	it := q.Iterator()
 	for it.HasNext() {
 		b = append(b, it.Next())
 	}
 	assert.ElementsMatch(t, a, b)
 	it.Cycle()
-	assert.Equal(t, wrapper.Integer(1), it.Next())
+	assert.Equal(t, types.Integer(1), it.Next())
 
 }
 
 // TestSliceRemove covers tests for Remove and RemoveAll.
 func TestSliceRemove(t *testing.T) {
 
-	q := NewSliceQueue[wrapper.Integer]()
+	q := NewSliceQueue[types.Integer]()
 
 	// Case 1 : Removing from empty.
 	assert.Equal(t, false, q.Remove(22))
@@ -133,7 +133,7 @@ func TestSliceRemove(t *testing.T) {
 	assert.Equal(t, true, q.Remove(5))
 	assert.Equal(t, false, q.Contains(5))
 
-	s := list.NewList[wrapper.Integer]()
+	s := list.NewForwardList[types.Integer]()
 	s.Add(1)
 	s.Add(2)
 
@@ -145,7 +145,7 @@ func TestSliceRemove(t *testing.T) {
 
 // TestString covers tests for String.
 func TestSliceString(t *testing.T) {
-	q := NewSliceQueue[wrapper.Integer]()
+	q := NewSliceQueue[types.Integer]()
 
 	q.Add(1)
 	q.Add(2)

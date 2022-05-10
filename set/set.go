@@ -7,7 +7,7 @@ import (
 	"collections/types"
 )
 
-// Set methods to be supported by an implementation of set i.e HashSet,TreeSet ...
+// Set interface specifying a list of methods a set implementation is expected to provide.
 type Set[T types.Equitable[T], E any] interface {
 	iterator.Iterable[T]
 	interfaces.Collection[T]

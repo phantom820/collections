@@ -1,5 +1,4 @@
-// Package _map provides an interface an implementation of a map should satisfy and types that are useful for map implementation.
-//Currently a HashMap has been implemented.
+// Package _map provides an implementation of map like data structures. Currently the only available implementation is a HashMap.
 package _map
 
 import (
@@ -7,20 +6,21 @@ import (
 	"collections/types"
 )
 
+// MapIterator an interface that an iterator implementation for a map must satisfy.
 type MapIterator[K types.Hashable[K], V any] interface {
 	HasNext() bool
 	Next() MapEntry[K, V]
 	Cycle()
 }
 
-// Iterable iterable for a map.
+// MapIterable provides an interface for specifying a map iterable.
 type MapIterable[K types.Hashable[K], V any] interface {
 	Keys() []K
 	Values() []V
 	Iterator() MapIterator[K, V]
 }
 
-// MapEntry wraps around the key and value of a map. For uniformity in terms of functional
+// MapEntry wraps around the key and value of a map.
 type MapEntry[K types.Hashable[K], V any] struct {
 	key   K
 	value V

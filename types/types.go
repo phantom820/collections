@@ -1,9 +1,9 @@
-// Package types contains the type constraints that will be applied on types that can be used with the data structures
-// that will be implemented .
+// Package types implements type constraints for types that can be used with collections. It also contains
+// wrappers for string and int primitives to allow them to be used with collections.
 package types
 
-// Equitable specifies method that a type must implement in order to be able to check two members of the
-// type for equality. The method equals must be an equivalence relation.
+// Equitable specifies a method that a type must implement in order to be able to check two members of the
+// type for equality. The method Equals must be an equivalence relation.
 type Equitable[T any] interface {
 	Equals(other T) bool
 }
@@ -20,4 +20,51 @@ type Hashable[T any] interface {
 type Comparable[T any] interface {
 	Equitable[T]
 	Less(other T) bool
+}
+
+// Integer wrapper around int to make it compatible with collections.
+type Integer int
+
+// HashCode gives the hash code for an integer as its value.
+func (i Integer) HashCode() int {
+	return int(i)
+}
+
+// Equals checks if Integer x equals Integer y.
+func (x Integer) Equals(y Integer) bool {
+	return x == y
+}
+
+// Less checks if Integer x is less than Integer y.
+func (x Integer) Less(y Integer) bool {
+	return x < y
+}
+
+// String wrapper around string to make it compatible with collections.
+type String string
+
+// HashCode generates a hash code for a given String.
+func (s String) HashCode() int {
+	const (
+		m = 1e9 + 9 // To be used for modulation.
+		p = 53      // To be used as prime.
+	)
+	p_pow := 1
+	runes := []rune(s)
+	code := 0
+	for _, r := range runes {
+		code = (code + p_pow*(int(r)+1)) % m
+		p_pow = (p_pow * p) % m
+	}
+	return code
+}
+
+// Equals check if String s1 and String s2 are equal.
+func (s String) Equals(other String) bool {
+	return s == other
+}
+
+// Less checks if String s is less than String other (lexographical comparison).
+func (s String) Less(other String) bool {
+	return s < other
 }

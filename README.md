@@ -59,6 +59,13 @@ collections is a library aiming to bring collections (common data structures) in
 	l.Back()                                  // retrives back element of list.
 	l.Contains(23)                            // checks if list contains 23.
 
+	
+	// iterating through a list.
+	it := l.Iterator() 
+	for it.HasNext() {
+		fmt.Println(it.Next())
+	}
+
 	// create a new list that has transformed elements using specified function
 	tList = l.Map(func(e types.Integer) types.Integer {
 		return e + 1
@@ -72,9 +79,29 @@ collections is a library aiming to bring collections (common data structures) in
 
   - `ForwardList`
   A singly linked list that only stores elements of the same type. See usage examples below.
+	```go
+	import (
+	"github.com/phantom820/collections/list"
+	"github.com/phantom820/collections/types"
+	)
+	
+	l := list.NewForwardList[types.Integer]()
+	// See List usage examples.
+	```
 
 - Stack 
   - `ListStack`
   A `ForwardList` based implementation of a stack. See usage examples below.
+	```
+	
+	s := stack.NewListStack[types.Integer](1,2,3) // creates a stack i which the top is 3.
+	s.Add(24) // pushes 24 to the stack.
+	_ = s.Peek() // returns top element in stack
+	s.Pop() // returns and remove top element in stack.
+
   - `SliceStack` 
-  A slice based implementation of a stack. See usage examples belo.w
+  A slice based implementation of a stack. See usage examples below
+	```
+			s := stack.NewListStack[types.Integer](1,2,3) // creates a stack i which the top is 3.
+			// see ListStack usage examples.
+	```

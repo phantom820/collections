@@ -1,7 +1,7 @@
 # collections
 [![Build Status](https://app.travis-ci.com/phantom820/collections.svg?branch=main)](https://app.travis-ci.com/phantom820/collections) [![codecov](https://codecov.io/gh/phantom820/collections/branch/main/graph/badge.svg?token=TY4FD26RP0)](https://codecov.io/gh/phantom820/collections)
 
-collections is a library aiming to bring collections (common data structures) into Go. 
+collections is a library aiming to bring collections (common data structures) into Go. These collections can be used with user define types that satisfy an interface required by that collection i.e collections such as `List`, `Queue` and stack require types to satisfy `Equitable` interface while a `Map` requires a type that satisfies the `Hashable` interface and so forth. See [types](https://github.com/phantom820/collections/blob/main/types/types.go), in which wrappers around primitives `string` and `int`. 
 
 - `Tree`
   - `Red Black Tree`
@@ -92,7 +92,7 @@ collections is a library aiming to bring collections (common data structures) in
 - Stack 
   - `ListStack`
   A `ForwardList` based implementation of a stack. See usage examples below.
-	```
+	```go
 	
 	s := stack.NewListStack[types.Integer](1,2,3) // creates a stack i which the top is 3.
 	s.Add(24) // pushes 24 to the stack.
@@ -101,7 +101,7 @@ collections is a library aiming to bring collections (common data structures) in
 
   - `SliceStack` 
   A slice based implementation of a stack. See usage examples below
-	```
+	```go
 	s := stack.NewListStack[types.Integer](1,2,3) // creates a stack i which the top is 3.
 	// see ListStack usage examples.
 	```

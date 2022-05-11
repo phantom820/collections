@@ -102,6 +102,11 @@ collections is a library aiming to bring collections (common data structures) in
   - `SliceStack` 
   A slice based implementation of a stack. See usage examples below
 	```
-			s := stack.NewListStack[types.Integer](1,2,3) // creates a stack i which the top is 3.
-			// see ListStack usage examples.
+	s := stack.NewListStack[types.Integer](1,2,3) // creates a stack i which the top is 3.
+	// see ListStack usage examples.
 	```
+- `Queue`
+	- `ListQueue` 
+	A `ForwardList` based implementation of a queue. enqueue using `Add` , check front using `Front` and remove front using `RemoveFront`.
+	-  `SliceQueue`
+	A slice based implemetation of a queue.

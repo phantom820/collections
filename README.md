@@ -3,6 +3,9 @@
 
 collections is a library aiming to bring collections (common data structures) into Go. These collections can be used with user define types that satisfy an interface required by that collection i.e collections such as `List`, `Queue` and stack require types to satisfy `Equitable` interface while a `Map` requires a type that satisfies the `Hashable` interface and so forth. See [types](https://github.com/phantom820/collections/blob/main/types/types.go), in which wrappers around primitives `string` and `int` have been implemented. 
 
+### install 
+` go get github.com/phantom820/collections@v0.1.0-beta`
+
 - `Tree`
   - `Red Black Tree`
   An implementation  of a red black tree that stores a key and an associated value in its node. See the usage example below

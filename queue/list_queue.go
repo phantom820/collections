@@ -1,4 +1,3 @@
-// ForwardList based implementation of a queue.
 package queue
 
 import (

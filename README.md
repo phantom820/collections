@@ -1,7 +1,7 @@
 # collections
 [![Build Status](https://app.travis-ci.com/phantom820/collections.svg?branch=main)](https://app.travis-ci.com/phantom820/collections) [![codecov](https://codecov.io/gh/phantom820/collections/branch/main/graph/badge.svg?token=TY4FD26RP0)](https://codecov.io/gh/phantom820/collections)
 
-collections is a library aiming to bring collections (common data structures) into Go. These collections can be used with user define types that satisfy an interface required by that collection i.e collections such as `List`, `Queue` and stack require types to satisfy `Equitable` interface while a `Map` requires a type that satisfies the `Hashable` interface and so forth. See [types](https://github.com/phantom820/collections/blob/main/types/types.go), in which wrappers around primitives `string` and `int`. 
+collections is a library aiming to bring collections (common data structures) into Go. These collections can be used with user define types that satisfy an interface required by that collection i.e collections such as `List`, `Queue` and stack require types to satisfy `Equitable` interface while a `Map` requires a type that satisfies the `Hashable` interface and so forth. See [types](https://github.com/phantom820/collections/blob/main/types/types.go), in which wrappers around primitives `string` and `int` have been implemented. 
 
 - `Tree`
   - `Red Black Tree`

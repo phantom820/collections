@@ -27,10 +27,10 @@ type Collection[T types.Equitable[T]] interface {
 ### Sorting
 ```go
 l1 := forwardlist.New[types.Integer](5, 3, 6, 7, 20)
-collections.Sort[types.Integer](l1) // sorting using type defined ordering.
+collections.Sort[types.Integer](l1) // Sorting using type defined ordering.
 	
 l2 := forwardlist.New[types.Integer](5, 3, 6, 7, 20)
-collections.SortBy[types.Integer](l,func(a, b types.Integer) bool { return a < b}) // sorting with custom comparator.
+collections.SortBy[types.Integer](l,func(a, b types.Integer) bool { return a < b}) // Sorting with custom comparator.
 ```
 
 - List

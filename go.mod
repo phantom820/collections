@@ -11,6 +11,7 @@ require (
 )
 
 retract v0.1.0-beta
-retract v0.1.0-gamma
-retract v0.2.0-beta
 
+retract v0.1.0-gamma
+
+retract v0.2.0-beta

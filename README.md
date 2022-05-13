@@ -172,7 +172,17 @@ otherM.Filter(func(e maps.MapEntry[types.Integer, string]) bool {
 
 ### Sets
 - `HashSet` : a set implementation based on a `HashMap`.
+```go
+s := hashset.New[types.Integer](1, 2, 4) // {1,2,4}
+s.Add(1, 2, 10)                          // {1,2,4,10} order not gueranteed
+s.Contains(1)                            // true
 
+_ = s.Filter(func(e types.Integer) bool { return e%2 == 0 })    // {2,4,10}
+_ = s.Map(func(e types.Integer) types.Integer { return e - 1 }) // {0,1,3,9}
+// checkout docs for more .
+
+
+```
 
 
 

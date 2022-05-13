@@ -3,7 +3,27 @@
 
 collections is a library aiming to bring common data structures into Go. These collections can be used with user define types that satisfy an interface required by that collection i.e collections such as `List`, `Queue` and `Stack` require types to satisfy `Equitable` interface while a `Map` requires a type that satisfies the `Hashable` interface and so forth. See [types](https://github.com/phantom820/collections/blob/main/types/types.go), in which wrappers around primitives `string` and `int` have been implemented. 
 
-### Data structures
+### Install 
+` go get github.com/phantom820/collections@v0.3.0-alpha`
+
+### Collections
+An interface that somme of the implemented data structures satisfy 
+```go
+// Satisfied by List, Vector, Queue , Stack ,  HashSet.
+type Collection[T types.Equitable[T]] interface {
+	iterator.Iterable[T]              // Returns an iterator for iterating through the collection.
+	Add(elements ...T) bool           // Adds elements to the collection.
+	AddAll(c iterator.Iterable[T])    // Adds all elements from another collection into the collection.
+	AddSlice(s []T)                   // Adds all elements from a slice into the collection.
+	Len() int                         // Returns the size (number of items) stored in the collection.
+	Contains(e T) bool                // Checks if the element e is a member of the collection.
+	Remove(e T) bool                  // Tries to remove a specified element in the collection. It removes the first occurence of the element.
+	RemoveAll(c iterator.Iterable[T]) // Removes all elements from another collections that appear in the collection.
+	Empty() bool                      // Checks if the collection contains any elements.
+	Clear()                           // Removes all elements in the collection.
+}
+```
+
 - List
 	- `ForwardList` : singly linked list.
 	- `List` : doubly linked list.
@@ -38,32 +58,34 @@ type Queue[T types.Equitable[T]] interface {
 - Stack 
 	- `ListStack` : `ForwardList` based implementation of a stack.
 	- `SliceStack` : slice based implementation of a stack.
-- Tree
-	- `Red Black Tree` : a red black tree implementation witho nodes that store a key and an associated value.
-- Map
-	- `HashMap` : a map that uses a hash table (slice) and red black tree for individual containers in buckets.
-- Set
-	- `HashSet` : a set implementation based on a `HashMap`.
-
-### Interfaces
--  `List, Vector, Queue , Stack ,  HashSet`
 ```go
-// Satisfied by List, Vector, Queue , Stack ,  HashSet.
-type Collection[T types.Equitable[T]] interface {
-	iterator.Iterable[T]              // Returns an iterator for iterating through the collection.
-	Add(elements ...T) bool           // Adds elements to the collection.
-	AddAll(c iterator.Iterable[T])    // Adds all elements from another collection into the collection.
-	AddSlice(s []T)                   // Adds all elements from a slice into the collection.
-	Len() int                         // Returns the size (number of items) stored in the collection.
-	Contains(e T) bool                // Checks if the element e is a member of the collection.
-	Remove(e T) bool                  // Tries to remove a specified element in the collection. It removes the first occurence of the element.
-	RemoveAll(c iterator.Iterable[T]) // Removes all elements from another collections that appear in the collection.
-	Empty() bool                      // Checks if the collection contains any elements.
-	Clear()                           // Removes all elements in the collection.
+type Stack[T types.Equitable[T]] interface {
+	collections.Collection[T]
+	Peek() T // Returns the top element in the stack. Will panic if no top element.
+	Pop() T  // Returns and  removes the top element in the stack. Will panic if no top element.
+}
+
+### Trees
+
+- `Red Black Tree` : a red black tree implementation witho nodes that store a key and an associated value.
+```go
+type Tree[K any, V any] interface {
+	Insert(key K, value V) bool      // Inserts a node with the specified key and value.
+	Delete(key K) bool               // Deletes the node with specified key. Returns true if such a node was found and deleted otherwise false.
+	Clear()                          // Deleted all the nodes in the tree.
+	Search(key K) bool               // Searches for a node with the specified key.
+	Update(key K, value V) (V, bool) // Updates the node with specified key with the new value. Returns the old value if there was such a node.
+	Get(key K) (V, bool)             // Retrieves the value of the node with the specified key.
+	InOrderTraversal() []K           // Performs an in order traversal and returns results in a slice.
+	Values() []V                     // Retrieves all the values sin the tree.
+	Keys() []K                       // Retrieves all the keys in the tree.
+	Empty() bool                     // Chekcs if the tree is empty.
+	Len() int                        // Returns the size of the tree.
 }
 ```
 
-- Satisfied by `HashMap` .
+### Maps
+- `HashMap` : a map that uses a hash table (slice) and red black tree for individual containers in buckets.
 ```go
 type Map[K types.Hashable[K], V any] interface {
 	MapIterable[K, V]
@@ -81,6 +103,10 @@ type Map[K types.Hashable[K], V any] interface {
 }
 ```
 
-### install 
-` go get github.com/phantom820/collections@v0.3.0-alpha`
+
+### Sets
+- `HashSet` : a set implementation based on a `HashMap`.
+
+
+
 

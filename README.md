@@ -97,6 +97,14 @@ type Stack[T types.Equitable[T]] interface {
 	Peek() T // Returns the top element in the stack. Will panic if no top element.
 	Pop() T  // Returns and  removes the top element in the stack. Will panic if no top element.
 }
+
+
+s := slicestack.New[types.Integer]()
+s.Add(2, 4, 6, 7)
+s.Peek() // 7
+s.Pop()  // 7
+s.Peek() // 6
+// checkout docs for more .
 ```
 ### Trees
 
@@ -115,6 +123,15 @@ type Tree[K any, V any] interface {
 	Empty() bool                     // Chekcs if the tree is empty.
 	Len() int                        // Returns the size of the tree.
 }
+
+
+t := rbt.New[types.Integer, string]()
+t.Insert(1, "A")
+t.Insert(2, "B")
+t.Delete(2)
+t.Search(1)
+t.Get(1)
+// checkout docs for more .
 ```
 
 ### Maps
@@ -134,6 +151,22 @@ type Map[K types.Hashable[K], V any] interface {
 	Clear()                           // Removes all entries in the map.
 	Empty() bool                      // Checks if the map is empty.
 }
+
+m := hashmap.NewHashMap[types.Integer, string]()
+m.Put(1, "A") // {(1,"A")}
+m.Put(2, "B") // {(2,"B") , (1,"A")} order not gueranted
+m.Put(3, "C") // {(2,"B") , (1,"A") , {3,"C"}}
+
+value, _ := m.Get(1)
+
+otherM := m.Map(func(e maps.MapEntry[types.Integer, string]) maps.MapEntry[types.Integer, string] {
+	return maps.MapEntry[types.Integer,string]{e.Key + 2, e.Value + "A"}
+}) // {(4,"BA") , (3,"AA") , {5,"CA"}}
+
+otherM.Filter(func(e maps.MapEntry[types.Integer, string]) bool {
+	return e.Key%2 == 0
+}) // {(4,"BA") }
+// checkout docs for more .
 ```
 
 

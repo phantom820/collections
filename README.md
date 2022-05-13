@@ -24,6 +24,15 @@ type Collection[T types.Equitable[T]] interface {
 }
 ```
 
+### Sorting
+```go
+l1 := forwardlist.New[types.Integer](5, 3, 6, 7, 20)
+collections.Sort[types.Integer](l1) // sorting using type defined ordering.
+	
+l2 := forwardlist.New[types.Integer](5, 3, 6, 7, 20)
+collections.SortBy[types.Integer](l,func(a, b types.Integer) bool { return a < b}) // sorting with custom comparator.
+```
+
 - List
 	- `ForwardList` : singly linked list.
 	- `List` : doubly linked list.

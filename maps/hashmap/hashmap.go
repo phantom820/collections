@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	LoadFactorLimit = 0.75
+	loadFactorLimit = 0.75
 	Capacity        = 16
 )
 
@@ -24,7 +24,7 @@ type HashMap[K types.Hashable[K], V any] struct {
 // NewHashMap creates an empty HashMap with default initial capacity of 16 and load factor limit of 0.75.
 func NewHashMap[K types.Hashable[K], V any]() *HashMap[K, V] {
 	buckets := make([]*rbt.RedBlackTree[key[K], V], Capacity)
-	m := HashMap[K, V]{capacity: Capacity, loadFactorLimit: LoadFactorLimit, buckets: buckets, len: 0}
+	m := HashMap[K, V]{capacity: Capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0}
 	return &m
 }
 
@@ -245,7 +245,7 @@ func (m *HashMap[K, V]) RemoveAll(keys iterator.Iterable[K]) {
 	}
 }
 
-// loadFactor computes the load factor of the map m.
+// LoadFactor computes the load factor of the map m.
 func (m *HashMap[K, V]) LoadFactor() float32 {
 	return float32(m.len) / float32(m.capacity)
 }

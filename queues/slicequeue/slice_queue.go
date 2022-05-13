@@ -1,26 +1,28 @@
 package slicequeue
 
 import (
+	"fmt"
+
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/queues"
 	"github.com/phantom820/collections/types"
 )
 
 // SliceQueue slice based implementation of a queue.
-type SliceQueue[T types.Equitable[T]] []T
+type SliceQueue[T types.Equitable[T]] struct {
+	data []T
+}
 
 // New creates a slice based queue with the specified elements. If no specified elements an empty queue is returned.
-func New[T types.Equitable[T]](elements ...T) SliceQueue[T] {
-	var q SliceQueue[T] = make([]T, 0)
+func New[T types.Equitable[T]](elements ...T) *SliceQueue[T] {
+	q := SliceQueue[T]{data: make([]T, len(elements))}
 	q.AddSlice(elements)
-	return q
+	return &q
 }
 
 // Add adds elements to the back of the queue.
 func (q *SliceQueue[T]) Add(elements ...T) bool {
-	for _, e := range elements {
-		*q = append(*q, e)
-	}
+	q.data = append(q.data, elements...)
 	return true
 }
 
@@ -41,19 +43,18 @@ func (q *SliceQueue[T]) AddSlice(s []T) {
 
 // Clear removes all elements in the queue.
 func (q *SliceQueue[T]) Clear() {
-	*q = nil
-	*q = make([]T, 0)
+	q.data = make([]T, 0)
 }
 
 // Collect converts queue into a slice.
 func (q *SliceQueue[T]) Collect() []T {
-	return *q
+	return q.data
 }
 
 // Contains checks if the elemen e is in the queue.
 func (q *SliceQueue[T]) Contains(e T) bool {
-	for i, _ := range *q {
-		if (*q)[i].Equals(e) {
+	for i, _ := range q.data {
+		if q.data[i].Equals(e) {
 			return true
 		}
 	}
@@ -62,7 +63,7 @@ func (q *SliceQueue[T]) Contains(e T) bool {
 
 // Empty checks if the queue is empty.
 func (q *SliceQueue[T]) Empty() bool {
-	return len(*q) == 0
+	return len(q.data) == 0
 }
 
 // Front returns the front element of the queue without removing it.
@@ -70,7 +71,7 @@ func (q *SliceQueue[T]) Front() T {
 	if q.Empty() {
 		panic(queues.ErrNoFrontElement)
 	}
-	return (*q)[0]
+	return q.data[0]
 }
 
 // sliceQueueIterator model for implementing an iterator on a slice based queue.
@@ -104,17 +105,17 @@ func (it *sliceQueueIterator[T]) Cycle() {
 
 // Iterator returns an iterator for iterating through queue.
 func (q *SliceQueue[T]) Iterator() iterator.Iterator[T] {
-	return &sliceQueueIterator[T]{slice: *q, i: 0}
+	return &sliceQueueIterator[T]{slice: q.data, i: 0}
 }
 
 func (q *SliceQueue[T]) Len() int {
-	return len(*q)
+	return len(q.data)
 }
 
 // indexOf finds the index of an element e in the queue. Gives -1 if the element is not present.
 func (q *SliceQueue[T]) indexOf(e T) int {
-	for i, _ := range *q {
-		if (*q)[i].Equals(e) {
+	for i, _ := range q.data {
+		if q.data[i].Equals(e) {
 			return i
 		}
 	}
@@ -124,7 +125,7 @@ func (q *SliceQueue[T]) indexOf(e T) int {
 func (q *SliceQueue[T]) Remove(e T) bool {
 	i := q.indexOf(e)
 	if i != -1 {
-		*q = append((*q)[0:i], (*q)[i+1:]...)
+		q.data = append(q.data[0:i], q.data[i+1:]...)
 		return true
 	}
 	return false
@@ -143,7 +144,12 @@ func (q *SliceQueue[T]) RemoveFront() T {
 	if q.Empty() {
 		panic(queues.ErrNoFrontElement)
 	}
-	f := (*q)[0]
-	*q = (*q)[1:]
+	f := q.data[0]
+	q.data = q.data[1:]
 	return f
+}
+
+// String for pretty printing the queue.
+func (q *SliceQueue[T]) String() string {
+	return fmt.Sprint(q.data)
 }

@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestSliceAdd covers tests for Add, Empty, Contains.
-func TestSliceAdd(t *testing.T) {
+// TestAdd covers tests for Add, Empty, Contains.
+func TestAdd(t *testing.T) {
 
 	q := New[types.Integer]()
 
@@ -47,8 +47,8 @@ func TestSliceAdd(t *testing.T) {
 
 }
 
-// TestSliceFront covers tests for Front and RemoveFront.
-func TestSliceFront(t *testing.T) {
+// TestFront covers tests for Front and RemoveFront.
+func TestFront(t *testing.T) {
 
 	q := New[types.Integer]()
 
@@ -88,7 +88,7 @@ func TestSliceFront(t *testing.T) {
 }
 
 // Covers tests for Iterator.
-func TestSliceIterator(t *testing.T) {
+func TestIterator(t *testing.T) {
 	q := New[types.Integer]()
 
 	// Case 1 : Next on empty queue should panic.
@@ -118,8 +118,8 @@ func TestSliceIterator(t *testing.T) {
 
 }
 
-// TestSliceRemove covers tests for Remove and RemoveAll.
-func TestSliceRemove(t *testing.T) {
+// TestRemove covers tests for Remove and RemoveAll.
+func TestRemove(t *testing.T) {
 
 	q := New[types.Integer]()
 
@@ -146,7 +146,7 @@ func TestSliceRemove(t *testing.T) {
 }
 
 // TestString covers tests for String.
-func TestSliceString(t *testing.T) {
+func TestString(t *testing.T) {
 	q := New[types.Integer]()
 
 	q.Add(1)

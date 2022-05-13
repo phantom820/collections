@@ -1,6 +1,7 @@
-package stack
+package slicestack
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/phantom820/collections/iterator"
@@ -150,4 +151,9 @@ func TestSliceIterator(t *testing.T) {
 	it.Cycle()
 	assert.Equal(t, types.Integer(5), it.Next())
 
+}
+
+func TestString(t *testing.T) {
+	s := New[types.Integer](1, 2, 3, 4)
+	assert.Equal(t, "[1 2 3 4]", fmt.Sprint(s))
 }

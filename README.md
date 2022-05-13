@@ -7,11 +7,34 @@ collections is a library aiming to bring common data structures into Go. These c
 - List
 	- `ForwardList` : singly linked list.
 	- `List` : doubly linked list.
--Vector
+
+```go	
+// List interface which implementations of a linked list must satisfy.
+type List[T types.Equitable[T]] interface {
+	collections.Collection[T]
+	Front() T         // Returns the front element in the list. Will panic if there is no front element.
+	RemoveFront() T   // Returns and removes the front element in the list.
+	Back() T          // Returns the element at the back of the list. Will panic if no back element.
+	RemoveBack() T    // Returns and removes the element at the back of the list. Will panic if no back element.
+	Set(i int, e T) T // Replaces the element at the specified index with the new element and returns old element. Will panic if index out of bounds.
+	Swap(i, j int)    // Swaps the element at index i with the element at index j. Will panic if one or both indices out of bounds.
+}
+```
+
+- Vector
 	- `Vector` : a vector (wrapper around Go slice)
 - Queue
 	- `ListQueue` : `ForwardList` based implementation of a queue.
 	- `SliceQueue` : slice based implementation of a queue.
+
+```go
+type Queue[T types.Equitable[T]] interface {
+	collections.Collection[T]
+	Front() T       //  Returns the front element of the queue. Will panic if no front element.
+	RemoveFront() T // Returns and removes the front element of the queue. Will panic if no front element.
+}
+```
+
 - Stack 
 	- `ListStack` : `ForwardList` based implementation of a stack.
 	- `SliceStack` : slice based implementation of a stack.

@@ -29,7 +29,6 @@ type Collection[T types.Equitable[T]] interface {
 	- `List` : doubly linked list.
 
 ```go	
-// List interface which implementations of a linked list must satisfy.
 type List[T types.Equitable[T]] interface {
 	collections.Collection[T]
 	Front() T         // Returns the front element in the list. Will panic if there is no front element.
@@ -38,6 +37,9 @@ type List[T types.Equitable[T]] interface {
 	RemoveBack() T    // Returns and removes the element at the back of the list. Will panic if no back element.
 	Set(i int, e T) T // Replaces the element at the specified index with the new element and returns old element. Will panic if index out of bounds.
 	Swap(i, j int)    // Swaps the element at index i with the element at index j. Will panic if one or both indices out of bounds.
+	At(i int) T       // Retrieves the element at the specified index. Will panic if index is out of bounds.
+	RemoveAt(i int) T // Removes the element ath the specified index andreturns it. Will panic if index out of bounds.
+	AddAt(i int, e T) // Adds the element at the specified index. Will panic if index out of bounds.
 }
 
 l := forwardlist.New[types.Integer](1, 2, 3)                         // [1,2,3]
@@ -50,11 +52,23 @@ l.RemoveAt(2)                                                        //  4 , [1,
 l.RemoveFront()                                                      // 1 , [3,5,6]
 other := l.Map(func(e types.Integer) types.Integer { return e + 3 }) //  [6,8,9]
 _ = other.Filter(func(e types.Integer) bool { return e%3 == 0 })     // [6,9]
+// checkout docs for more .
 
 ```
 
 - Vector
 	- `Vector` : a vector (wrapper around Go slice)
+```go
+v := vector.New[types.Integer](1, 2, 3)                              // [1,2,3]
+v.Add(4, 5, 6)                                                       // [1,2,3,4,5,6]
+v.Contains(1)                                                        // true
+v.Remove(2)                                                          // [1,3,4,5,6]
+v.RemoveAt(2)                                                        //  4 , [1,3,5,6]
+v.At(0)                                                              // 1
+other := v.Map(func(e types.Integer) types.Integer { return e + 3 }) //  [4,6,8,9]
+_ = other.Filter(func(e types.Integer) bool { return e%2 == 0 }) 		 // [4,6,8]
+// checkout docs for more .
+```
 - Queue
 	- `ListQueue` : `ForwardList` based implementation of a queue.
 	- `SliceQueue` : slice based implementation of a queue.

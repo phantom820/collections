@@ -39,6 +39,18 @@ type List[T types.Equitable[T]] interface {
 	Set(i int, e T) T // Replaces the element at the specified index with the new element and returns old element. Will panic if index out of bounds.
 	Swap(i, j int)    // Swaps the element at index i with the element at index j. Will panic if one or both indices out of bounds.
 }
+
+l := forwardlist.New[types.Integer](1, 2, 3)                         // [1,2,3]
+l.Add(4, 5, 6)                                                       // [1,2,3,4,5,6]
+l.Front()                                                            // 1
+l.Back()                                                             // 6
+l.Contains(1)                                                        // true
+l.Remove(2)                                                          // [1,3,4,5,6]
+l.RemoveAt(2)                                                        //  4 , [1,3,5,6]
+l.RemoveFront()                                                      // 1 , [3,5,6]
+other := l.Map(func(e types.Integer) types.Integer { return e + 3 }) //  [6,8,9]
+_ = other.Filter(func(e types.Integer) bool { return e%3 == 0 })     // [6,9]
+
 ```
 
 - Vector

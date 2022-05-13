@@ -79,6 +79,13 @@ type Queue[T types.Equitable[T]] interface {
 	Front() T       //  Returns the front element of the queue. Will panic if no front element.
 	RemoveFront() T // Returns and removes the front element of the queue. Will panic if no front element.
 }
+
+q := listqueue.New[types.Integer]()
+q.Add(1, 2, 3, 4)
+q.Front()       // 1
+q.RemoveFront() // 1
+q.Front()       // 2
+// checkout docs for more .
 ```
 
 - Stack 

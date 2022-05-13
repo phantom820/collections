@@ -90,7 +90,7 @@ type Stack[T types.Equitable[T]] interface {
 	Peek() T // Returns the top element in the stack. Will panic if no top element.
 	Pop() T  // Returns and  removes the top element in the stack. Will panic if no top element.
 }
-
+```
 ### Trees
 
 - `Red Black Tree` : a red black tree implementation witho nodes that store a key and an associated value.

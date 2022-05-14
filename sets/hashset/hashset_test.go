@@ -108,6 +108,52 @@ func TestRemove(t *testing.T) {
 
 }
 
+// TestUnion covers tests for Union operation.
+func TestUnion(t *testing.T) {
+
+	a := New[types.Int]()
+	b := New[types.Int]()
+
+	// Case 1 : Union of empty sets should return empty.
+	c := a.Union(b)
+	assert.Equal(t, true, c.Empty())
+
+	// Case 2 : Union of populatet set and empty set should return popuilated set.
+	a.Add(1, 2, 3)
+	c = a.Union(b)
+	assert.Equal(t, true, c.Equals(a))
+
+	// Case 3 : Union of populated sets.
+	b.Add(1, 2, 4, 5, 6)
+	d := New[types.Int](1, 2, 3, 4, 5, 6)
+
+	assert.Equal(t, true, d.Equals(a.Union(b)))
+}
+
+// TestIntersection covers tests for Intersection operation.
+func TestIntersection(t *testing.T) {
+
+	a := New[types.Int]()
+	b := New[types.Int]()
+
+	// Case 1 : Intersection of empty sets should return empty.
+	c := a.Intersection(b)
+	assert.Equal(t, true, c.Empty())
+
+	// Case 2 : Intersection of populated set and empty set should return empty set.
+	a.Add(1, 2, 3)
+	c = a.Intersection(b)
+	assert.Equal(t, true, c.Empty())
+
+	// Case 3 : Intersection of populated sets.
+	b.Add(1, 2, 4, 5, 6)
+	d := New[types.Int](1, 2)
+
+	assert.Equal(t, true, d.Equals(a.Intersection(b)))
+	assert.Equal(t, true, d.Equals(b.Intersection(a)))
+
+}
+
 // TestMapFilter covers tests for Map and Filter
 func TestMapFilter(t *testing.T) {
 

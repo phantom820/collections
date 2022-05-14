@@ -11,20 +11,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestPut covers tests for Put, Contains.
+// TestPut covers tests for Put, ContainsKey, ContainsValue.
 func TestPut(t *testing.T) {
 
 	m := New[types.String, string]()
 
-	assert.Equal(t, false, m.Contains("1"))
+	assert.Equal(t, false, m.ContainsKey("1"))
+	assert.Equal(t, false, m.ContainsValue("1", func(a, b string) bool { return a == b }))
 	m.Put("1", "20")
-	assert.Equal(t, true, m.Contains("1"))
+	assert.Equal(t, true, m.ContainsKey("1"))
+	assert.Equal(t, true, m.ContainsValue("20", func(a, b string) bool { return a == b }))
+
 	assert.Equal(t, 1, m.Len())
 	m.Put("0ab", "21")
 
-	assert.Equal(t, true, m.Contains("0ab"))
+	assert.Equal(t, true, m.ContainsKey("0ab"))
 	m.Put("1c", "21")
-	assert.Equal(t, true, m.Contains("1c"))
+	assert.Equal(t, true, m.ContainsKey("1c"))
 	m.Put("1c", "90")
 	v, _ := m.Get("1c")
 	assert.Equal(t, "90", v)
@@ -84,7 +87,7 @@ func TestRemoveAll(t *testing.T) {
 
 	m.RemoveAll(l)
 	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, false, m.Contains("2"))
+	assert.Equal(t, false, m.ContainsKey("2"))
 }
 
 // TestResize covers tests for resize.

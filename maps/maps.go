@@ -29,15 +29,16 @@ type MapEntry[K types.Hashable[K], V any] struct {
 // Map interface specifying functions an implementation of a map should provide.
 type Map[K types.Hashable[K], V any] interface {
 	MapIterable[K, V]
-	Put(key K, value V) V             // Inserts the key and value into the map. Returns the previous value associated with the key if it was present otherwise zero value.
-	PutIfAbsent(key K, value V) bool  // Insert the key and value in the map if the key does not already exist.
-	PutAll(m Map[K, V])               // Inserts all entries from another map into the map.
-	Get(key K) (V, bool)              // Retrieves the valuee associated with the key. Returns zero value if the key does not exist.
-	Len() int                         // Returns the size of the map.
-	Keys() []K                        // Returns the keys in the map as a slice.
-	Contains(key K) bool              // Checks if the map contains the specified key.
-	Remove(key K) bool                // Removes the map entry with the specified key.
-	RemoveAll(c iterator.Iterable[K]) // Removes all keys in the map that appear in an iterable.
-	Clear()                           // Removes all entries in the map.
-	Empty() bool                      // Checks if the map is empty.
+	Put(key K, value V) V                                 // Inserts the key and value into the map. Returns the previous value associated with the key if it was present otherwise zero value.
+	PutIfAbsent(key K, value V) bool                      // Insert the key and value in the map if the key does not already exist.
+	PutAll(m Map[K, V])                                   // Inserts all entries from another map into the map.
+	Get(key K) (V, bool)                                  // Retrieves the valuee associated with the key. Returns zero value if the key does not exist.
+	Len() int                                             // Returns the size of the map.
+	Keys() []K                                            // Returns the keys in the map as a slice.
+	ContainsKey(key K) bool                               // Checks if the map contains the specified key.
+	ContainsValue(value V, equals func(a, b V) bool) bool // Checks if the map has an entry whose value is the specified value. func equals is used to compare value for equality.
+	Remove(key K) bool                                    // Removes the map entry with the specified key.
+	RemoveAll(c iterator.Iterable[K])                     // Removes all keys in the map that appear in an iterable.
+	Clear()                                               // Removes all entries in the map.
+	Empty() bool                                          // Checks if the map is empty.
 }

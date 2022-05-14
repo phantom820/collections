@@ -147,6 +147,46 @@ func (s *HashSet[T]) Filter(f func(e T) bool) *HashSet[T] {
 	return other
 }
 
+// Union performs union operation using sets a and b. This will return a new set.
+func (a *HashSet[T]) Union(b *HashSet[T]) *HashSet[T] {
+	c := New[T]()
+	c.AddAll(a)
+	c.AddAll(b)
+	return c
+}
+
+// intersection helper function to perform set intersection the idea is iterate over bigger set and lookup in smaller.
+func intersection[T types.Hashable[T]](a *HashSet[T], b *HashSet[T]) *HashSet[T] {
+	c := New[T]()
+	if a.Len() > b.Len() {
+		it := a.Iterator()
+		for it.HasNext() {
+			e := it.Next()
+			if b.Contains(e) {
+				c.Add(e)
+			}
+		}
+		return c
+	}
+	it := b.Iterator()
+	for it.HasNext() {
+		e := it.Next()
+		if a.Contains(e) {
+			c.Add(e)
+		}
+	}
+	return c
+}
+
+// Intersection performs intersection operation using sets a and b. This will return a new set.
+func (a *HashSet[T]) Intersection(b *HashSet[T]) *HashSet[T] {
+	c := New[T]()
+	if a.Empty() || b.Empty() {
+		return c
+	}
+	return intersection(a, b)
+}
+
 // Equals check if the set is equals the other set. This is true only if they are the same reference or they are of the same size with the
 // same elements.
 func (s *HashSet[T]) Equals(other *HashSet[T]) bool {

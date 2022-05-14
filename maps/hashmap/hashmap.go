@@ -214,10 +214,22 @@ func (m *HashMap[K, V]) Get(k K) (V, bool) {
 	return m.buckets[index].Get(_key)
 }
 
-// Contains checks if the map contains a mapping for the key.
-func (m *HashMap[K, V]) Contains(k K) bool {
+// ContainsKey checks if the map contains a mapping for the key.
+func (m *HashMap[K, V]) ContainsKey(k K) bool {
 	i := k.HashCode() % m.capacity
 	return !(m.buckets[i] == nil)
+}
+
+// ContainsValue checks if the map has an entry whose value is the specified value. func equals is used to compare value for equality.
+func (m *HashMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool {
+	it := m.Iterator()
+	for it.HasNext() {
+		entry := it.Next()
+		if equals(entry.Value, v) {
+			return true
+		}
+	}
+	return false
 }
 
 // Remove removes the map entry <k,V> from map m if it exists.

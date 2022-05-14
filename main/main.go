@@ -1,31 +1,20 @@
 package main
 
 import (
-	"github.com/phantom820/collections/lists"
+	"fmt"
+
+	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/lists/forwardlist"
-	"github.com/phantom820/collections/lists/list"
-	"github.com/phantom820/collections/queues"
-	"github.com/phantom820/collections/queues/listqueue"
-	"github.com/phantom820/collections/queues/slicequeue"
-	"github.com/phantom820/collections/stacks"
-	"github.com/phantom820/collections/stacks/liststack"
-	"github.com/phantom820/collections/stacks/slicestack"
 	"github.com/phantom820/collections/types"
 )
 
 func main() {
 
-	var l1 lists.List[types.Integer] = forwardlist.New[types.Integer]()
-	var l2 lists.List[types.Integer] = list.New[types.Integer]()
-	l1.Back()
-	l2.Back()
+	l1 := forwardlist.New[types.Int](5, 3, 6, 7, 20)
+	l2 := forwardlist.New[types.Int](5, 3, 6, 7, 20)
 
-	var q1 queues.Queue[types.Integer] = listqueue.New[types.Integer]()
-	q1.Front()
-	var q2 queues.Queue[types.Integer] = slicequeue.New[types.Integer]()
-	q2.Front()
-
-	var s1 stacks.Stack[types.Integer] = slicestack.New[types.Integer]()
-	var s2 stacks.Stack[types.Integer] = liststack.New[types.Integer]()
-
+	collections.Sort[types.Int](l1)                                                  // sorting using type defined ordering.
+	collections.SortBy[types.Int](l2, func(a, b types.Int) bool { return !(a < b) }) // sorting with custom comparator for 2 elements.
+	fmt.Println(l1)
+	fmt.Println(l2)
 }

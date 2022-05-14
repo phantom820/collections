@@ -90,17 +90,17 @@ func TestRemoveAll(t *testing.T) {
 // TestResize covers tests for resize.
 func TestResize(t *testing.T) {
 
-	m := NewHashMap[types.Integer, int]()
+	m := NewHashMap[types.Int, int]()
 	assert.Equal(t, 16, m.Capacity())
 	assert.Equal(t, float32(0), m.LoadFactor())
 	for i := 1; i <= 16; i++ {
-		m.Put(types.Integer(i), i)
+		m.Put(types.Int(i), i)
 	}
 	assert.Equal(t, 32, m.Capacity())             // should have doubled in caoacity after crossing threshold.
 	assert.Equal(t, float32(0.5), m.LoadFactor()) // load factor should be half.
 
 	for i := 17; i <= 34; i++ {
-		m.Put(types.Integer(i), i)
+		m.Put(types.Int(i), i)
 	}
 
 	assert.Equal(t, 64, m.Capacity()) // should have doubled in size once more.
@@ -110,13 +110,13 @@ func TestResize(t *testing.T) {
 // TestKeys covers tests for Keys
 func TestKeys(t *testing.T) {
 
-	m := NewHashMap[types.Integer, int]()
+	m := NewHashMap[types.Int, int]()
 
 	// Keys should be collected correctly.
 	for i := 1; i <= 6; i++ {
-		m.Put(types.Integer(i), i)
+		m.Put(types.Int(i), i)
 	}
-	keys := []types.Integer{1, 2, 3, 4, 5, 6}
+	keys := []types.Int{1, 2, 3, 4, 5, 6}
 	assert.ElementsMatch(t, keys, m.Keys())
 
 }
@@ -124,11 +124,11 @@ func TestKeys(t *testing.T) {
 // TestValues covers tests for values.
 func TestValues(t *testing.T) {
 
-	m := NewHashMap[types.Integer, int]()
+	m := NewHashMap[types.Int, int]()
 
 	// Values should be collected .
 	for i := 1; i <= 6; i++ {
-		m.Put(types.Integer(i), i)
+		m.Put(types.Int(i), i)
 	}
 	values := []int{1, 2, 3, 4, 5, 6}
 	assert.ElementsMatch(t, values, m.Values())
@@ -178,15 +178,15 @@ func TestIterator(t *testing.T) {
 // TestEquals covers tests for Equals.
 func TestEquals(t *testing.T) {
 
-	m := NewHashMap[types.Integer, int]()
+	m := NewHashMap[types.Int, int]()
 	for i := 0; i <= 5; i++ {
-		m.Put(types.Integer(i), i)
+		m.Put(types.Int(i), i)
 	}
 
 	// Case 1 : map equals its self.
 	assert.Equal(t, true, m.Equals(m, func(a, b int) bool { return a == b }))
 
-	other := NewHashMap[types.Integer, int]()
+	other := NewHashMap[types.Int, int]()
 
 	// Case 2 : maps with different keys should not be equal.
 	assert.Equal(t, false, m.Equals(other, func(a, b int) bool { return a == b }))
@@ -208,18 +208,18 @@ func TestEquals(t *testing.T) {
 
 // TestMap covers tests for Map
 func TestMap(t *testing.T) {
-	m := NewHashMap[types.Integer, int]()
+	m := NewHashMap[types.Int, int]()
 	for i := 1; i <= 6; i++ {
-		m.Put(types.Integer(i), i)
+		m.Put(types.Int(i), i)
 	}
 
-	other := m.Map(func(e maps.MapEntry[types.Integer, int]) maps.MapEntry[types.Integer, int] {
+	other := m.Map(func(e maps.MapEntry[types.Int, int]) maps.MapEntry[types.Int, int] {
 		k := e.Key + 2
 		v := e.Value + 10
-		return maps.MapEntry[types.Integer, int]{Key: k, Value: v}
+		return maps.MapEntry[types.Int, int]{Key: k, Value: v}
 	})
 
-	keys := []types.Integer{3, 4, 5, 6, 7, 8}
+	keys := []types.Int{3, 4, 5, 6, 7, 8}
 	values := []int{11, 12, 13, 14, 15, 16}
 	assert.ElementsMatch(t, keys, other.Keys())
 	assert.ElementsMatch(t, values, other.Values())
@@ -228,16 +228,16 @@ func TestMap(t *testing.T) {
 
 // TestFilter covers tests for Filter.
 func TestFilter(t *testing.T) {
-	m := NewHashMap[types.Integer, int]()
+	m := NewHashMap[types.Int, int]()
 	for i := 1; i <= 6; i++ {
-		m.Put(types.Integer(i), i)
+		m.Put(types.Int(i), i)
 	}
 
-	other := m.Filter(func(e maps.MapEntry[types.Integer, int]) bool {
+	other := m.Filter(func(e maps.MapEntry[types.Int, int]) bool {
 		return e.Key%2 == 0
 	})
 
-	keys := []types.Integer{2, 4, 6}
+	keys := []types.Int{2, 4, 6}
 	assert.ElementsMatch(t, keys, other.Keys())
 
 }

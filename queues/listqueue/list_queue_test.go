@@ -15,7 +15,7 @@ import (
 // TestAdd covers tests for Add, Empty, Contains.
 func TestAdd(t *testing.T) {
 
-	q := New[types.Integer]()
+	q := New[types.Int]()
 
 	// q Starts out as empty.
 	assert.Equal(t, true, q.Empty())
@@ -28,10 +28,10 @@ func TestAdd(t *testing.T) {
 	q.Add(2)
 	assert.Equal(t, true, q.Contains(2))
 
-	l := forwardlist.New[types.Integer]()
+	l := forwardlist.New[types.Int]()
 
 	for i := 3; i <= 10; i++ {
-		l.Add(types.Integer(i))
+		l.Add(types.Int(i))
 	}
 
 	// Case 2 : Add a number of elements at once.
@@ -41,7 +41,7 @@ func TestAdd(t *testing.T) {
 	// Case 3 : Adding a slice should work accordingly
 	q.Clear()
 
-	s := []types.Integer{1, 2, 3, 4}
+	s := []types.Int{1, 2, 3, 4}
 	q.AddSlice(s)
 
 	assert.ElementsMatch(t, s, q.Collect())
@@ -51,7 +51,7 @@ func TestAdd(t *testing.T) {
 // TestFront covers tests for Front and RemoveFront.
 func TestFront(t *testing.T) {
 
-	q := New[types.Integer]()
+	q := New[types.Int]()
 
 	// Case 1 : Front on an empty queue should paanic
 	t.Run("panics", func(t *testing.T) {
@@ -65,13 +65,13 @@ func TestFront(t *testing.T) {
 
 	// Case 2 : Front and RemoveFront should behave accordingly.
 	for i := 1; i <= 10; i++ {
-		q.Add(types.Integer(i))
+		q.Add(types.Int(i))
 	}
 
-	assert.Equal(t, types.Integer(1), q.Front())
-	assert.Equal(t, types.Integer(1), q.RemoveFront())
-	assert.Equal(t, types.Integer(2), q.RemoveFront())
-	assert.Equal(t, types.Integer(3), q.RemoveFront())
+	assert.Equal(t, types.Int(1), q.Front())
+	assert.Equal(t, types.Int(1), q.RemoveFront())
+	assert.Equal(t, types.Int(2), q.RemoveFront())
+	assert.Equal(t, types.Int(3), q.RemoveFront())
 
 	q.Clear()
 	assert.Equal(t, true, q.Empty())
@@ -90,7 +90,7 @@ func TestFront(t *testing.T) {
 
 // Covers tests for Iterator.
 func TestIterator(t *testing.T) {
-	q := New[types.Integer]()
+	q := New[types.Int]()
 
 	// Case 1 : Next on empty queue should panic.
 	t.Run("panics", func(t *testing.T) {
@@ -105,24 +105,24 @@ func TestIterator(t *testing.T) {
 
 	// Case 2 : Iterator should work accordingly on populated queue.
 	for i := 1; i < 6; i++ {
-		q.Add(types.Integer(i))
+		q.Add(types.Int(i))
 	}
 	a := q.Collect()
-	b := make([]types.Integer, 0)
+	b := make([]types.Int, 0)
 	it := q.Iterator()
 	for it.HasNext() {
 		b = append(b, it.Next())
 	}
 	assert.ElementsMatch(t, a, b)
 	it.Cycle()
-	assert.Equal(t, types.Integer(1), it.Next())
+	assert.Equal(t, types.Int(1), it.Next())
 
 }
 
 // TestRemove covers tests for Remove and RemoveAll.
 func TestRemove(t *testing.T) {
 
-	q := New[types.Integer]()
+	q := New[types.Int]()
 
 	// Case 1 : Removing from empty.
 	assert.Equal(t, false, q.Remove(22))
@@ -135,7 +135,7 @@ func TestRemove(t *testing.T) {
 
 	assert.Equal(t, true, q.Remove(5))
 
-	s := forwardlist.New[types.Integer]()
+	s := forwardlist.New[types.Int]()
 	s.Add(1)
 	s.Add(2)
 
@@ -147,7 +147,7 @@ func TestRemove(t *testing.T) {
 
 // TestString covers tests for String.
 func TestString(t *testing.T) {
-	q := New[types.Integer]()
+	q := New[types.Int]()
 
 	q.Add(1)
 	q.Add(2)

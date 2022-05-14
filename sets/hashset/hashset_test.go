@@ -14,7 +14,7 @@ import (
 // TestAdd covers tests for Add,AddAll and AddSlice.
 func TestAdd(t *testing.T) {
 
-	s := New[types.Integer]()
+	s := New[types.Int]()
 	assert.Equal(t, true, s.Empty())
 
 	// Case 1 : Add to an empty set.
@@ -28,10 +28,10 @@ func TestAdd(t *testing.T) {
 	assert.Equal(t, true, s.Contains(2))
 
 	// Case 2 : Add multiple elements from another iterable.
-	s = New[types.Integer]()
-	l := list.New[types.Integer]()
+	s = New[types.Int]()
+	l := list.New[types.Int]()
 	for i := 0; i < 10; i++ {
-		l.Add(types.Integer(i))
+		l.Add(types.Int(i))
 	}
 
 	s.AddAll(l)
@@ -46,17 +46,17 @@ func TestAdd(t *testing.T) {
 	// Case 3 Adding a slice should work accordingly.
 	s.Clear()
 
-	sl := []types.Integer{1, 1, 2, 3, 4, 5}
+	sl := []types.Int{1, 1, 2, 3, 4, 5}
 	s.AddSlice(sl)
 
-	sm := []types.Integer{1, 2, 3, 4, 5}
+	sm := []types.Int{1, 2, 3, 4, 5}
 	assert.ElementsMatch(t, sm, s.Collect())
 
 }
 
 func TestIterator(t *testing.T) {
 
-	s := New[types.Integer]()
+	s := New[types.Int]()
 	t.Run("panics", func(t *testing.T) {
 		// If the function panics, recover() will
 		// return a non nil value.
@@ -70,17 +70,17 @@ func TestIterator(t *testing.T) {
 	})
 
 	for i := 1; i < 6; i++ {
-		s.Add(types.Integer(i))
+		s.Add(types.Int(i))
 	}
 	a := s.Collect()
-	b := make([]types.Integer, 0)
+	b := make([]types.Int, 0)
 	it := s.Iterator()
 	for it.HasNext() {
 		b = append(b, it.Next())
 	}
 	assert.ElementsMatch(t, a, b)
 	it.Cycle()
-	assert.Equal(t, types.Integer(1), it.Next())
+	assert.Equal(t, types.Int(1), it.Next())
 
 	s.Clear()
 	assert.Equal(t, true, s.Empty())
@@ -89,17 +89,17 @@ func TestIterator(t *testing.T) {
 
 func TestRemove(t *testing.T) {
 
-	s := New[types.Integer]()
+	s := New[types.Int]()
 
 	assert.Equal(t, false, s.Remove(1))
 	s.Add(1)
 	assert.Equal(t, true, s.Remove(1))
 	assert.Equal(t, 0, s.Len())
 
-	l := list.New[types.Integer]()
+	l := list.New[types.Int]()
 	for i := 1; i <= 10; i++ {
-		s.Add(types.Integer(i))
-		l.Add(types.Integer(i))
+		s.Add(types.Int(i))
+		l.Add(types.Int(i))
 	}
 
 	assert.Equal(t, 10, s.Len())
@@ -111,19 +111,19 @@ func TestRemove(t *testing.T) {
 // TestMapFilter covers tests for Map and Filter
 func TestMapFilter(t *testing.T) {
 
-	s := New[types.Integer]()
+	s := New[types.Int]()
 	for i := 0; i < 6; i++ {
-		s.Add(types.Integer(i))
+		s.Add(types.Int(i))
 	}
-	other := s.Map(func(e types.Integer) types.Integer { return e + 10 })
+	other := s.Map(func(e types.Int) types.Int { return e + 10 })
 
-	a := []types.Integer{10, 11, 12, 13, 14, 15}
+	a := []types.Int{10, 11, 12, 13, 14, 15}
 	b := other.Collect()
 
 	assert.ElementsMatch(t, a, b)
 
-	c := []types.Integer{0, 2, 4}
-	other = s.Filter(func(e types.Integer) bool { return e%2 == 0 })
+	c := []types.Int{0, 2, 4}
+	other = s.Filter(func(e types.Int) bool { return e%2 == 0 })
 	d := other.Collect()
 
 	assert.ElementsMatch(t, c, d)
@@ -133,8 +133,8 @@ func TestMapFilter(t *testing.T) {
 // TestEquals covers tests for Equals.
 func TestEquals(t *testing.T) {
 
-	s := New[types.Integer]()
-	other := New[types.Integer]()
+	s := New[types.Int]()
+	other := New[types.Int]()
 	assert.Equal(t, true, s.Equals(s))
 	assert.Equal(t, true, s.Equals(other)) // Two empty sets are equal.
 
@@ -151,7 +151,7 @@ func TestEquals(t *testing.T) {
 // TestString covers tests for String.
 func TestString(t *testing.T) {
 
-	s := New[types.Integer]()
+	s := New[types.Int]()
 
 	assert.Equal(t, "{}", fmt.Sprint(s))
 	s.Add(1)

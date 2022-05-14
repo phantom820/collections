@@ -22,4 +22,7 @@ type List[T types.Equitable[T]] interface {
 	RemoveBack() T    // Returns and removes the element at the back of the list. Will panic if no back element.
 	Set(i int, e T) T // Replaces the element at the specified index with the new element and returns old element. Will panic if index out of bounds.
 	Swap(i, j int)    // Swaps the element at index i with the element at index j. Will panic if one or both indices out of bounds.
+	At(i int) T       // Retrieves the element at the specified index. Will panic if index is out of bounds.
+	RemoveAt(i int) T // Removes the element ath the specified index andreturns it. Will panic if index out of bounds.
+	AddAt(i int, e T) // Adds the element at the specified index. Will panic if index out of bounds.
 }

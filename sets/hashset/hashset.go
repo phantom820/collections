@@ -20,7 +20,7 @@ type HashSet[T types.Hashable[T]] struct {
 
 // New creates a HashSet with the specified elements, if there none an empty set is returned.
 func New[T types.Hashable[T]](elements ...T) *HashSet[T] {
-	data := hashmap.NewHashMap[T, bool]()
+	data := hashmap.New[T, bool]()
 	s := HashSet[T]{data: data}
 	s.AddSlice(elements)
 	return &s

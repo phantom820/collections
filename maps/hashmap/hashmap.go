@@ -21,8 +21,8 @@ type HashMap[K types.Hashable[K], V any] struct {
 	len             int
 }
 
-// NewHashMap creates an empty HashMap with default initial capacity of 16 and load factor limit of 0.75.
-func NewHashMap[K types.Hashable[K], V any]() *HashMap[K, V] {
+// New creates an empty HashMap with default initial capacity of 16 and load factor limit of 0.75.
+func New[K types.Hashable[K], V any]() *HashMap[K, V] {
 	buckets := make([]*rbt.RedBlackTree[key[K], V], Capacity)
 	m := HashMap[K, V]{capacity: Capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0}
 	return &m
@@ -321,7 +321,7 @@ func (m *HashMap[K, V]) Equals(other *HashMap[K, V], equals func(a V, b V) bool)
 // Map applies a transformation on an entry of m i.e f((k,v)) -> (k*,v*) , using a function f and returns a new HashMap of which its keys
 // and values have been transformed.
 func (m HashMap[K, V]) Map(f func(e maps.MapEntry[K, V]) maps.MapEntry[K, V]) *HashMap[K, V] {
-	newMap := NewHashMap[K, V]()
+	newMap := New[K, V]()
 	it := m.Iterator()
 	for it.HasNext() {
 		oldEntry := it.Next()
@@ -334,7 +334,7 @@ func (m HashMap[K, V]) Map(f func(e maps.MapEntry[K, V]) maps.MapEntry[K, V]) *H
 // Filter filters the HashMap m using a predicate function that indicates whether an entry should be kept or not in a
 // HashMap to be returned.
 func (m HashMap[K, V]) Filter(f func(e maps.MapEntry[K, V]) bool) *HashMap[K, V] {
-	newMap := NewHashMap[K, V]()
+	newMap := New[K, V]()
 	it := m.Iterator()
 	for it.HasNext() {
 		entry := it.Next()

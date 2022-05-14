@@ -51,7 +51,7 @@ type List[T types.Equitable[T]] interface {
 	AddAt(i int, e T) // Adds the element at the specified index. Will panic if index out of bounds.
 }
 
-l := forwardlist.New[types.Int](1, 2, 3)                         // [1,2,3]
+l := forwardlist.New[types.Int](1, 2, 3)                        		 // [1,2,3]
 l.Add(4, 5, 6)                                                       // [1,2,3,4,5,6]
 l.Front()                                                            // 1
 l.Back()                                                             // 6
@@ -59,8 +59,8 @@ l.Contains(1)                                                        // true
 l.Remove(2)                                                          // [1,3,4,5,6]
 l.RemoveAt(2)                                                        //  4 , [1,3,5,6]
 l.RemoveFront()                                                      // 1 , [3,5,6]
-other := l.Map(func(e types.Int) types.Int { return e + 3 }) //  [6,8,9]
-_ = other.Filter(func(e types.Int) bool { return e%3 == 0 })     // [6,9]
+other := l.Map(func(e types.Int) types.Int { return e + 3 }) 				 //  [6,8,9]
+_ = other.Filter(func(e types.Int) bool { return e%3 == 0 })         // [6,9]
 // checkout docs for more .
 
 ```

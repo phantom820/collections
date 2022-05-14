@@ -1,115 +1,197 @@
 # collections
 [![Build Status](https://app.travis-ci.com/phantom820/collections.svg?branch=main)](https://app.travis-ci.com/phantom820/collections) [![codecov](https://codecov.io/gh/phantom820/collections/branch/main/graph/badge.svg?token=TY4FD26RP0)](https://codecov.io/gh/phantom820/collections)
 
-collections is a library aiming to bring collections (common data structures) into Go. These collections can be used with user define types that satisfy an interface required by that collection i.e collections such as `List`, `Queue` and stack require types to satisfy `Equitable` interface while a `Map` requires a type that satisfies the `Hashable` interface and so forth. See [types](https://github.com/phantom820/collections/blob/main/types/types.go), in which wrappers around primitives `string` and `int` have been implemented. 
+collections is a library aiming to bring common data structures into Go. These collections can be used with user define types that satisfy an interface required by that collection i.e collections such as `List`, `Queue` and `Stack` require types to satisfy `Equitable` interface while a `Map` requires a type that satisfies the `Hashable` interface and so forth. See [types](https://github.com/phantom820/collections/blob/main/types/types.go), in which wrappers around primitives `string` and `int` have been implemented. 
 
-### install 
+### Install 
 ` go get github.com/phantom820/collections@v0.3.0-alpha`
 
-- `Tree`
-  - `Red Black Tree`
-  An implementation  of a red black tree that stores a key and an associated value in its node. See the usage example below
-  ```go
-    import (
-      "github.com/phantom820/collections/tree"
-      "github.com/phantom820/collections/types"
-    )
+### Collections
+An interface that somme of the implemented data structures satisfy 
+```go
+// Satisfied by List, Vector, Queue , Stack ,  HashSet.
+type Collection[T types.Equitable[T]] interface {
+	iterator.Iterable[T]              // Returns an iterator for iterating through the collection.
+	Add(elements ...T) bool           // Adds elements to the collection.
+	AddAll(c iterator.Iterable[T])    // Adds all elements from another collection into the collection.
+	AddSlice(s []T)                   // Adds all elements from a slice into the collection.
+	Len() int                         // Returns the size (number of items) stored in the collection.
+	Contains(e T) bool                // Checks if the element e is a member of the collection.
+	Remove(e T) bool                  // Tries to remove a specified element in the collection. It removes the first occurence of the element.
+	RemoveAll(c iterator.Iterable[T]) // Removes all elements from another collections that appear in the collection.
+	Empty() bool                      // Checks if the collection contains any elements.
+	Clear()                           // Removes all elements in the collection.
+}
+```
 
-    t := tree.NewRedBlackTree[types.Int, string]() // empty rbt that uses Integer as a key and string for associated value.
-    t.Insert(1, "2")                                   // creates a node  (1,"2").
-    t.Search(1)                                        // Searches for a node with the key 1.
-    t.Get(1)                                           // retrieves a node with the key 1.
-    t.Delete(1)                                        // removes node with key 1 from the tree
-    ...
-  ```
-
-- `Map`
-  - `HashMap`
-  An implementation of a hashmap that uses a red black tree as the underlting container in its individual buckets. See usage example below.
-  ```go
-
-  import (
-    _map "github.com/phantom820/collections/map"
-    "github.com/phantom820/collections/types"
-  )
-
-	m := _map.NewHashMap[types.Int, string]()
-	m.Put(1, "A") // makes map insertion.
-	m.Put(2, "B")
-	m.Get(1) // retrieves key from map.
-
-	// creates a new map from the map m by adding 22 to the key and appending "$" to value.
-	tMap := m.Map(func(e _map.MapEntry[types.Int, string]) _map.MapEntry[types.Int, string] {
-		n := _map.NewMapEntry(e.Key()+22, e.Value()+"$")
-		return n
-	})
-
-	// creates a new map by filtering the map based on even number key values.
-	fMap := tMap.Filter(func(e _map.MapEntry[types.Int, string]) bool {
-		return e.Key()%2 == 0
-	})
-  ```
-
-- `Linked List`
-  - `List`
-  A doubly linked list that only stores elements of the same type (homogeeous list). See usage examples below.
-  ```go
-  
-	l := list.NewList[types.Int](1, 2, 3) // creates a list with element 1,2,3 .
-	l.AddFront(23)                            // adds an element to the front of the list.
-	l.Front()                                 // retrieves front element of list.
-	l.AddBack(34)                             // adds an element to the back of the list an alias for Add.
-	l.Back()                                  // retrives back element of list.
-	l.Contains(23)                            // checks if list contains 23.
-
+### Sorting
+```go
+l1 := forwardlist.New[types.Int](5, 3, 6, 7, 20)
+collections.Sort[types.Int](l1) // Sorting using type defined ordering.
 	
-	// iterating through a list.
-	it := l.Iterator() 
-	for it.HasNext() {
-		fmt.Println(it.Next())
-	}
+l2 := forwardlist.New[types.Int](5, 3, 6, 7, 20)
+collections.SortBy[types.Int](l,func(a, b types.Int) bool { return a < b}) // Sorting with custom comparator.
+```
 
-	// create a new list that has transformed elements using specified function
-	tList = l.Map(func(e types.Int) types.Int {
-		return e + 1
-	})
+- List
+	- `ForwardList` : singly linked list.
+	- `List` : doubly linked list.
 
-	// creates a new filtered listered using specified function.
-	fList = l.Filter(func(e types.Int) bool {
-		return e > 3
-	})
-  ```
+```go	
+type List[T types.Equitable[T]] interface {
+	collections.Collection[T]
+	Front() T         // Returns the front element in the list. Will panic if there is no front element.
+	RemoveFront() T   // Returns and removes the front element in the list.
+	Back() T          // Returns the element at the back of the list. Will panic if no back element.
+	RemoveBack() T    // Returns and removes the element at the back of the list. Will panic if no back element.
+	Set(i int, e T) T // Replaces the element at the specified index with the new element and returns old element. Will panic if index out of bounds.
+	Swap(i, j int)    // Swaps the element at index i with the element at index j. Will panic if one or both indices out of bounds.
+	At(i int) T       // Retrieves the element at the specified index. Will panic if index is out of bounds.
+	RemoveAt(i int) T // Removes the element ath the specified index andreturns it. Will panic if index out of bounds.
+	AddAt(i int, e T) // Adds the element at the specified index. Will panic if index out of bounds.
+}
 
-  - `ForwardList`
-  A singly linked list that only stores elements of the same type. See usage examples below.
-	```go
-	import (
-	"github.com/phantom820/collections/list"
-	"github.com/phantom820/collections/types"
-	)
-	
-	l := list.NewForwardList[types.Int]()
-	// See List usage examples.
-	```
+l := forwardlist.New[types.Int](1, 2, 3)                         // [1,2,3]
+l.Add(4, 5, 6)                                                       // [1,2,3,4,5,6]
+l.Front()                                                            // 1
+l.Back()                                                             // 6
+l.Contains(1)                                                        // true
+l.Remove(2)                                                          // [1,3,4,5,6]
+l.RemoveAt(2)                                                        //  4 , [1,3,5,6]
+l.RemoveFront()                                                      // 1 , [3,5,6]
+other := l.Map(func(e types.Int) types.Int { return e + 3 }) //  [6,8,9]
+_ = other.Filter(func(e types.Int) bool { return e%3 == 0 })     // [6,9]
+// checkout docs for more .
+
+```
+
+- Vector
+	- `Vector` : a vector (wrapper around Go slice)
+```go
+v := vector.New[types.Int](1, 2, 3)                              // [1,2,3]
+v.Add(4, 5, 6)                                                       // [1,2,3,4,5,6]
+v.Contains(1)                                                        // true
+v.Remove(2)                                                          // [1,3,4,5,6]
+v.RemoveAt(2)                                                        //  4 , [1,3,5,6]
+v.At(0)                                                              // 1
+other := v.Map(func(e types.Int) types.Int { return e + 3 }) //  [4,6,8,9]
+_ = other.Filter(func(e types.Int) bool { return e%2 == 0 }) 		 // [4,6,8]
+// checkout docs for more .
+```
+- Queue
+	- `ListQueue` : `ForwardList` based implementation of a queue.
+	- `SliceQueue` : slice based implementation of a queue.
+
+```go
+type Queue[T types.Equitable[T]] interface {
+	collections.Collection[T]
+	Front() T       //  Returns the front element of the queue. Will panic if no front element.
+	RemoveFront() T // Returns and removes the front element of the queue. Will panic if no front element.
+}
+
+q := listqueue.New[types.Int]()
+q.Add(1, 2, 3, 4)
+q.Front()       // 1
+q.RemoveFront() // 1
+q.Front()       // 2
+// checkout docs for more .
+```
 
 - Stack 
-  - `ListStack`
-  A `ForwardList` based implementation of a stack. See usage examples below.
-	```go
-	
-	s := stack.NewListStack[types.Int](1,2,3) // creates a stack i which the top is 3.
-	s.Add(24) // pushes 24 to the stack.
-	_ = s.Peek() // returns top element in stack
-	s.Pop() // returns and remove top element in stack.
+	- `ListStack` : `ForwardList` based implementation of a stack.
+	- `SliceStack` : slice based implementation of a stack.
+```go
+type Stack[T types.Equitable[T]] interface {
+	collections.Collection[T]
+	Peek() T // Returns the top element in the stack. Will panic if no top element.
+	Pop() T  // Returns and  removes the top element in the stack. Will panic if no top element.
+}
 
-  - `SliceStack` 
-  A slice based implementation of a stack. See usage examples below
-	```go
-	s := stack.NewListStack[types.Int](1,2,3) // creates a stack i which the top is 3.
-	// see ListStack usage examples.
-	```
-- `Queue`
-	- `ListQueue` 
-	A `ForwardList` based implementation of a queue. enqueue using `Add` , check front using `Front` and remove front using `RemoveFront`.
-	-  `SliceQueue`
-	A slice based implemetation of a queue.
+
+s := slicestack.New[types.Int]()
+s.Add(2, 4, 6, 7)
+s.Peek() // 7
+s.Pop()  // 7
+s.Peek() // 6
+// checkout docs for more .
+```
+### Trees
+
+- `Red Black Tree` : a red black tree implementation witho nodes that store a key and an associated value.
+```go
+type Tree[K any, V any] interface {
+	Insert(key K, value V) bool      // Inserts a node with the specified key and value.
+	Delete(key K) bool               // Deletes the node with specified key. Returns true if such a node was found and deleted otherwise false.
+	Clear()                          // Deleted all the nodes in the tree.
+	Search(key K) bool               // Searches for a node with the specified key.
+	Update(key K, value V) (V, bool) // Updates the node with specified key with the new value. Returns the old value if there was such a node.
+	Get(key K) (V, bool)             // Retrieves the value of the node with the specified key.
+	InOrderTraversal() []K           // Performs an in order traversal and returns results in a slice.
+	Values() []V                     // Retrieves all the values sin the tree.
+	Keys() []K                       // Retrieves all the keys in the tree.
+	Empty() bool                     // Chekcs if the tree is empty.
+	Len() int                        // Returns the size of the tree.
+}
+
+
+t := rbt.New[types.Int, string]()
+t.Insert(1, "A")
+t.Insert(2, "B")
+t.Delete(2)
+t.Search(1)
+t.Get(1)
+// checkout docs for more .
+```
+
+### Maps
+- `HashMap` : a map that uses a hash table (slice) and red black tree for individual containers in buckets.
+```go
+type Map[K types.Hashable[K], V any] interface {
+	MapIterable[K, V]
+	Put(key K, value V) V             // Inserts the key and value into the map. Returns the previous value associated with the key if it was present otherwise zero value.
+	PutIfAbsent(key K, value V) bool  // Insert the key and value in the map if the key does not already exist.
+	PutAll(m Map[K, V])               // Inserts all entries from another map into the map.
+	Get(key K) (V, bool)              // Retrieves the valuee associated with the key. Returns zero value if the key does not exist.
+	Len() int                         // Returns the size of the map.
+	Keys() []K                        // Returns the keys in the map as a slice.
+	Contains(key K) bool              // Checks if the map contains the specified key.
+	Remove(key K) bool                // Removes the map entry with the specified key.
+	RemoveAll(c iterator.Iterable[K]) // Removes all keys in the map that appear in an iterable.
+	Clear()                           // Removes all entries in the map.
+	Empty() bool                      // Checks if the map is empty.
+}
+
+m := hashmap.NewHashMap[types.Int, string]()
+m.Put(1, "A") // {(1,"A")}
+m.Put(2, "B") // {(2,"B") , (1,"A")} order not gueranted
+m.Put(3, "C") // {(2,"B") , (1,"A") , {3,"C"}}
+
+value, _ := m.Get(1)
+
+otherM := m.Map(func(e maps.MapEntry[types.Int, string]) maps.MapEntry[types.Int, string] {
+	return maps.MapEntry[types.Int,string]{e.Key + 2, e.Value + "A"}
+}) // {(4,"BA") , (3,"AA") , {5,"CA"}}
+
+otherM.Filter(func(e maps.MapEntry[types.Int, string]) bool {
+	return e.Key%2 == 0
+}) // {(4,"BA") }
+// checkout docs for more .
+```
+
+
+### Sets
+- `HashSet` : a set implementation based on a `HashMap`.
+```go
+s := hashset.New[types.Int](1, 2, 4) // {1,2,4}
+s.Add(1, 2, 10)                          // {1,2,4,10} order not gueranteed
+s.Contains(1)                            // true
+
+_ = s.Filter(func(e types.Int) bool { return e%2 == 0 })    // {2,4,10}
+_ = s.Map(func(e types.Int) types.Int { return e - 1 }) // {0,1,3,9}
+// checkout docs for more .
+
+
+```
+
+
+

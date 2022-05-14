@@ -23,14 +23,19 @@ type Collection[T types.Equitable[T]] interface {
 	Clear()                           // Removes all elements in the collection.
 }
 ```
-
-### Sorting
+- #### Iterating
 ```go
-l1 := forwardlist.New[types.Int](5, 3, 6, 7, 20)
-collections.Sort[types.Int](l1) // Sorting using type defined ordering.
+it := collection.Iterator()
+for it.HasNext() {
+	fmt.Println(it.Next())
+}
+```
+- #### Sorting
+```go
+collections.Sort[T](collection[T]) // Sorting using natural ordering of elements in the collection.
 	
-l2 := forwardlist.New[types.Int](5, 3, 6, 7, 20)
-collections.SortBy[types.Int](l,func(a, b types.Int) bool { return a < b}) // Sorting with custom comparator.
+collections.SortBy[T](l,func(a, b T) bool { ..... }) // Sorting with custom comparator function. Needs to define ordering for 2 elemetns.
+// see detailed example with list.
 ```
 
 - List
@@ -50,6 +55,17 @@ type List[T types.Equitable[T]] interface {
 	RemoveAt(i int) T // Removes the element ath the specified index andreturns it. Will panic if index out of bounds.
 	AddAt(i int, e T) // Adds the element at the specified index. Will panic if index out of bounds.
 }
+
+l := forwardlist.New[types.Int](5, 3, 6, 7, 20)
+
+// iterating
+it := l1.Iterator()
+for it.HasNext() {
+ fmt.Println(it.Next())
+}
+
+// sorting
+collections.Sort[types.Int](l)  
 
 l := forwardlist.New[types.Int](1, 2, 3)                        		 // [1,2,3]
 l.Add(4, 5, 6)                                                       // [1,2,3,4,5,6]
@@ -115,9 +131,21 @@ s.Pop()  // 7
 s.Peek() // 6
 // checkout docs for more .
 ```
-### Trees
+- Set
+- `HashSet` : a set implementation based on a `HashMap`.
+```go
+s := hashset.New[types.Int](1, 2, 4) // {1,2,4}
+s.Add(1, 2, 10)                          // {1,2,4,10} order not gueranteed
+s.Contains(1)                            // true
 
-- `Red Black Tree` : a red black tree implementation witho nodes that store a key and an associated value.
+_ = s.Filter(func(e types.Int) bool { return e%2 == 0 })    // {2,4,10}
+_ = s.Map(func(e types.Int) types.Int { return e - 1 }) // {0,1,3,9}
+// checkout docs for more .
+```
+
+
+### Trees
+Tree based data structures.
 ```go
 type Tree[K any, V any] interface {
 	Insert(key K, value V) bool      // Inserts a node with the specified key and value.
@@ -132,8 +160,11 @@ type Tree[K any, V any] interface {
 	Empty() bool                     // Chekcs if the tree is empty.
 	Len() int                        // Returns the size of the tree.
 }
+```
 
+- `Red Black Tree` : a red black tree implementation witho nodes that store a key and an associated value.
 
+```go
 t := rbt.New[types.Int, string]()
 t.Insert(1, "A")
 t.Insert(2, "B")
@@ -144,7 +175,7 @@ t.Get(1)
 ```
 
 ### Maps
-- `HashMap` : a map that uses a hash table (slice) and red black tree for individual containers in buckets.
+Map based data structures.
 ```go
 type Map[K types.Hashable[K], V any] interface {
 	MapIterable[K, V]
@@ -160,8 +191,30 @@ type Map[K types.Hashable[K], V any] interface {
 	Clear()                           // Removes all entries in the map.
 	Empty() bool                      // Checks if the map is empty.
 }
+```
+- #### Iterating
+```go
+it := m.Iterator()
+for it.HasNext() {
+	entry := it.Next()
+	fmt.Printf("Key:%d Value:%s\n", entry.Key, entry.Value)
+}
+// see detailed example with HashMap.
+```
+- `HashMap` : a map that uses a hash table (slice) and red black tree for individual containers in buckets.
+```go
+m := hashmap.New[types.Int, string]()
+m.Put(1, "A")
+m.Put(2, "B")
 
-m := hashmap.NewHashMap[types.Int, string]()
+it := m.Iterator()
+for it.HasNext() {
+ entry := it.Next()
+ fmt.Printf("Key:%d Value:%s\n", entry.Key, entry.Value)
+} 
+
+
+m := hashmap.New[types.Int, string]()
 m.Put(1, "A") // {(1,"A")}
 m.Put(2, "B") // {(2,"B") , (1,"A")} order not gueranted
 m.Put(3, "C") // {(2,"B") , (1,"A") , {3,"C"}}
@@ -179,19 +232,7 @@ otherM.Filter(func(e maps.MapEntry[types.Int, string]) bool {
 ```
 
 
-### Sets
-- `HashSet` : a set implementation based on a `HashMap`.
-```go
-s := hashset.New[types.Int](1, 2, 4) // {1,2,4}
-s.Add(1, 2, 10)                          // {1,2,4,10} order not gueranteed
-s.Contains(1)                            // true
 
-_ = s.Filter(func(e types.Int) bool { return e%2 == 0 })    // {2,4,10}
-_ = s.Map(func(e types.Int) types.Int { return e - 1 }) // {0,1,3,9}
-// checkout docs for more .
-
-
-```
 
 
 

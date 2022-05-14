@@ -7,7 +7,7 @@ collections is a library aiming to bring common data structures into Go. These c
 ` go get github.com/phantom820/collections@v0.3.0-alpha`
 
 ### Collections
-An interface that somme of the implemented data structures satisfy 
+An interface for "Linear" data structures.
 ```go
 // Satisfied by List, Vector, Queue , Stack ,  HashSet.
 type Collection[T types.Equitable[T]] interface {

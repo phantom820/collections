@@ -11,8 +11,8 @@ import (
 
 // ForwardList an implementation of a singly linked list.
 type ForwardList[T types.Equitable[T]] struct {
-	head *singleNode[T]
-	tail *singleNode[T]
+	head *node[T]
+	tail *node[T]
 	len  int
 }
 
@@ -23,22 +23,22 @@ func New[T types.Equitable[T]](elements ...T) *ForwardList[T] {
 	return &list
 }
 
-// singleNode a link for a singly linked list. Stores a value of some type T along with next pointer. This type is for internal use
+// node a link for a singly linked list. Stores a value of some type T along with next pointer. This type is for internal use
 // in the implementation of a singly linked list.
-type singleNode[T types.Equitable[T]] struct {
-	next  *singleNode[T]
+type node[T types.Equitable[T]] struct {
+	next  *node[T]
 	value T
 }
 
-// newSingleNode creates a new singleNode with the value v.
-func newSingleNode[T types.Equitable[T]](v T) *singleNode[T] {
-	return &singleNode[T]{value: v, next: nil}
+// newNode creates a new node with the value v.
+func newNode[T types.Equitable[T]](v T) *node[T] {
+	return &node[T]{value: v, next: nil}
 }
 
 // forwadListIterator struct to implement an iterator for a ForwardList.
 type forwardListIterator[T types.Equitable[T]] struct {
-	n     *singleNode[T] // Used for Next() and HasNext().
-	start *singleNode[T] // Used to cycle an iterator.
+	n     *node[T] // Used for Next() and HasNext().
+	start *node[T] // Used to cycle an iterator.
 }
 
 // HasNext checks if the iterator it has a next element to yield.
@@ -111,9 +111,9 @@ func (list *ForwardList[T]) Swap(i, j int) {
 }
 
 // nodePair retrieves a node and the one before it. For internal use to support operation like Swap.
-func (list *ForwardList[T]) nodePair(i int) (*singleNode[T], *singleNode[T]) {
+func (list *ForwardList[T]) nodePair(i int) (*node[T], *node[T]) {
 	j := 0
-	var p *singleNode[T] = nil
+	var p *node[T] = nil
 	var e = list.head
 	for e != nil {
 		if j == i {
@@ -127,9 +127,9 @@ func (list *ForwardList[T]) nodePair(i int) (*singleNode[T], *singleNode[T]) {
 }
 
 // nodeAt retrieves the node at index i in list. This is for internal use for supporting operations like Swap.
-func (list *ForwardList[T]) nodeAt(i int) *singleNode[T] {
+func (list *ForwardList[T]) nodeAt(i int) *node[T] {
 	j := 0
-	var n *singleNode[T]
+	var n *node[T]
 	for e := list.head; e != nil; e = e.next {
 		if j == i {
 			n = e
@@ -160,7 +160,7 @@ func (list *ForwardList[T]) At(i int) T {
 
 // AddFront adds element to the front of the list.
 func (list *ForwardList[T]) AddFront(e T) {
-	n := newSingleNode(e)
+	n := newNode(e)
 	if list.head != nil {
 		n.next = list.head
 		list.head = n
@@ -178,7 +178,7 @@ func (list *ForwardList[T]) AddBack(e T) {
 		list.AddFront(e)
 		return
 	}
-	n := newSingleNode(e)
+	n := newNode(e)
 	list.tail.next = n
 	list.tail = n
 	list.len++
@@ -195,7 +195,7 @@ func (list *ForwardList[T]) AddAt(i int, e T) {
 		list.AddBack(e)
 	} else {
 		j := 0
-		n := newSingleNode(e)
+		n := newNode(e)
 		for x := list.head; x != nil; x = x.next {
 			if j == i-1 {
 				n.next = x.next
@@ -249,7 +249,7 @@ func (list *ForwardList[T]) Len() int {
 }
 
 // search traverses the list looking for element. For internal use to support operations such as Contains, AddAt and  so on.
-func (list *ForwardList[T]) search(e T) *singleNode[T] {
+func (list *ForwardList[T]) search(e T) *node[T] {
 	curr := list.head
 	for curr != nil {
 		if curr.value.Equals(e) {
@@ -322,7 +322,7 @@ func (list *ForwardList[T]) RemoveAt(i int) T {
 }
 
 // removeNode removes the specified node curr where prev is the node before it. For internal use for functions such as remove at.
-func (list *ForwardList[T]) removeNode(prev *singleNode[T], curr *singleNode[T]) T {
+func (list *ForwardList[T]) removeNode(prev *node[T], curr *node[T]) T {
 	prev.next = curr.next
 	list.len -= 1
 	v := curr.value
@@ -343,7 +343,7 @@ func (list *ForwardList[T]) Remove(e T) bool {
 		list.RemoveBack()
 		return true
 	} else {
-		var p *singleNode[T]
+		var p *node[T]
 		var n = list.head
 		for n != nil {
 			if n.value.Equals(e) {
@@ -458,4 +458,77 @@ func (list *ForwardList[T]) Filter(f func(e T) bool) *ForwardList[T] {
 		}
 	}
 	return newList
+}
+
+// locateMid finds the mid of a list using The Tortoise and The Hare approach.
+func locateMid[T types.Equitable[T]](head *node[T]) *node[T] {
+	slow := head
+	fast := head.next
+	for fast != nil && fast.next != nil {
+		slow = slow.next
+		fast = fast.next.next
+	}
+	return slow
+}
+
+// merge combines 2 list that have been sorted by natural ordering of elements.
+func merge[T types.Comparable[T]](leftList *ForwardList[T], rightList *ForwardList[T]) *ForwardList[T] {
+	leftHead := leftList.head
+	rightHead := rightList.head
+
+	falseHead := &node[T]{}
+	sentinel := falseHead
+
+	// merge ny comparing front of each list and traversing.
+	for leftHead != nil && rightHead != nil {
+		if leftHead.value.Less(rightHead.value) {
+			sentinel.next = leftHead
+			leftHead = leftHead.next
+		} else {
+			sentinel.next = rightHead
+			rightHead = rightHead.next
+		}
+		sentinel = sentinel.next
+	}
+
+	// at the end one of the 2 list must have been exhauted.
+	for leftHead != nil {
+		sentinel.next = leftHead
+		leftHead = leftHead.next
+		sentinel = sentinel.next
+	}
+
+	for rightHead != nil {
+		sentinel.next = rightHead
+		rightHead = rightHead.next
+		sentinel = sentinel.next
+	}
+
+	head := falseHead.next
+	tail := sentinel
+
+	list := ForwardList[T]{head: head, tail: tail}
+	return &list
+}
+
+// sort sorts the list using natural ordering of elements. The sorting algorithm is merge sort.
+func sort[T types.Comparable[T]](list *ForwardList[T]) *ForwardList[T] {
+	if list.head.next == nil {
+		return list
+	}
+	mid := locateMid(list.head)
+	rightList := ForwardList[T]{head: mid.next, tail: list.tail}
+	list.tail = mid
+	mid.next = nil
+	leftSortedList := sort(list)
+	rightSortedList := sort(&rightList)
+	finalList := merge(leftSortedList, rightSortedList)
+	return finalList
+}
+
+// Sort sorts the list using natural ordering of elements.
+func Sort[T types.Comparable[T]](list *ForwardList[T]) {
+	len := list.len
+	list = sort(list)
+	list.len = len
 }

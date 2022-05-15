@@ -2,8 +2,6 @@
 package collections
 
 import (
-	"sort"
-
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/types"
 )
@@ -40,19 +38,21 @@ func (slice slice[T]) Swap(i, j int) {
 func (slice slice[T]) Less(i, j int) bool { return slice[i].Less(slice[j]) }
 
 func Sort[T types.Comparable[T]](collection Collection[T]) {
-	var slice slice[T] = collection.Collect() // linear time to collect all members into a slice O(n).
-	sort.Sort(slice)                          // log linear time to sort O(nlogn)
-	collection.Clear()                        // constant time O(1)
-	collection.AddSlice(slice)                // linear time O(n) resulting in overall time complexity O(nlogn)
+
+	// sort.Sort[T](collection)
+	// var slice slice[T] = collection.Collect() // linear time to collect all members into a slice O(n).
+	// sort.Sort(slice)                          // log linear time to sort O(nlogn)
+	// collection.Clear()                        // constant time O(1)
+	// collection.AddSlice(slice)                // linear time O(n) resulting in overall time complexity O(nlogn)
 }
 
 // SortBy sorts a collection given the custom less function which defines the ralation a < b i.e if a < b then less should return true
 // otherwise should return false.
 func SortBy[T types.Equitable[T]](collection Collection[T], less func(a, b T) bool) {
-	var slice = collection.Collect()
-	sort.Slice(slice, func(i, j int) bool {
-		return less(slice[i], slice[j])
-	})
-	collection.Clear()
-	collection.AddSlice(slice)
+	// var slice = collection.Collect()
+	// sort.Slice(slice, func(i, j int) bool {
+	// 	return less(slice[i], slice[j])
+	// })
+	// collection.Clear()
+	// collection.AddSlice(slice)
 }

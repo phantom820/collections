@@ -20,78 +20,78 @@ type Vector[T types.Equitable[T]] struct {
 
 // New creates a vector with the specified elements, if there are none an empty vector is created.
 func New[T types.Equitable[T]](elements ...T) *Vector[T] {
-	v := Vector[T]{data: make([]T, 0)}
-	v.AddSlice(elements)
-	return &v
+	vector := Vector[T]{data: make([]T, 0)}
+	vector.AddSlice(elements)
+	return &vector
 }
 
 // Set replaces the element at index i in the vector with the new element. Returns the old element that was at index i.
-func (v *Vector[T]) Set(i int, e T) T {
-	if i < 0 || i >= v.Len() {
+func (vector *Vector[T]) Set(i int, e T) T {
+	if i < 0 || i >= vector.Len() {
 		panic(ErrOutOfBounds)
 	}
-	temp := v.data[i]
-	v.data[i] = e
+	temp := vector.data[i]
+	vector.data[i] = e
 	return temp
 }
 
 // Add adds elements to the back of the vector.
-func (v *Vector[T]) Add(elements ...T) bool {
-	v.data = append(v.data, elements...)
+func (vector *Vector[T]) Add(elements ...T) bool {
+	vector.data = append(vector.data, elements...)
 	return true
 }
 
 // AddAll adds the elements from some iterable elements to the vector.
-func (v *Vector[T]) AddAll(elements iterator.Iterable[T]) {
+func (vector *Vector[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
-		v.Add(it.Next())
+		vector.Add(it.Next())
 	}
 }
 
 // AddSlice adds element from a slice s into the vector.
-func (v *Vector[T]) AddSlice(s []T) {
-	v.data = append(v.data, s...)
+func (vector *Vector[T]) AddSlice(s []T) {
+	vector.data = append(vector.data, s...)
 }
 
 // Clear removes all elements in the vector.
-func (v *Vector[T]) Clear() {
-	v.data = nil
-	v.data = make([]T, 0)
+func (vector *Vector[T]) Clear() {
+	vector.data = nil
+	vector.data = make([]T, 0)
 }
 
 // At retrieves the element at the specified index.  Will panic if index is out of bounds.
-func (v *Vector[T]) At(i int) T {
-	if i < 0 || i >= v.Len() {
+func (vector *Vector[T]) At(i int) T {
+	if i < 0 || i >= vector.Len() {
 		panic(ErrOutOfBounds)
 	}
-	return v.data[i]
+	return vector.data[i]
 }
 
 //AddAt adds an element at the specified index in the vector. Will panic if index is out of bounds.
-func (v *Vector[T]) AddAt(i int, e T) {
-	if i < 0 || i >= len(v.data) {
+func (vector *Vector[T]) AddAt(i int, e T) {
+	if i < 0 || i >= len(vector.data) {
 		panic(ErrOutOfBounds)
 	}
-	for j, _ := range v.data {
+	for j, _ := range vector.data {
 		if i == j {
-			a := v.data[0:i]
+			a := vector.data[0:i]
 			a = append(a, e)
-			b := v.data[i:]
-			v.data = append(a, b...)
+			b := vector.data[i:]
+			vector.data = append(a, b...)
 		}
 	}
 }
 
 // Collect converts vector into a slice.
-func (v *Vector[T]) Collect() []T {
-	return v.data
+func (vector *Vector[T]) Collect() []T {
+	return vector.data
 }
 
 // Contains checks if the elemen e is in the vector.
-func (v *Vector[T]) Contains(e T) bool {
-	for i, _ := range v.data {
-		if v.data[i].Equals(e) {
+func (vector *Vector[T]) Contains(e T) bool {
+	for i, _ := range vector.data {
+		if vector.data[i].Equals(e) {
 			return true
 		}
 	}
@@ -99,8 +99,8 @@ func (v *Vector[T]) Contains(e T) bool {
 }
 
 // Empty checks if the vector is empty.
-func (v *Vector[T]) Empty() bool {
-	return len(v.data) == 0
+func (vector *Vector[T]) Empty() bool {
+	return len(vector.data) == 0
 }
 
 // vectorIterator model for implementing an iterator on a vector.
@@ -134,14 +134,14 @@ func (it *vectorIterator[T]) Cycle() {
 
 // Equals checks if the vector is equals to other. This only true if they are the same reference or have the same size and element wise comparison passes
 // otherwise false.
-func (v *Vector[T]) Equals(other *Vector[T]) bool {
-	if v == other {
+func (vector *Vector[T]) Equals(other *Vector[T]) bool {
+	if vector == other {
 		return true
-	} else if len(v.data) != len(other.data) {
+	} else if len(vector.data) != len(other.data) {
 		return false
 	} else {
-		for i, _ := range v.data {
-			if !(v.data)[i].Equals((other.data)[i]) {
+		for i, _ := range vector.data {
+			if !(vector.data)[i].Equals((other.data)[i]) {
 				return false
 			}
 		}
@@ -150,71 +150,71 @@ func (v *Vector[T]) Equals(other *Vector[T]) bool {
 }
 
 // Iterator returns an iterator for iterating through a vector.
-func (v *Vector[T]) Iterator() iterator.Iterator[T] {
-	return &vectorIterator[T]{slice: v.data, i: 0}
+func (vector *Vector[T]) Iterator() iterator.Iterator[T] {
+	return &vectorIterator[T]{slice: vector.data, i: 0}
 }
 
 // Len return the size of the vector.
-func (v Vector[T]) Len() int {
-	return len(v.data)
+func (vector *Vector[T]) Len() int {
+	return len(vector.data)
 }
 
 // indexOf finds the index of an element e in the vector. Gives -1 if the element is not present.
-func (v *Vector[T]) indexOf(e T) int {
-	for i, _ := range v.data {
-		if (v.data)[i].Equals(e) {
+func (vector *Vector[T]) indexOf(e T) int {
+	for i, _ := range vector.data {
+		if (vector.data)[i].Equals(e) {
 			return i
 		}
 	}
 	return -1
 }
 
-// Remove deletes the element e from the vector.
-func (v *Vector[T]) Remove(e T) bool {
-	i := v.indexOf(e)
+// Remove deletes the element from the vector.
+func (vector *Vector[T]) Remove(element T) bool {
+	i := vector.indexOf(element)
 	if i == -1 {
 		return false
 	}
-	v.data = append((v.data)[0:i], (v.data)[i+1:]...)
+	vector.data = append((vector.data)[0:i], (vector.data)[i+1:]...)
 	return true
 }
 
 // RemoveAt deletes the element at the specified index in the vector. Will panic if index is out of bounds.
-func (v *Vector[T]) RemoveAt(i int) T {
-	if i < 0 || i >= len(v.data) {
+func (vector *Vector[T]) RemoveAt(i int) T {
+	if i < 0 || i >= len(vector.data) {
 		panic(ErrOutOfBounds)
 	}
-	temp := (v.data)[i]
-	v.data = append(v.data[0:i], v.data[i+1:]...)
+	temp := (vector.data)[i]
+	vector.data = append(vector.data[0:i], vector.data[i+1:]...)
 	return temp
 }
 
-// RemoveAll removes all the elements from some iterable elements that are in the vector.
-func (v *Vector[T]) RemoveAll(elements iterator.Iterable[T]) {
+// RemoveAll removes all the elements from iterable elements that are in the vector.
+func (vector *Vector[T]) RemoveAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
-		v.Remove(it.Next())
+		vector.Remove(it.Next())
 	}
 }
 
 // Map transforms each element in the vector using a specified function and returns a new vector with transformed elements.
-func (v *Vector[T]) Map(f func(e T) T) *Vector[T] {
-	newV := New[T]()
-	for _, e := range v.data {
-		newV.Add(f(e))
+func (vector *Vector[T]) Map(f func(e T) T) *Vector[T] {
+	newVector := New[T]()
+	for _, e := range vector.data {
+		newVector.Add(f(e))
 	}
-	return newV
+	return newVector
 }
 
-// Filter filters elements of the vector using a specified predicate function and returns a new vector with elements satisfying predicate.
-func (v *Vector[T]) Filter(f func(e T) bool) *Vector[T] {
-	newV := New[T]()
-	for _, e := range v.data {
+// Filter filters elements of the vector using the predicate function f and returns a new vector with elements satisfying predicate.
+func (vector *Vector[T]) Filter(f func(e T) bool) *Vector[T] {
+	newVector := New[T]()
+	for _, e := range vector.data {
 		if f(e) {
-			newV.Add(e)
+			newVector.Add(e)
 		}
 	}
-	return newV
+	return newVector
 }
 
 // String for pretty printing the vector.

@@ -3,8 +3,6 @@ package main
 import (
 	"github.com/phantom820/collections/maps/hashmap"
 	"github.com/phantom820/collections/maps/treemap"
-	"github.com/phantom820/collections/sets"
-	"github.com/phantom820/collections/sets/hashset"
 	"github.com/phantom820/collections/types"
 )
 
@@ -18,5 +16,5 @@ func main() {
 
 	n.PutAll(m)
 
-	var s1 sets.Set[types.Int] = hashset.New[types.Int]()
+	// var s1 sets.Set[types.Int] = hashset.New[types.Int]()
 }

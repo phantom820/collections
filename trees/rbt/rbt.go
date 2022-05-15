@@ -236,17 +236,18 @@ func (tree *RedBlackTree[K, V]) Get(key K) (V, bool) {
 }
 
 // Delete deletes the node with the specified key from the tree.
-func (tree *RedBlackTree[K, V]) Delete(key K) bool {
+func (tree *RedBlackTree[K, V]) Delete(key K) (V, bool) {
 	node := tree.search(key)
 	if node == tree.Nil {
-		return false
+		return node.value, false
 	}
 	tree.delete(node)
 	tree.len--
 	node.left = nil
 	node.right = nil
+	temp := node.value
 	node = nil
-	return true
+	return temp, true
 }
 
 // Delete deletes the node z from the tree. for internal use to support Delete operation.
@@ -364,6 +365,30 @@ func (tree *RedBlackTree[K, V]) InOrderTraversal() []K {
 	return data
 }
 
+// pairs helper function for quick retrieval of both keys and values.
+func (tree *RedBlackTree[K, V]) pairs(node *redBlackNode[K, V], keys *[]K, values *[]V) {
+	if node == tree.Nil {
+		return
+	}
+	if node.left != tree.Nil {
+		tree.pairs(node.left, keys, values)
+	}
+	*keys = append(*keys, node.key)
+	*values = append(*values, node.value)
+
+	if node.right != tree.Nil {
+		tree.pairs(node.right, keys, values)
+	}
+}
+
+// Pairs returns the keys and values of the tree using an in order traversal.
+func (tree *RedBlackTree[K, V]) Pairs() ([]K, []V) {
+	keys := []K{}
+	values := []V{}
+	tree.pairs(tree.root, &keys, &values)
+	return keys, values
+}
+
 // values collects all the values in the tree into a slice using an in order traversal.
 func (tree *RedBlackTree[K, V]) values(node *redBlackNode[K, V], data *[]V) {
 	if node == tree.Nil {
@@ -414,10 +439,12 @@ func (tree *RedBlackTree[K, V]) Len() int {
 
 // Clear deletes all the nodes in the tree.
 func (t *RedBlackTree[K, V]) Clear() {
-	keys := t.Keys()
-	for _, k := range keys {
-		t.Delete(k)
-	}
+	t.root = nil
+	t.Nil = nil
+	t.len = 0
+	Nil := &redBlackNode[K, V]{parent: nil, left: nil, right: nil, color: black}
+	t.root = Nil
+	t.Nil = Nil
 }
 
 // Empty checks if the tree is empty.

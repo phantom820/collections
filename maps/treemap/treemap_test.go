@@ -1,7 +1,6 @@
-package hashmap
+package treemap
 
 import (
-	"strconv"
 	"testing"
 
 	"github.com/phantom820/collections/iterator"
@@ -11,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestPut also covers tests for PutAll, ContainsKey, ContainsValue,  Empty, Len, Keys, Clear.
+// TestPut also covers tests for PutAll, Empty, Len, Keys, Values, Clear.
 func TestPut(t *testing.T) {
 
 	m := New[types.String, string]()
@@ -19,79 +18,74 @@ func TestPut(t *testing.T) {
 	// Case 1 : An empty map.
 	assert.Equal(t, true, m.Empty())
 	assert.ElementsMatch(t, []types.Int{}, m.Keys())
-	v := m.Put("1", "A")
+	v := m.Put("A", "A")
 	assert.Equal(t, false, m.Empty())
 	assert.Equal(t, 1, m.Len())
 	assert.Equal(t, "", v)
-	assert.Equal(t, []types.String{"1"}, m.Keys())
-	assert.ElementsMatch(t, []string{"A"}, m.Values())
+	assert.Equal(t, []types.String{"A"}, m.Keys())
 
 	// Case 2 : An already mapped key.
-	v = m.Put("1", "B")
+	v = m.Put("A", "B")
 	assert.Equal(t, 1, m.Len())
 	assert.Equal(t, "A", v)
 
 	// Case 3 : A non empty map with a new key.
-	v = m.Put("2", "B")
+	v = m.Put("B", "B")
 	assert.Equal(t, 2, m.Len())
 	assert.Equal(t, "", v)
+	assert.Equal(t, []types.String{"A", "B"}, m.Keys())
 
-	// Case 4 : Adding all values from another map.
+	// Case 4 : Ordering of keys and values.
+	for i := 14; i >= 2; i-- {
+		m.Put(types.String(string(rune(80-i))), string(rune(80-i)))
+	}
+
+	keys := []types.String{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}
+	values := []string{"B", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}
+
+	assert.Equal(t, keys, m.Keys())
+	assert.Equal(t, values, m.Values())
+
+	// Case 5 : Adding all values from another map.
 	other := New[types.String, string]()
-	other.Put("15", "O")
-	other.Put("16", "P")
-	other.Put("17", "Q")
-
-	assert.Equal(t, false, m.ContainsKey("15"))
-	assert.Equal(t, false, m.ContainsKey("O"))
+	other.Put("O", "O")
+	other.Put("P", "P")
+	other.Put("Q", "Q")
 
 	m.PutAll(other)
-	assert.Equal(t, true, m.ContainsKey("15"))
-	assert.Equal(t, true, m.ContainsValue("O", func(a, b string) bool { return a == b }))
-	assert.Equal(t, true, m.ContainsKey("16"))
-	assert.Equal(t, true, m.ContainsValue("P", func(a, b string) bool { return a == b }))
-	assert.Equal(t, true, m.ContainsKey("17"))
-	assert.Equal(t, false, m.ContainsValue("W", func(a, b string) bool { return a == b }))
+	assert.ElementsMatch(t, append(keys, "O", "P", "Q"), m.Keys())
+	assert.ElementsMatch(t, append(values, "O", "P", "Q"), m.Values())
 
 	m.Clear()
 	assert.Equal(t, true, m.Empty())
 
 }
 
-// TestPutIfAbsent
+// TestPutIfAbsent also covers tests for ContainsKey, ContainsValue.
 func TestPutIfAbsent(t *testing.T) {
 
-	m := New[types.String, string]()
+	m := New[types.Int, string]()
 
 	// Case 1 : An empty map.
 	assert.Equal(t, true, m.Empty())
-	assert.Equal(t, false, m.ContainsKey("1"))
+	assert.Equal(t, false, m.ContainsKey(1))
 	assert.Equal(t, false, m.ContainsValue("A", func(a, b string) bool { return a == b }))
-	b := m.PutIfAbsent("1", "A")
+	b := m.PutIfAbsent(1, "A")
 	assert.Equal(t, false, m.Empty())
-	assert.Equal(t, true, m.ContainsKey("1"))
+	assert.Equal(t, true, m.ContainsKey(1))
 	assert.Equal(t, true, m.ContainsValue("A", func(a, b string) bool { return a == b }))
 	assert.Equal(t, 1, m.Len())
 	assert.Equal(t, true, b)
 
 	// Case 2 : An already mapped key.
-	b = m.PutIfAbsent("1", "B")
+	b = m.PutIfAbsent(1, "B")
 	assert.Equal(t, 1, m.Len())
 	assert.Equal(t, false, b)
 
 	// Case 3 : A non empty map with a new key.
-	b = m.PutIfAbsent("2", "C")
+	b = m.PutIfAbsent(2, "C")
 	assert.Equal(t, 2, m.Len())
 	assert.Equal(t, true, b)
-
-	// Case 5 : Bucket non empty but does not have key.
-	m.PutIfAbsent("\x10AAAA", "AA")
-
-	assert.Equal(t, true, m.ContainsKey("\x10AAAA"))
-	assert.Equal(t, false, m.ContainsKey("\x00AAAA"))
-
-	m.PutIfAbsent("\x00AAAA", "B")
-	assert.Equal(t, true, m.ContainsKey("\x00AAAA"))
 
 }
 
@@ -117,6 +111,8 @@ func TestRemove(t *testing.T) {
 
 	v, _ = m.Remove(2)
 	assert.Equal(t, "B", v)
+	assert.ElementsMatch(t, []types.Int{1, 3, 4, 5}, m.Keys())
+	assert.ElementsMatch(t, []string{"A", "C", "D", "E"}, m.Values())
 
 	// Case 3 : Remove a number of keys.
 	l := list.New[types.Int](1, 3, 4, 5)
@@ -126,65 +122,6 @@ func TestRemove(t *testing.T) {
 
 }
 
-func TestResize(t *testing.T) {
-
-	m := New[types.Int, int]()
-	assert.Equal(t, 16, m.Capacity())
-	assert.Equal(t, float32(0), m.LoadFactor())
-	for i := 1; i <= 16; i++ {
-		m.Put(types.Int(i), i)
-	}
-	assert.Equal(t, 32, m.Capacity())             // should have doubled in caoacity after crossing threshold.
-	assert.Equal(t, float32(0.5), m.LoadFactor()) // load factor should be half.
-
-	for i := 17; i <= 34; i++ {
-		m.Put(types.Int(i), i)
-	}
-
-	assert.Equal(t, 64, m.Capacity()) // should have doubled in size once more.
-
-}
-
-func TestIterator(t *testing.T) {
-
-	m := New[types.String, int]()
-
-	// Case 1 : Iterator on map with elements.
-	for i := 1; i <= 20; i++ {
-		m.Put(types.String(strconv.Itoa(i)), i)
-	}
-
-	keys := make([]types.String, 0)
-	values := make([]int, 0)
-	it := m.Iterator()
-	for it.HasNext() {
-		entry := it.Next()
-		keys = append(keys, entry.Key)
-		values = append(values, entry.Value)
-	}
-	assert.ElementsMatch(t, m.Keys(), keys)
-	assert.ElementsMatch(t, m.Values(), values)
-
-	// Case 2 : Next on exhausted iterator should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, iterator.NoNextElementError, r.(error))
-			}
-		}()
-
-		it.Next()
-	})
-
-	// Case 3 : Cycling should reset iterator.
-	it.Cycle()
-	entry := it.Next()
-	assert.Equal(t, keys[0], entry.Key)
-	assert.Equal(t, values[0], entry.Value)
-
-}
-
-// TestEquals covers tests for Equals.
 func TestEquals(t *testing.T) {
 
 	m := New[types.Int, string]()
@@ -213,6 +150,42 @@ func TestEquals(t *testing.T) {
 	// Case 5 : Equal maps.
 	other.Put(2, "B")
 	assert.Equal(t, true, m.Equals(other, func(a, b string) bool { return a == b }))
+
+}
+
+func TestIterator(t *testing.T) {
+
+	m := New[types.Int, string]()
+
+	// Case 1 : Legal iterator.
+	m.Put(1, "A")
+	m.Put(2, "B")
+	m.Put(3, "C")
+
+	it := m.Iterator()
+	keys := []types.Int{}
+	for it.HasNext() {
+		keys = append(keys, it.Next().Key)
+	}
+
+	assert.ElementsMatch(t, []types.Int{1, 2, 3}, keys)
+
+	// Case 2 : Exhausted iterator.
+	t.Run("panics", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				assert.Equal(t, iterator.NoNextElementError, r.(error))
+			}
+		}()
+		it.Next()
+	})
+
+	// Case 3 : Recylce iterator.
+	it.Cycle()
+
+	v := it.Next().Value
+	assert.Equal(t, "A", v)
+
 }
 
 func TestMap(t *testing.T) {

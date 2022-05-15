@@ -77,7 +77,8 @@ func TestDelete(t *testing.T) {
 
 	tree.Clear()
 	assert.Equal(t, true, tree.Empty())
-	assert.Equal(t, false, tree.Delete(1))
+	_, b := tree.Delete(1)
+	assert.Equal(t, false, b)
 
 	tree.Insert(50, 1)
 	tree.Insert(80, 1)
@@ -124,7 +125,9 @@ func TestSearch(t *testing.T) {
 	_, b := tree.Get(-22)
 	assert.Equal(t, false, b)
 
-	tree.Clear()
+	for i := -10; i < 12; i++ {
+		tree.Delete(types.Int(i))
+	}
 
 }
 
@@ -169,4 +172,25 @@ func TestValues(t *testing.T) {
 
 	values = []int{1, 2, 3}
 	assert.ElementsMatch(t, values, tree.Values())
+}
+
+func TestPairs(t *testing.T) {
+
+	tree := New[types.Int, int]()
+
+	k, v := tree.Pairs()
+	assert.ElementsMatch(t, []types.Int{}, k)
+	assert.ElementsMatch(t, []int{}, v)
+
+	tree.Insert(1, 1)
+	tree.Insert(2, 2)
+	tree.Insert(3, 3)
+
+	keys := []types.Int{1, 2, 3}
+	values := []int{1, 2, 3}
+
+	k, v = tree.Pairs()
+	assert.ElementsMatch(t, keys, k)
+	assert.ElementsMatch(t, values, v)
+
 }

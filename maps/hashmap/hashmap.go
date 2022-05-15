@@ -93,7 +93,7 @@ func (it *hashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 			it.keys++
 			it.bucket = it.bucket[1:len(it.bucket)]
 			it.values = it.values[1:len(it.values)]
-			entry := maps.MapEntry[K, V]{k, v}
+			entry := maps.MapEntry[K, V]{Key: k, Value: v}
 			return entry
 		} else {
 			// find a non empty bucket and take values from it. This should be somewhat quick, O(m) collecting keys, O(m) collecting values
@@ -115,7 +115,7 @@ func (it *hashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 				}
 			}
 
-			entry := maps.MapEntry[K, V]{k, v}
+			entry := maps.MapEntry[K, V]{Key: k, Value: v}
 			return entry
 		}
 	}
@@ -216,8 +216,14 @@ func (m *HashMap[K, V]) Get(k K) (V, bool) {
 
 // ContainsKey checks if the map contains a mapping for the key.
 func (m *HashMap[K, V]) ContainsKey(k K) bool {
-	i := k.HashCode() % m.capacity
-	return !(m.buckets[i] == nil)
+	hash := k.HashCode()
+	i := hash % m.capacity
+	if m.buckets[i] == nil {
+		return false
+	}
+	_key := key[K]{key: k, hash: hash}
+	return m.buckets[i].Search(_key)
+
 }
 
 // ContainsValue checks if the map has an entry whose value is the specified value. func equals is used to compare value for equality.
@@ -233,20 +239,21 @@ func (m *HashMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool {
 }
 
 // Remove removes the map entry <k,V> from map m if it exists.
-func (m *HashMap[K, V]) Remove(k K) bool {
+func (m *HashMap[K, V]) Remove(k K) (V, bool) {
 	_key := key[K]{key: k, hash: k.HashCode()}
 	index := _key.hash % m.capacity
 	if m.buckets[index] == nil {
-		return false
+		var e V
+		return e, false
 	}
-	r := m.buckets[index].Delete(_key)
+	v, r := m.buckets[index].Delete(_key)
 	if r {
 		m.len--
 		if m.buckets[index].Empty() {
 			m.buckets[index] = nil
 		}
 	}
-	return r
+	return v, r
 }
 
 // RemoveAll removes all keys that are in the specified iterable from m.
@@ -301,13 +308,12 @@ func (m *HashMap[K, V]) Empty() bool {
 
 // Clear removes all entries in the map.
 func (m *HashMap[K, V]) Clear() {
-	keys := m.Keys()
-	for _, key := range keys {
-		m.Remove(key)
-	}
+	m.len = 0
+	m.buckets = nil
+	m.buckets = make([]*rbt.RedBlackTree[key[K], V], m.capacity)
 }
 
-// Equals check if map m is equal to map n. This checks that the two maps have the same entries (k,v), the values are compared
+// Equals check if map m is equal to map other. This checks that the two maps have the same entries (k,v), the values are compared
 // using the specified equals function for two values. Keys are compared using their corresponding Equals method.
 // Only returns true if the 2 maps are the same reference or have the same size and entries.
 func (m *HashMap[K, V]) Equals(other *HashMap[K, V], equals func(a V, b V) bool) bool {
@@ -316,6 +322,9 @@ func (m *HashMap[K, V]) Equals(other *HashMap[K, V], equals func(a V, b V) bool)
 	} else if m.len != other.Len() {
 		return false
 	} else {
+		if m.Empty() && other.Empty() {
+			return true
+		}
 		it := m.Iterator()
 		for it.HasNext() {
 			entry := it.Next()

@@ -98,7 +98,8 @@ func (s *HashSet[T]) AddSlice(sl []T) {
 
 // Remove removes the element from the set if it is present.
 func (s *HashSet[T]) Remove(e T) bool {
-	return s.data.Remove(e)
+	_, ok := s.data.Remove(e)
+	return ok
 }
 
 // RemoveAll removes all entries from some iterable it from set.

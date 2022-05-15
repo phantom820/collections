@@ -18,9 +18,9 @@ type ForwardList[T types.Equitable[T]] struct {
 
 // New creates a list with the specified elements. If no elements are specified an empty list is created.
 func New[T types.Equitable[T]](elements ...T) *ForwardList[T] {
-	l := ForwardList[T]{head: nil, len: 0}
-	l.AddSlice(elements)
-	return &l
+	list := ForwardList[T]{head: nil, len: 0}
+	list.AddSlice(elements)
+	return &list
 }
 
 // singleNode a link for a singly linked list. Stores a value of some type T along with next pointer. This type is for internal use
@@ -42,66 +42,66 @@ type forwardListIterator[T types.Equitable[T]] struct {
 }
 
 // HasNext checks if the iterator it has a next element to yield.
-func (it *forwardListIterator[T]) HasNext() bool {
-	return it.n != nil
+func (iterator *forwardListIterator[T]) HasNext() bool {
+	return iterator.n != nil
 }
 
 // Next returns the next element in the iterator it. Will panic if iterator is exhausted.
-func (it *forwardListIterator[T]) Next() T {
-	if !it.HasNext() {
+func (iter *forwardListIterator[T]) Next() T {
+	if !iter.HasNext() {
 		panic(iterator.NoNextElementError)
 	}
-	n := it.n
-	it.n = it.n.next
+	n := iter.n
+	iter.n = iter.n.next
 	return n.value
 }
 
 // Cycle resets the iterator it.
-func (it *forwardListIterator[T]) Cycle() {
-	it.n = it.start
+func (iterator *forwardListIterator[T]) Cycle() {
+	iterator.n = iterator.start
 }
 
 // Iterator returns an iterator for the list.
-func (l *ForwardList[T]) Iterator() iterator.Iterator[T] {
-	return &forwardListIterator[T]{n: l.head, start: l.head}
+func (list *ForwardList[T]) Iterator() iterator.Iterator[T] {
+	return &forwardListIterator[T]{n: list.head, start: list.head}
 }
 
 // Front returns the front of the list. Will panic if list has no front element.
-func (l *ForwardList[T]) Front() T {
-	if l.head != nil {
-		return l.head.value
+func (list *ForwardList[T]) Front() T {
+	if list.head != nil {
+		return list.head.value
 	}
 	panic(lists.ErrEmptyList)
 }
 
 // Back returns the back element of the list.  Will panic if list has no back element.
-func (l *ForwardList[T]) Back() T {
-	if l.tail != nil {
-		return l.tail.value
+func (list *ForwardList[T]) Back() T {
+	if list.tail != nil {
+		return list.tail.value
 	}
 	panic(lists.ErrEmptyList)
 }
 
 // Swap swaps the element at index i and the element at index j. This is done using links. Will panic if one/both of the specified indices
 //  out of bounds.
-func (l *ForwardList[T]) Swap(i, j int) {
-	if i < 0 || i >= l.len || j < 0 || j >= l.len {
+func (list *ForwardList[T]) Swap(i, j int) {
+	if i < 0 || i >= list.len || j < 0 || j >= list.len {
 		panic(lists.ErrOutOfBounds)
 	} else {
-		prevX, currX := l.nodePair(i)
-		prevY, currY := l.nodePair(j)
+		prevX, currX := list.nodePair(i)
+		prevY, currY := list.nodePair(j)
 
 		// If x is not head of linked list
 		if prevX != nil {
 			prevX.next = currY
 		} else { // Else make y as new head
-			l.head = currY
+			list.head = currY
 		}
 		// If y is not head of linked list
 		if prevY != nil {
 			prevY.next = currX
 		} else { // Else make x as new head
-			l.head = currX
+			list.head = currX
 		}
 		// Swap next pointers
 		temp := currY.next
@@ -111,10 +111,10 @@ func (l *ForwardList[T]) Swap(i, j int) {
 }
 
 // nodePair retrieves a node and the one before it. For internal use to support operation like Swap.
-func (l *ForwardList[T]) nodePair(i int) (*singleNode[T], *singleNode[T]) {
+func (list *ForwardList[T]) nodePair(i int) (*singleNode[T], *singleNode[T]) {
 	j := 0
 	var p *singleNode[T] = nil
-	var e = l.head
+	var e = list.head
 	for e != nil {
 		if j == i {
 			break
@@ -127,10 +127,10 @@ func (l *ForwardList[T]) nodePair(i int) (*singleNode[T], *singleNode[T]) {
 }
 
 // nodeAt retrieves the node at index i in list. This is for internal use for supporting operations like Swap.
-func (l *ForwardList[T]) nodeAt(i int) *singleNode[T] {
+func (list *ForwardList[T]) nodeAt(i int) *singleNode[T] {
 	j := 0
 	var n *singleNode[T]
-	for e := l.head; e != nil; e = e.next {
+	for e := list.head; e != nil; e = e.next {
 		if j == i {
 			n = e
 		}
@@ -140,15 +140,15 @@ func (l *ForwardList[T]) nodeAt(i int) *singleNode[T] {
 }
 
 // At retrieves the element at index i in list. Will panic If i is out of bounds.
-func (l *ForwardList[T]) At(i int) T {
-	if i < 0 || i >= l.len {
+func (list *ForwardList[T]) At(i int) T {
+	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	}
-	it := l.Iterator()
+	iter := list.Iterator()
 	j := 0
 	var v T
-	for it.HasNext() {
-		e := it.Next()
+	for iter.HasNext() {
+		e := iter.Next()
 		if j == i {
 			v = e
 			break
@@ -159,48 +159,48 @@ func (l *ForwardList[T]) At(i int) T {
 }
 
 // AddFront adds element to the front of the list.
-func (l *ForwardList[T]) AddFront(e T) {
+func (list *ForwardList[T]) AddFront(e T) {
 	n := newSingleNode(e)
-	if l.head != nil {
-		n.next = l.head
-		l.head = n
-		l.len++
+	if list.head != nil {
+		n.next = list.head
+		list.head = n
+		list.len++
 		return
 	}
-	l.head = n
-	l.tail = n
-	l.len++
+	list.head = n
+	list.tail = n
+	list.len++
 }
 
 // AddBack adds element to the back of the list.
-func (l *ForwardList[T]) AddBack(e T) {
-	if l.head == nil {
-		l.AddFront(e)
+func (list *ForwardList[T]) AddBack(e T) {
+	if list.head == nil {
+		list.AddFront(e)
 		return
 	}
 	n := newSingleNode(e)
-	l.tail.next = n
-	l.tail = n
-	l.len++
+	list.tail.next = n
+	list.tail = n
+	list.len++
 }
 
 // AddAt adds an element to list at specified index i. Will panic if i is out of bounds.
-func (l *ForwardList[T]) AddAt(i int, e T) {
-	if i < 0 || i >= l.len {
+func (list *ForwardList[T]) AddAt(i int, e T) {
+	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	} else if i == 0 {
-		l.AddFront(e)
+		list.AddFront(e)
 		return
-	} else if i == l.len-1 {
-		l.AddBack(e)
+	} else if i == list.len-1 {
+		list.AddBack(e)
 	} else {
 		j := 0
 		n := newSingleNode(e)
-		for x := l.head; x != nil; x = x.next {
+		for x := list.head; x != nil; x = x.next {
 			if j == i-1 {
 				n.next = x.next
 				x.next = n
-				l.len++
+				list.len++
 				break
 			}
 			j = j + 1
@@ -210,47 +210,47 @@ func (l *ForwardList[T]) AddAt(i int, e T) {
 }
 
 // Add adds elements to the back of the list.
-func (l *ForwardList[T]) Add(elements ...T) bool {
+func (list *ForwardList[T]) Add(elements ...T) bool {
 	for _, e := range elements {
-		l.AddBack(e)
+		list.AddBack(e)
 	}
 	return true
 }
 
 // Set replaces the element at index i in the list with the new element. Returns the old element that was at index i.
-func (l *ForwardList[T]) Set(i int, e T) T {
-	if i < 0 || i >= l.len {
+func (list *ForwardList[T]) Set(i int, e T) T {
+	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	}
-	n := l.nodeAt(i)
+	n := list.nodeAt(i)
 	temp := n.value
 	n.value = e
 	return temp
 }
 
 // AddAll adds all elements from an iterable elements to the list.
-func (l *ForwardList[T]) AddAll(elements iterator.Iterable[T]) {
+func (list *ForwardList[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
-		l.Add(it.Next())
+		list.Add(it.Next())
 	}
 }
 
 // AddSlice adds element from a slice s into the list.
-func (l *ForwardList[T]) AddSlice(s []T) {
+func (list *ForwardList[T]) AddSlice(s []T) {
 	for _, e := range s {
-		l.Add(e)
+		list.Add(e)
 	}
 }
 
 // Len returns the size of the list.
-func (l *ForwardList[T]) Len() int {
-	return l.len
+func (list *ForwardList[T]) Len() int {
+	return list.len
 }
 
 // search traverses the list looking for element. For internal use to support operations such as Contains, AddAt and  so on.
-func (l *ForwardList[T]) search(e T) *singleNode[T] {
-	curr := l.head
+func (list *ForwardList[T]) search(e T) *singleNode[T] {
+	curr := list.head
 	for curr != nil {
 		if curr.value.Equals(e) {
 			return curr
@@ -261,27 +261,27 @@ func (l *ForwardList[T]) search(e T) *singleNode[T] {
 }
 
 // Contains checks if element is in the list.
-func (l *ForwardList[T]) Contains(e T) bool {
-	return l.search(e) != nil
+func (list *ForwardList[T]) Contains(e T) bool {
+	return list.search(e) != nil
 }
 
 // RemoveFront removes and returns the front element of the list. Will panic if l has no front element.
-func (l *ForwardList[T]) RemoveFront() T {
-	if l.len == 0 {
+func (list *ForwardList[T]) RemoveFront() T {
+	if list.len == 0 {
 		panic(lists.ErrEmptyList)
-	} else if l.len == 1 {
-		n := l.head
-		l.head = n.next // subsequent operations are to avoid memory leaks.
-		l.tail = nil
-		l.len -= 1
+	} else if list.len == 1 {
+		n := list.head
+		list.head = n.next // subsequent operations are to avoid memory leaks.
+		list.tail = nil
+		list.len -= 1
 		v := n.value
 		n.next = nil
 		n = nil
 		return v
 	} else {
-		n := l.head
-		l.head = n.next
-		l.len -= 1
+		n := list.head
+		list.head = n.next
+		list.len -= 1
 		v := n.value
 		n.next = nil
 		n = nil
@@ -290,14 +290,14 @@ func (l *ForwardList[T]) RemoveFront() T {
 }
 
 // RemoveBack removes and returns the back element of the list. Will panic if l has no back element.
-func (l *ForwardList[T]) RemoveBack() T {
-	if l.len <= 1 {
-		return l.RemoveFront()
+func (list *ForwardList[T]) RemoveBack() T {
+	if list.len <= 1 {
+		return list.RemoveFront()
 	} else {
-		prevN, n := l.nodePair(l.len - 1)
+		prevN, n := list.nodePair(list.len - 1)
 		prevN.next = nil
-		l.tail = prevN
-		l.len -= 1
+		list.tail = prevN
+		list.len -= 1
 		v := n.value
 		n.next = nil
 		n = nil
@@ -306,25 +306,25 @@ func (l *ForwardList[T]) RemoveBack() T {
 }
 
 // RemoveAt removes the element at the specified index i in the list. Will panic if index i is out of bounds.
-func (l *ForwardList[T]) RemoveAt(i int) T {
-	if l.Empty() {
+func (list *ForwardList[T]) RemoveAt(i int) T {
+	if list.Empty() {
 		panic(lists.ErrEmptyList)
-	} else if i < 0 || i >= l.len {
+	} else if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	} else if i == 0 {
-		return l.RemoveFront()
-	} else if i == l.len-1 {
-		return l.RemoveBack()
+		return list.RemoveFront()
+	} else if i == list.len-1 {
+		return list.RemoveBack()
 	} else {
-		prevN, n := l.nodePair(i)
-		return l.removeNode(prevN, n)
+		prevN, n := list.nodePair(i)
+		return list.removeNode(prevN, n)
 	}
 }
 
 // removeNode removes the specified node curr where prev is the node before it. For internal use for functions such as remove at.
-func (l *ForwardList[T]) removeNode(prev *singleNode[T], curr *singleNode[T]) T {
+func (list *ForwardList[T]) removeNode(prev *singleNode[T], curr *singleNode[T]) T {
 	prev.next = curr.next
-	l.len -= 1
+	list.len -= 1
 	v := curr.value
 	curr.next = nil
 	curr = nil
@@ -332,19 +332,19 @@ func (l *ForwardList[T]) removeNode(prev *singleNode[T], curr *singleNode[T]) T 
 }
 
 // Remove removes element from the list if its present. This removes the first occurence of e.
-func (l *ForwardList[T]) Remove(e T) bool {
-	curr := l.search(e)
+func (list *ForwardList[T]) Remove(e T) bool {
+	curr := list.search(e)
 	if curr == nil {
 		return false
-	} else if curr == l.head {
-		l.RemoveFront()
+	} else if curr == list.head {
+		list.RemoveFront()
 		return true
-	} else if curr == l.tail {
-		l.RemoveBack()
+	} else if curr == list.tail {
+		list.RemoveBack()
 		return true
 	} else {
 		var p *singleNode[T]
-		var n = l.head
+		var n = list.head
 		for n != nil {
 			if n.value.Equals(e) {
 				break
@@ -352,13 +352,13 @@ func (l *ForwardList[T]) Remove(e T) bool {
 			p = n
 			n = n.next
 		}
-		l.removeNode(p, n)
+		list.removeNode(p, n)
 		return true
 	}
 }
 
 // RemoveAll removes all the elements from list that appear in iterable elements.
-func (l *ForwardList[T]) RemoveAll(elements iterator.Iterable[T]) {
+func (list *ForwardList[T]) RemoveAll(elements iterator.Iterable[T]) {
 	defer func() {
 		if r := recover(); r != nil {
 			// do nothing just fail safe if l ends up empty from the removals.
@@ -366,26 +366,26 @@ func (l *ForwardList[T]) RemoveAll(elements iterator.Iterable[T]) {
 	}()
 	it := elements.Iterator()
 	for it.HasNext() {
-		l.Remove(it.Next())
+		list.Remove(it.Next())
 	}
 }
 
 // Clear removes all elements from the list.
-func (l *ForwardList[T]) Clear() {
-	for l.head != nil {
-		l.RemoveFront()
+func (list *ForwardList[T]) Clear() {
+	for list.head != nil {
+		list.RemoveFront()
 	}
 }
 
 // Equals checks if list and other list are equal. If they are the same reference/ have same size and elements then they are equal.
 // Otherwise they are not equal.
-func (l *ForwardList[T]) Equals(other *ForwardList[T]) bool {
-	if l == other {
+func (list *ForwardList[T]) Equals(other *ForwardList[T]) bool {
+	if list == other {
 		return true
-	} else if l.len != other.Len() {
+	} else if list.len != other.Len() {
 		return false
 	} else {
-		it := l.Iterator()
+		it := list.Iterator()
 		otherIt := other.Iterator()
 		for it.HasNext() {
 			a := it.Next()
@@ -399,14 +399,14 @@ func (l *ForwardList[T]) Equals(other *ForwardList[T]) bool {
 }
 
 // Empty checks if the list is empty.
-func (l *ForwardList[T]) Empty() bool {
-	return l.len == 0
+func (list *ForwardList[T]) Empty() bool {
+	return list.len == 0
 }
 
 // Reverse returns a new list that is the reverse of l. This uses extra memory since we inserting into a new list.
-func (l *ForwardList[T]) Reverse() *ForwardList[T] {
+func (list *ForwardList[T]) Reverse() *ForwardList[T] {
 	r := New[T]()
-	h := l.head
+	h := list.head
 	for h != nil {
 		r.AddFront(h.value)
 		h = h.next
@@ -415,10 +415,10 @@ func (l *ForwardList[T]) Reverse() *ForwardList[T] {
 }
 
 // Collect collects all elements of the list into a slice.
-func (l *ForwardList[T]) Collect() []T {
-	data := make([]T, l.len)
+func (list *ForwardList[T]) Collect() []T {
+	data := make([]T, list.len)
 	i := 0
-	for e := l.head; e != nil; e = e.next {
+	for e := list.head; e != nil; e = e.next {
 		data[i] = e.value
 		i = i + 1
 	}
@@ -426,23 +426,23 @@ func (l *ForwardList[T]) Collect() []T {
 }
 
 // traversal for pretty printing purposes.
-func (l *ForwardList[T]) traversal() string {
-	sb := make([]string, 0, 0)
-	for e := l.head; e != nil; e = e.next {
+func (list *ForwardList[T]) traversal() string {
+	sb := make([]string, 0)
+	for e := list.head; e != nil; e = e.next {
 		sb = append(sb, fmt.Sprint(e.value))
 	}
 	return "[" + strings.Join(sb, " ") + "]"
 }
 
 // String string formats for a list.
-func (l *ForwardList[T]) String() string {
-	return l.traversal()
+func (list *ForwardList[T]) String() string {
+	return list.traversal()
 }
 
 // Map transforms each element of the list using a function f and returns a new list with transformed elements.
-func (l *ForwardList[T]) Map(f func(e T) T) *ForwardList[T] {
+func (list *ForwardList[T]) Map(f func(e T) T) *ForwardList[T] {
 	newList := New[T]()
-	for e := l.head; e != nil; e = e.next {
+	for e := list.head; e != nil; e = e.next {
 		newE := f(e.value)
 		newList.Add(newE)
 	}
@@ -450,9 +450,9 @@ func (l *ForwardList[T]) Map(f func(e T) T) *ForwardList[T] {
 }
 
 // Filter filters the elements of the list using a predicate function f and returns new list with elements satisfying predicate.
-func (l *ForwardList[T]) Filter(f func(e T) bool) *ForwardList[T] {
+func (list *ForwardList[T]) Filter(f func(e T) bool) *ForwardList[T] {
 	newList := New[T]()
-	for e := l.head; e != nil; e = e.next {
+	for e := list.head; e != nil; e = e.next {
 		if f(e.value) {
 			newList.Add(e.value)
 		}

@@ -15,62 +15,62 @@ type SliceStack[T types.Equitable[T]] struct {
 
 // New creates a slice based stack with the specified elements, if there are none an empty stack is created.
 func New[T types.Equitable[T]](elements ...T) *SliceStack[T] {
-	s := SliceStack[T]{data: make([]T, 0)}
-	s.AddSlice(elements)
-	return &s
+	stack := SliceStack[T]{data: make([]T, 0)}
+	stack.AddSlice(elements)
+	return &stack
 }
 
 // Peek returns the top element of stack without removing it. Will panic if s has no top element.
-func (s *SliceStack[T]) Peek() T {
-	if s.Empty() {
+func (stack *SliceStack[T]) Peek() T {
+	if stack.Empty() {
 		panic(stacks.ErrNoTopElement)
 	}
-	return s.data[s.Len()-1]
+	return stack.data[stack.Len()-1]
 }
 
 // Pop removes and returns the top element of stack. Will panic if s has no top element.
-func (s *SliceStack[T]) Pop() T {
-	if s.Empty() {
+func (stack *SliceStack[T]) Pop() T {
+	if stack.Empty() {
 		panic(stacks.ErrNoTopElement)
 	}
-	t := s.data[s.Len()-1]
-	s.data = s.data[:s.Len()-1]
+	t := stack.data[stack.Len()-1]
+	stack.data = stack.data[:stack.Len()-1]
 	return t
 }
 
 // Add pushes the elements to the stack.
-func (s *SliceStack[T]) Add(elements ...T) bool {
-	s.data = append(s.data, elements...)
+func (stack *SliceStack[T]) Add(elements ...T) bool {
+	stack.data = append(stack.data, elements...)
 	return true
 }
 
 // AddAll pushes elements from iterable elements onto the stack.
-func (s *SliceStack[T]) AddAll(elements iterator.Iterable[T]) {
+func (stack *SliceStack[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
-		s.Add(it.Next())
+		stack.Add(it.Next())
 	}
 }
 
 // AddSlice adds element from a slice s into the stack q.
-func (s *SliceStack[T]) AddSlice(slice []T) {
-	s.data = append(s.data, slice...)
+func (stack *SliceStack[T]) AddSlice(slice []T) {
+	stack.data = append(stack.data, slice...)
 }
 
 // Clear removes all elements in the stack.
-func (s *SliceStack[T]) Clear() {
-	s.data = make([]T, 0)
+func (stack *SliceStack[T]) Clear() {
+	stack.data = make([]T, 0)
 }
 
 // Collect converts stack into a slice by returning underlying slice.
-func (s *SliceStack[T]) Collect() []T {
-	return s.data
+func (stack *SliceStack[T]) Collect() []T {
+	return stack.data
 }
 
 // Contains checks if the element e is in the stack.
-func (s *SliceStack[T]) Contains(e T) bool {
-	for i, _ := range s.data {
-		if s.data[i].Equals(e) {
+func (stack *SliceStack[T]) Contains(e T) bool {
+	for i, _ := range stack.data {
+		if stack.data[i].Equals(e) {
 			return true
 		}
 	}
@@ -78,8 +78,8 @@ func (s *SliceStack[T]) Contains(e T) bool {
 }
 
 // Empty checks if the stack is empty.
-func (s *SliceStack[T]) Empty() bool {
-	return len(s.data) == 0
+func (stack *SliceStack[T]) Empty() bool {
+	return len(stack.data) == 0
 }
 
 // sliceStackIterator model for implementing an iterator on a slice based stack.
@@ -112,44 +112,44 @@ func (it *sliceStackIterator[T]) Cycle() {
 }
 
 // Iterator returns an iterator for iterating through stack q.
-func (s *SliceStack[T]) Iterator() iterator.Iterator[T] {
-	return &sliceStackIterator[T]{slice: s.data, i: len(s.data) - 1}
+func (stack *SliceStack[T]) Iterator() iterator.Iterator[T] {
+	return &sliceStackIterator[T]{slice: stack.data, i: len(stack.data) - 1}
 }
 
 // Len returns the size of the stack.
-func (s *SliceStack[T]) Len() int {
-	return len(s.data)
+func (stack *SliceStack[T]) Len() int {
+	return len(stack.data)
 }
 
 // indexOf finds the index of an element e in the stack q. Gives -1 if the element is not present.
-func (s *SliceStack[T]) indexOf(e T) int {
-	for i, _ := range s.data {
-		if s.data[i].Equals(e) {
+func (stack *SliceStack[T]) indexOf(e T) int {
+	for i, _ := range stack.data {
+		if stack.data[i].Equals(e) {
 			return i
 		}
 	}
 	return -1
 }
 
-// Removes the first occurence of element e from the stack.
-func (s *SliceStack[T]) Remove(e T) bool {
-	i := s.indexOf(e)
+// Removes the first occurence of element  from the stack.
+func (stack *SliceStack[T]) Remove(e T) bool {
+	i := stack.indexOf(e)
 	if i == -1 {
 		return false
 	}
-	s.data = append(s.data[0:i], s.data[i+1:]...)
+	stack.data = append(stack.data[0:i], stack.data[i+1:]...)
 	return true
 }
 
 // RemoveAll removes all the elements from some iterable elements that are in the stack.
-func (s *SliceStack[T]) RemoveAll(elements iterator.Iterable[T]) {
+func (stack *SliceStack[T]) RemoveAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
-		s.Remove(it.Next())
+		stack.Remove(it.Next())
 	}
 }
 
 // String for pretty printing the stack.
-func (s *SliceStack[T]) String() string {
-	return fmt.Sprint(s.data)
+func (stack *SliceStack[T]) String() string {
+	return fmt.Sprint(stack.data)
 }

@@ -14,90 +14,90 @@ type ListStack[T types.Equitable[T]] struct {
 
 // New creates a stack with the specified elements, if there are none an empty stack is created.
 func New[T types.Equitable[T]](elements ...T) *ListStack[T] {
-	var s ListStack[T] = ListStack[T]{list: forwardlist.New[T]()}
-	s.AddSlice(elements)
-	return &s
+	var stack ListStack[T] = ListStack[T]{list: forwardlist.New[T]()}
+	stack.AddSlice(elements)
+	return &stack
 }
 
 // Peek returns the element at the top of the stack without removing it. Will panic if stack has no top element to peek.
-func (s *ListStack[T]) Peek() T {
+func (stack *ListStack[T]) Peek() T {
 	defer func() {
 		if r := recover(); r != nil {
 			panic(stacks.ErrNoTopElement)
 		}
 	}()
-	return s.list.Front()
+	return stack.list.Front()
 }
 
 // Pop returns and removes the element at the top of the stack. Will panic if stack has no top element to pop.
-func (s *ListStack[T]) Pop() T {
+func (stack *ListStack[T]) Pop() T {
 	defer func() {
 		if r := recover(); r != nil {
 			panic(stacks.ErrNoTopElement)
 		}
 	}()
-	return s.list.RemoveFront()
+	return stack.list.RemoveFront()
 }
 
 // Add pushes elements  to the stack.
-func (s *ListStack[T]) Add(elements ...T) bool {
+func (stack *ListStack[T]) Add(elements ...T) bool {
 	for _, e := range elements {
-		s.list.AddFront(e)
+		stack.list.AddFront(e)
 	}
 	return true
 }
 
 // AddAll pushes all the element from an iterable elements to the stack.
-func (s *ListStack[T]) AddAll(elements iterator.Iterable[T]) {
+func (stack *ListStack[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
-		s.list.AddFront(it.Next())
+		stack.list.AddFront(it.Next())
 	}
 }
 
 // AddSlices pushes all the elements from a slice to the stack.
-func (s *ListStack[T]) AddSlice(slice []T) {
+func (stack *ListStack[T]) AddSlice(slice []T) {
 	for _, e := range slice {
-		s.list.AddFront(e)
+		stack.list.AddFront(e)
 	}
 }
 
 // Clear removes all items on the stack.
-func (s *ListStack[T]) Clear() {
-	s.list.Clear()
+func (stack *ListStack[T]) Clear() {
+	stack.list.Clear()
 }
 
 // Collect returns the stack as a slice.
-func (s *ListStack[T]) Collect() []T {
-	return s.list.Collect()
+func (stack *ListStack[T]) Collect() []T {
+	return stack.list.Collect()
 }
 
 // Contains checks if element e is part of the stack.
-func (s *ListStack[T]) Contains(e T) bool {
-	return s.list.Contains(e)
+func (stack *ListStack[T]) Contains(e T) bool {
+	return stack.list.Contains(e)
 }
 
 // Empty checks if the stack is empty.
-func (s *ListStack[T]) Empty() bool {
-	return s.list.Empty()
+func (stack *ListStack[T]) Empty() bool {
+	return stack.list.Empty()
 }
 
 // Iterator returns in iterator for iterating through the stack.
-func (s *ListStack[T]) Iterator() iterator.Iterator[T] {
-	return s.list.Iterator()
+func (stack *ListStack[T]) Iterator() iterator.Iterator[T] {
+	return stack.list.Iterator()
 }
 
 // Len returns the size of the stack.
-func (s *ListStack[T]) Len() int {
-	return s.list.Len()
+func (stack *ListStack[T]) Len() int {
+	return stack.list.Len()
 }
 
 // Remove removes the first occurence of element e from the stack.
-func (s *ListStack[T]) Remove(e T) bool {
-	return s.list.Remove(e)
+func (stack *ListStack[T]) Remove(e T) bool {
+	return stack.list.Remove(e)
 }
 
-// RemoveAll removes all elements from the stack that occur in iterable elements.
-func (s *ListStack[T]) RemoveAll(elements iterator.Iterable[T]) {
-	s.list.RemoveAll(elements)
+// RemoveAll removes all elements from the stack that occur in iterable elementstack.
+func (stack *ListStack[T]) RemoveAll(elements iterator.Iterable[T]) {
+	stack.list.RemoveAll(elements)
 }

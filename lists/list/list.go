@@ -19,9 +19,9 @@ type List[T types.Equitable[T]] struct {
 
 // New creates a list with the specified elements. If no elements are specified an empty list is created.
 func New[T types.Equitable[T]](elements ...T) *List[T] {
-	l := List[T]{head: nil, len: 0}
-	l.AddSlice(elements)
-	return &l
+	list := List[T]{head: nil, len: 0}
+	list.AddSlice(elements)
+	return &list
 }
 
 // node a link for a doubly linked list. Stores a value of some type T along with prev and next pointer. This type is for internal use.
@@ -43,17 +43,17 @@ type listIterator[T types.Equitable[T]] struct {
 }
 
 // HasNext checks if the iterator has a next element to yield.
-func (it *listIterator[T]) HasNext() bool {
-	return it.n != nil
+func (iterator *listIterator[T]) HasNext() bool {
+	return iterator.n != nil
 }
 
-// Next returns the next element in the iterator. Will panic if iterator has been exhausted.
-func (it *listIterator[T]) Next() T {
-	if !it.HasNext() {
+// Next returns the next element in the iterator it. Will panic if iterator has no next element.
+func (iter *listIterator[T]) Next() T {
+	if !iter.HasNext() {
 		panic(iterator.NoNextElementError)
 	}
-	n := it.n
-	it.n = it.n.next
+	n := iter.n
+	iter.n = iter.n.next
 	return n.value
 }
 
@@ -63,45 +63,45 @@ func (it *listIterator[T]) Cycle() {
 }
 
 // Iterator returns an iterator for the list.
-func (l *List[T]) Iterator() iterator.Iterator[T] {
-	return &listIterator[T]{n: l.head, start: l.head}
+func (list *List[T]) Iterator() iterator.Iterator[T] {
+	return &listIterator[T]{n: list.head, start: list.head}
 }
 
 // Front returns the front element of the list. Will panic if l has no front element.
-func (l *List[T]) Front() T {
-	if l.head != nil {
-		return l.head.value
+func (list *List[T]) Front() T {
+	if list.head == nil {
+		panic(lists.ErrEmptyList)
 	}
-	panic(lists.ErrEmptyList)
+	return list.head.value
 }
 
 // Back returns the back element of the list. Will panic if l has no back element.
-func (l *List[T]) Back() T {
-	if l.tail != nil {
-		return l.tail.value
+func (list *List[T]) Back() T {
+	if list.tail != nil {
+		return list.tail.value
 	}
 	panic(lists.ErrEmptyList)
 }
 
 // Swap swaps the element at index i and the element at index j. This is done using links. Will panics if one or both of the specified indices
 // out of bounds.
-func (l *List[T]) Swap(i, j int) {
-	if i < 0 || i >= l.len || j < 0 || j >= l.len {
+func (list *List[T]) Swap(i, j int) {
+	if i < 0 || i >= list.len || j < 0 || j >= list.len {
 		panic(lists.ErrOutOfBounds)
 	} else {
-		x := l.nodeAt(i)
-		y := l.nodeAt(j)
-		if x == l.head {
-			l.head = y
-		} else if y == l.head {
-			l.head = x
+		x := list.nodeAt(i)
+		y := list.nodeAt(j)
+		if x == list.head {
+			list.head = y
+		} else if y == list.head {
+			list.head = x
 
 		}
-		if x == l.tail {
-			l.tail = y
+		if x == list.tail {
+			list.tail = y
 
-		} else if y == l.tail {
-			l.tail = x
+		} else if y == list.tail {
+			list.tail = x
 
 		}
 
@@ -136,10 +136,10 @@ func (l *List[T]) Swap(i, j int) {
 }
 
 // nodeAt retrieves the node at index i in list. This is for internal use for supporting operations like Swap.
-func (l *List[T]) nodeAt(i int) *node[T] {
+func (list *List[T]) nodeAt(i int) *node[T] {
 	j := 0
 	var n *node[T]
-	for e := l.head; e != nil; e = e.next {
+	for e := list.head; e != nil; e = e.next {
 		if j == i {
 			n = e
 		}
@@ -149,15 +149,15 @@ func (l *List[T]) nodeAt(i int) *node[T] {
 }
 
 // At retrieves the element at index i in list. Will panic If i is out of bounds.
-func (l *List[T]) At(i int) T {
-	if i < 0 || i >= l.len {
+func (list *List[T]) At(i int) T {
+	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	}
-	it := l.Iterator()
+	iterator := list.Iterator()
 	j := 0
 	var v T
-	for it.HasNext() {
-		e := it.Next()
+	for iterator.HasNext() {
+		e := iterator.Next()
 		if j == i {
 			v = e
 			break
@@ -168,49 +168,49 @@ func (l *List[T]) At(i int) T {
 }
 
 // AddFront adds element to the front of the list.
-func (l *List[T]) AddFront(e T) {
-	n := newNode(e)
-	if l.head != nil {
-		n.next = l.head
-		l.head.prev = n
-		l.head = n
-		l.len++
+func (list *List[T]) AddFront(element T) {
+	n := newNode(element)
+	if list.head != nil {
+		n.next = list.head
+		list.head.prev = n
+		list.head = n
+		list.len++
 		return
 	}
-	l.head = n
-	l.tail = n
-	l.len++
+	list.head = n
+	list.tail = n
+	list.len++
 }
 
 // AddBack adds element to the back of the list.
-func (l *List[T]) AddBack(e T) {
-	if l.head == nil {
-		l.AddFront(e)
+func (list *List[T]) AddBack(element T) {
+	if list.head == nil {
+		list.AddFront(element)
 		return
 	}
-	n := newNode(e)
-	l.tail.next = n
-	n.prev = l.tail
-	l.tail = n
-	l.len++
+	n := newNode(element)
+	list.tail.next = n
+	n.prev = list.tail
+	list.tail = n
+	list.len++
 }
 
 // AddAt adds element to list at specified index i. Will panic if i is out of bounds.
-func (l *List[T]) AddAt(i int, e T) {
-	if i < 0 || i >= l.len {
+func (list *List[T]) AddAt(i int, elements T) {
+	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	} else if i == 0 {
-		l.AddFront(e)
+		list.AddFront(elements)
 		return
 	} else {
 		j := 0
-		n := newNode(e)
-		for x := l.head; x != nil; x = x.next {
+		n := newNode(elements)
+		for x := list.head; x != nil; x = x.next {
 			if j == i-1 {
 				n.prev = x
 				n.next = x.next
 				x.next = n
-				l.len++
+				list.len++
 				break
 			}
 			j = j + 1
@@ -220,49 +220,49 @@ func (l *List[T]) AddAt(i int, e T) {
 }
 
 // Add adds elements to the back of the list.
-func (l *List[T]) Add(elements ...T) bool {
+func (list *List[T]) Add(elements ...T) bool {
 	for _, e := range elements {
-		l.AddBack(e)
+		list.AddBack(e)
 	}
 	return true
 }
 
 // Set replaces the element at index i in the list with the new element. Returns the old element that was at index i.
-func (l *List[T]) Set(i int, e T) T {
-	if i < 0 || i >= l.len {
+func (list *List[T]) Set(i int, element T) T {
+	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	}
-	n := l.nodeAt(i)
+	n := list.nodeAt(i)
 	temp := n.value
-	n.value = e
+	n.value = element
 	return temp
 }
 
 // AddAll adds all elements from some iterable elements to the list.
-func (l *List[T]) AddAll(elements iterator.Iterable[T]) {
+func (list *List[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
-		l.Add(it.Next())
+		list.Add(it.Next())
 	}
 }
 
-// AddSlice adds element from a slice s into the list.
-func (l *List[T]) AddSlice(s []T) {
-	for _, e := range s {
-		l.Add(e)
+// AddSlice adds element from a slice to the list.
+func (list *List[T]) AddSlice(slice []T) {
+	for _, element := range slice {
+		list.Add(element)
 	}
 }
 
 // Len returns the size of the list.
-func (l *List[T]) Len() int {
-	return l.len
+func (list *List[T]) Len() int {
+	return list.len
 }
 
 // search traverses the list looking for element. For internal use to support operations such as Contains, AddAt and  so on.
-func (l *List[T]) search(e T) *node[T] {
-	curr := l.head
+func (list *List[T]) search(element T) *node[T] {
+	curr := list.head
 	for curr != nil {
-		if curr.value.Equals(e) {
+		if curr.value.Equals(element) {
 			return curr
 		}
 		curr = curr.next
@@ -271,45 +271,45 @@ func (l *List[T]) search(e T) *node[T] {
 }
 
 // Contains checks if element is in the list.
-func (l *List[T]) Contains(e T) bool {
-	return l.search(e) != nil
+func (list *List[T]) Contains(element T) bool {
+	return list.search(element) != nil
 }
 
-// RemoveFront removes and returns the front element of the list. Will panic if l has no front element.
-func (l *List[T]) RemoveFront() T {
-	if l.len == 0 {
+// RemoveFront removes and returns the front element of the list. Will panic if the list has no front element.
+func (list *List[T]) RemoveFront() T {
+	if list.len == 0 {
 		panic(lists.ErrEmptyList)
-	} else if l.len == 1 {
-		n := l.head
-		l.head = n.next // subsequent operations are to avoid memory leaks.
-		l.tail = nil
+	} else if list.len == 1 {
+		n := list.head
+		list.head = n.next // subsequent operations are to avoid memory leaks.
+		list.tail = nil
 		v := n.value
 		n.next = nil
 		n.prev = nil
 		n = nil
-		l.len -= 1
+		list.len -= 1
 		return v
 	} else {
-		n := l.head
-		l.head = n.next
+		n := list.head
+		list.head = n.next
 		v := n.value
 		n.next = nil
 		n.prev = nil
 		n = nil
-		l.len -= 1
+		list.len -= 1
 		return v
 	}
 }
 
 // RemoveBack removes and returns the back element of the list. Will panic if l has no back element.
-func (l *List[T]) RemoveBack() T {
-	if l.len <= 1 {
-		return l.RemoveFront()
+func (list *List[T]) RemoveBack() T {
+	if list.len <= 1 {
+		return list.RemoveFront()
 	} else {
-		n := l.tail
-		l.tail = l.tail.prev
-		l.tail.next = nil
-		l.len -= 1
+		n := list.tail
+		list.tail = list.tail.prev
+		list.tail.next = nil
+		list.len -= 1
 		v := n.value
 		n.prev = nil
 		n.next = nil
@@ -319,52 +319,52 @@ func (l *List[T]) RemoveBack() T {
 }
 
 // RemoveAt removes the element at the specified index i. Will panic if index i is out of bounds.
-func (l *List[T]) RemoveAt(i int) T {
-	if l.Empty() {
+func (list *List[T]) RemoveAt(i int) T {
+	if list.Empty() {
 		panic(lists.ErrEmptyList)
-	} else if i < 0 || i >= l.len {
+	} else if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	} else if i == 0 {
-		return l.RemoveFront()
-	} else if i == l.len-1 {
-		return l.RemoveBack()
+		return list.RemoveFront()
+	} else if i == list.len-1 {
+		return list.RemoveBack()
 	} else {
-		n := l.nodeAt(i)
-		return l.removeNode(n)
+		n := list.nodeAt(i)
+		return list.removeNode(n)
 	}
 }
 
 // removeNode removes the specified node. For internal use for functions such as RemoveAt.
-func (l *List[T]) removeNode(curr *node[T]) T {
+func (list *List[T]) removeNode(curr *node[T]) T {
 	n := curr.prev
 	n.next = curr.next
 	n.next.prev = n
 	curr.next = nil
 	curr.prev = nil
 	curr = nil
-	l.len -= 1
+	list.len -= 1
 	return n.value
 }
 
-// Remove removes element from the list if its present. This removes the first occurence of e.
-func (l *List[T]) Remove(e T) bool {
-	curr := l.search(e)
+// Remove removes element from the list if its present. This removes the first occurence of the element.
+func (list *List[T]) Remove(element T) bool {
+	curr := list.search(element)
 	if curr == nil {
 		return false
-	} else if curr == l.head {
-		l.RemoveFront()
+	} else if curr == list.head {
+		list.RemoveFront()
 		return true
-	} else if curr == l.tail {
-		l.RemoveBack()
+	} else if curr == list.tail {
+		list.RemoveBack()
 		return true
 	} else {
-		l.removeNode(curr)
+		list.removeNode(curr)
 		return true
 	}
 }
 
 // RemoveAll removes all the elements from the list that appear in some iterable elements.
-func (l *List[T]) RemoveAll(elements iterator.Iterable[T]) {
+func (list *List[T]) RemoveAll(elements iterator.Iterable[T]) {
 	defer func() {
 		if r := recover(); r != nil {
 			// do nothing just fail safe if l ends up empty from the removals.
@@ -372,14 +372,14 @@ func (l *List[T]) RemoveAll(elements iterator.Iterable[T]) {
 	}()
 	it := elements.Iterator()
 	for it.HasNext() {
-		l.Remove(it.Next())
+		list.Remove(it.Next())
 	}
 }
 
 // Reverse returns a new list that is the reverse of l. This uses extra memory since we inserting into a new list.
-func (l *List[T]) Reverse() *List[T] {
+func (list *List[T]) Reverse() *List[T] {
 	r := New[T]()
-	h := l.head
+	h := list.head
 	for h != nil {
 		r.AddFront(h.value)
 		h = h.next
@@ -388,28 +388,28 @@ func (l *List[T]) Reverse() *List[T] {
 }
 
 // Clear removes all elements from the list.
-func (l *List[T]) Clear() {
-	l.head = nil
-	l.tail = nil
-	l.len = 0
-	// for l.head != nil {
-	// 	l.RemoveFront()
+func (list *List[T]) Clear() {
+	list.head = nil
+	list.tail = nil
+	list.len = 0
+	// for list.head != nil {
+	// 	list.RemoveFront()
 	// }
 }
 
 // Equals checks if list and list other are equal. If they are the same reference/ have same size and elements then they are equal.
 // Otherwise they are not equal.
-func (l *List[T]) Equals(other *List[T]) bool {
-	if l == other {
+func (list *List[T]) Equals(other *List[T]) bool {
+	if list == other {
 		return true
-	} else if l.len != other.Len() {
+	} else if list.len != other.Len() {
 		return false
 	} else {
-		it := l.Iterator()
-		otherIt := other.Iterator()
-		for it.HasNext() {
-			a := it.Next()
-			b := otherIt.Next()
+		iter := list.Iterator()
+		otherIter := other.Iterator()
+		for iter.HasNext() {
+			a := iter.Next()
+			b := otherIter.Next()
 			if !a.Equals(b) {
 				return false
 			}
@@ -419,15 +419,15 @@ func (l *List[T]) Equals(other *List[T]) bool {
 }
 
 // Empty checks if the list is empty.
-func (l *List[T]) Empty() bool {
-	return l.len == 0
+func (list *List[T]) Empty() bool {
+	return list.len == 0
 }
 
 // Collect collects all elements of the list into a slice.
-func (l *List[T]) Collect() []T {
-	data := make([]T, l.len)
+func (list *List[T]) Collect() []T {
+	data := make([]T, list.len)
 	i := 0
-	for e := l.head; e != nil; e = e.next {
+	for e := list.head; e != nil; e = e.next {
 		data[i] = e.value
 		i = i + 1
 	}
@@ -435,23 +435,23 @@ func (l *List[T]) Collect() []T {
 }
 
 // traversal for pretty printing purposes.
-func (l *List[T]) traversal() string {
+func (list *List[T]) traversal() string {
 	sb := make([]string, 0)
-	for e := l.head; e != nil; e = e.next {
+	for e := list.head; e != nil; e = e.next {
 		sb = append(sb, fmt.Sprint(e.value))
 	}
 	return "[" + strings.Join(sb, " ") + "]"
 }
 
 // String string format for list.
-func (l *List[T]) String() string {
-	return l.traversal()
+func (list *List[T]) String() string {
+	return list.traversal()
 }
 
 // Map transforms each element of the list using a function f and returns a new list with transformed elements.
-func (l *List[T]) Map(f func(e T) T) *List[T] {
+func (list *List[T]) Map(f func(e T) T) *List[T] {
 	newList := New[T]()
-	for e := l.head; e != nil; e = e.next {
+	for e := list.head; e != nil; e = e.next {
 		newE := f(e.value)
 		newList.Add(newE)
 	}
@@ -459,9 +459,9 @@ func (l *List[T]) Map(f func(e T) T) *List[T] {
 }
 
 // Filter filters the elements of the list using a predicate function f and returns new list with elements satisfying predicate.
-func (l *List[T]) Filter(f func(e T) bool) *List[T] {
+func (list *List[T]) Filter(f func(e T) bool) *List[T] {
 	newList := New[T]()
-	for e := l.head; e != nil; e = e.next {
+	for e := list.head; e != nil; e = e.next {
 		if f(e.value) {
 			newList.Add(e.value)
 		}

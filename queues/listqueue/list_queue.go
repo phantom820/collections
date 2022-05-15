@@ -17,93 +17,93 @@ type ListQueue[T types.Equitable[T]] struct {
 
 // New creates a list based queue with the specified elements. If no specified elements an empty queue is returned.
 func New[T types.Equitable[T]](elements ...T) *ListQueue[T] {
-	q := ListQueue[T]{list: forwardlist.New[T]()}
-	q.AddSlice(elements)
-	return &q
+	queue := ListQueue[T]{list: forwardlist.New[T]()}
+	queue.AddSlice(elements)
+	return &queue
 }
 
 // Add adds elements to the back of the queue.
-func (q *ListQueue[T]) Add(elements ...T) bool {
+func (queue *ListQueue[T]) Add(elements ...T) bool {
 	for _, e := range elements {
-		q.list.Add(e)
+		queue.list.Add(e)
 	}
 	return true
 }
 
 // AddAll adds the elements from some iterable elements to the queue.
-func (q *ListQueue[T]) AddAll(elements iterator.Iterable[T]) {
+func (queue *ListQueue[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
-		q.Add(it.Next())
+		queue.Add(it.Next())
 	}
 }
 
 // AddSlice adds element from some slice s into the queue.
-func (q *ListQueue[T]) AddSlice(s []T) {
-	q.list.AddSlice(s)
+func (queue *ListQueue[T]) AddSlice(s []T) {
+	queue.list.AddSlice(s)
 }
 
 // Remove removes the element e from the queue .
-func (q *ListQueue[T]) Remove(e T) bool {
-	return q.list.Remove(e)
+func (queue *ListQueue[T]) Remove(e T) bool {
+	return queue.list.Remove(e)
 }
 
 // Clear removes all elements in the queue.
-func (q *ListQueue[T]) Clear() {
-	q.list.Clear()
+func (queue *ListQueue[T]) Clear() {
+	queue.list.Clear()
 }
 
 // Collect converts queue into a slice.
-func (q ListQueue[T]) Collect() []T {
-	return q.list.Collect()
+func (queue *ListQueue[T]) Collect() []T {
+	return queue.list.Collect()
 }
 
 // Contains checks if the elemen e is in the queue.
-func (q *ListQueue[T]) Contains(e T) bool {
-	return q.list.Contains(e)
+func (queue *ListQueue[T]) Contains(e T) bool {
+	return queue.list.Contains(e)
 }
 
 // Empty checks if the queue is empty.
-func (q *ListQueue[T]) Empty() bool {
-	return q.list.Empty()
+func (queue *ListQueue[T]) Empty() bool {
+	return queue.list.Empty()
 }
 
 // Front returns the front element of the queue without removing it.
-func (q *ListQueue[T]) Front() T {
+func (queue *ListQueue[T]) Front() T {
 	defer func() {
 		if r := recover(); r != nil {
 			panic(queues.ErrNoFrontElement)
 		}
 	}()
-	return q.list.Front()
+	return queue.list.Front()
 }
 
 // Iterator returns an iterator for iterating through queue.
-func (q *ListQueue[T]) Iterator() iterator.Iterator[T] {
-	return q.list.Iterator()
+func (queue *ListQueue[T]) Iterator() iterator.Iterator[T] {
+	return queue.list.Iterator()
 }
 
 // Len returns the size of the queue.
-func (q *ListQueue[T]) Len() int {
-	return q.list.Len()
+func (queue *ListQueue[T]) Len() int {
+	return queue.list.Len()
 }
 
 // RemoveAll removes all the elements from some iterable elements that are in the queue.
-func (q *ListQueue[T]) RemoveAll(elements iterator.Iterable[T]) {
-	q.list.RemoveAll(elements)
+func (queue *ListQueue[T]) RemoveAll(elements iterator.Iterable[T]) {
+	queue.list.RemoveAll(elements)
 }
 
 // RemoveFront removes and returns the front element of the queue. Wil panic if no such element.
-func (q *ListQueue[T]) RemoveFront() T {
+func (queue *ListQueue[T]) RemoveFront() T {
 	defer func() {
 		if r := recover(); r != nil {
 			panic(queues.ErrNoFrontElement)
 		}
 	}()
-	return q.list.RemoveFront()
+	return queue.list.RemoveFront()
 }
 
 // String for printing the queue.
-func (q ListQueue[T]) String() string {
-	return fmt.Sprint(q.list)
+func (queue *ListQueue[T]) String() string {
+	return fmt.Sprint(queue.list)
 }

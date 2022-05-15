@@ -1,4 +1,4 @@
-package hashset
+package linkedhashset
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/list"
 	"github.com/phantom820/collections/types"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,7 +42,7 @@ func TestAdd(t *testing.T) {
 		assert.Equal(t, true, s.Contains(it.Next()))
 	}
 
-	// Case 3 Adding a slice should work accordingly.
+	// Case 3 : Adding a slice should work accordingly.
 	s.Clear()
 
 	sl := []types.Int{1, 1, 2, 3, 4, 5}
@@ -51,6 +50,15 @@ func TestAdd(t *testing.T) {
 
 	sm := []types.Int{1, 2, 3, 4, 5}
 	assert.ElementsMatch(t, sm, s.Collect())
+
+	// Case 4 : Clear and add a vast colelction of values
+	s.Clear()
+	slice := []types.Int{}
+	for i := 50; i >= 0; i-- {
+		s.Add(types.Int(i))
+		slice = append(slice, types.Int(i))
+	}
+	assert.ElementsMatch(t, slice, s.Collect())
 
 }
 

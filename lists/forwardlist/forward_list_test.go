@@ -475,3 +475,59 @@ func TestString(t *testing.T) {
 	assert.Equal(t, "[2 3 4 5 10]", fmt.Sprint(l))
 
 }
+
+func TestSort(t *testing.T) {
+
+	l := New[types.Int]()
+
+	// Case 1 : Sorting an empty list does nothing.
+	Sort(l)
+	assert.Equal(t, true, l.Empty())
+
+	// Case 2 : Sorting a list with elements.
+	l.Add(-10, 20, 0, 5, 4, 3, 2, 1)
+	sorted := []types.Int{-10, 0, 1, 2, 3, 4, 5, 20}
+	Sort(l)
+	assert.ElementsMatch(t, sorted, l.Collect())
+
+	// Try adding to sorted list to see if nothing broke.
+	l.Add(100)
+	assert.ElementsMatch(t, append(sorted, 100), l.Collect())
+	l.AddFront(200)
+	assert.ElementsMatch(t, append([]types.Int{200}, append(sorted, 100)...), l.Collect())
+
+	// Case 2 : Sorting an already sorted list.
+	l.Clear()
+	l.Add(-10, 0, 1, 2, 3, 4, 5, 20)
+	Sort(l)
+	assert.ElementsMatch(t, sorted, l.Collect())
+
+}
+
+func TestSortBy(t *testing.T) {
+
+	l := New[types.Int]()
+
+	// Case 1 : Sorting an empty list does nothing.
+	SortBy(l, func(a, b types.Int) bool { return a < b })
+	assert.Equal(t, true, l.Empty())
+
+	// Case 2 : Sorting a list with elements.
+	l.Add(-10, 20, 0, 5, 4, 3, 2, 1)
+	sorted := []types.Int{20, 5, 4, 3, 2, 1, 0, -10}
+	SortBy(l, func(a, b types.Int) bool { return a > b })
+	assert.ElementsMatch(t, sorted, l.Collect())
+
+	// Try adding to sorted list to see if nothing broke.
+	l.Add(100)
+	assert.ElementsMatch(t, append(sorted, 100), l.Collect())
+	l.AddFront(200)
+	assert.ElementsMatch(t, append([]types.Int{200}, append(sorted, 100)...), l.Collect())
+
+	// Case 2 : Sorting an already sorted list.
+	l.Clear()
+	l.Add(-10, 0, 1, 2, 3, 4, 5, 20)
+	SortBy(l, func(a, b types.Int) bool { return a < b })
+	assert.ElementsMatch(t, sorted, l.Collect())
+
+}

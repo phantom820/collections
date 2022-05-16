@@ -468,3 +468,137 @@ func (list *List[T]) Filter(f func(e T) bool) *List[T] {
 	}
 	return newList
 }
+
+// locateMid finds the mid of a list using The Tortoise and The Hare approach.
+func locateMid[T types.Equitable[T]](head *node[T]) *node[T] {
+	slow := head
+	fast := head.next
+	for fast != nil && fast.next != nil {
+		slow = slow.next
+		fast = fast.next.next
+	}
+	return slow
+}
+
+// merge combines 2 list that have been sorted by natural ordering of elements.
+func merge[T types.Comparable[T]](leftHead *node[T], rightHead *node[T]) (*node[T], *node[T]) {
+
+	falseHead := &node[T]{}
+	sentinel := falseHead
+
+	// merge by comparing front of each list and traversing.
+	for leftHead != nil && rightHead != nil {
+		if leftHead.value.Less(rightHead.value) {
+			sentinel.next = leftHead
+			leftHead = leftHead.next
+		} else {
+			sentinel.next = rightHead
+			rightHead = rightHead.next
+		}
+		temp := sentinel
+		sentinel = sentinel.next
+		sentinel.prev = temp
+
+	}
+
+	// at the end one of the 2 list must have been exhauted.
+	for leftHead != nil {
+		sentinel.next = leftHead
+		leftHead = leftHead.next
+		temp := sentinel
+		sentinel = sentinel.next
+		sentinel.prev = temp
+	}
+
+	for rightHead != nil {
+		sentinel.next = rightHead
+		rightHead = rightHead.next
+		temp := sentinel
+		sentinel = sentinel.next
+		sentinel.prev = temp
+	}
+	falseHead.next.prev = nil
+	return falseHead.next, sentinel
+}
+
+// sort sorts the list using natural ordering of elements. The sorting algorithm is merge sort.
+func sort[T types.Comparable[T]](head *node[T]) (*node[T], *node[T]) {
+	if head.next == nil {
+		return head, nil
+	}
+	mid := locateMid(head)
+	rightHead := mid.next
+	mid.next = nil
+	leftHeadSorted, _ := sort(head)
+	rightHeadSorted, _ := sort(rightHead)
+	finalHead, finalTail := merge(leftHeadSorted, rightHeadSorted)
+	return finalHead, finalTail
+}
+
+// Sort sorts the list using natural ordering of elements.
+func Sort[T types.Comparable[T]](list *List[T]) {
+	if list.Empty() || list.len == 1 {
+		return
+	}
+	head, tail := sort(list.head)
+	list.head = head
+	list.tail = tail
+}
+
+// mergeBy combines 2 list that have been sorted by a specified function f.
+func mergeBy[T types.Equitable[T]](leftHead *node[T], rightHead *node[T], less func(a, b T) bool) (*node[T], *node[T]) {
+
+	falseHead := &node[T]{}
+	sentinel := falseHead
+
+	// merge by comparing front of each list and traversing.
+	for leftHead != nil && rightHead != nil {
+		if less(leftHead.value, rightHead.value) {
+			sentinel.next = leftHead
+			leftHead = leftHead.next
+		} else {
+			sentinel.next = rightHead
+			rightHead = rightHead.next
+		}
+		sentinel = sentinel.next
+	}
+
+	// at the end one of the 2 list must have been exhauted.
+	for leftHead != nil {
+		sentinel.next = leftHead
+		leftHead = leftHead.next
+		sentinel = sentinel.next
+	}
+
+	for rightHead != nil {
+		sentinel.next = rightHead
+		rightHead = rightHead.next
+		sentinel = sentinel.next
+	}
+
+	return falseHead.next, sentinel
+}
+
+// sortBy sorts the list using the specified function less for ordering. The sorting algorithm is merge sort.
+func sortBy[T types.Equitable[T]](head *node[T], less func(a, b T) bool) (*node[T], *node[T]) {
+	if head.next == nil {
+		return head, nil
+	}
+	mid := locateMid(head)
+	rightHead := mid.next
+	mid.next = nil
+	leftHeadSorted, _ := sortBy(head, less)
+	rightHeadSorted, _ := sortBy(rightHead, less)
+	finalHead, finalTail := mergeBy(leftHeadSorted, rightHeadSorted, less)
+	return finalHead, finalTail
+}
+
+// SortBy sorts the list using the function less for comparison of two element . if less(a,b) = true then it means a comes before b in the sorted list.
+func SortBy[T types.Equitable[T]](list *List[T], less func(a, b T) bool) {
+	if list.Empty() || list.len == 1 {
+		return
+	}
+	head, tail := sortBy(list.head, less)
+	list.head = head
+	list.tail = tail
+}

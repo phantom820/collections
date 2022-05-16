@@ -21,7 +21,6 @@ func TestAdd(t *testing.T) {
 
 	// Case 1 : Add individual elements.
 	v.Add(1)
-	fmt.Println(v)
 	assert.Equal(t, false, v.Empty())
 	assert.Equal(t, 1, v.Len())
 	assert.Equal(t, true, v.Contains(1))
@@ -126,6 +125,8 @@ func TestAddAt(t *testing.T) {
 	assert.Equal(t, types.Int(-1), v.data[0])
 	v.AddAt(v.Len()-1, 22)
 	assert.Equal(t, types.Int(22), v.data[v.Len()-2])
+	v.AddAt(2, 23)
+	assert.Equal(t, types.Int(23), v.At(2))
 
 }
 
@@ -263,4 +264,60 @@ func TestString(t *testing.T) {
 	v.Add(3)
 
 	assert.Equal(t, "[1 2 3]", fmt.Sprint(v))
+}
+
+func TestSort(t *testing.T) {
+
+	v := New[types.Int]()
+
+	// Case 1 : Sorting an empty vector does nothing.
+	Sort(v)
+	assert.Equal(t, true, v.Empty())
+
+	// Case 2 : Sorting a vector with elements.
+	v.Add(-10, 20, 0, 5, 4, 3, 2, 1)
+	sorted := []types.Int{-10, 0, 1, 2, 3, 4, 5, 20}
+	Sort(v)
+	assert.ElementsMatch(t, sorted, v.Collect())
+
+	// Try adding to sorted vector to see if nothing broke.
+	v.Add(100)
+	assert.ElementsMatch(t, append(sorted, 100), v.Collect())
+	v.AddAt(0, 200)
+	assert.ElementsMatch(t, append([]types.Int{200}, append(sorted, 100)...), v.Collect())
+
+	// Case 2 : Sorting an already sorted vector.
+	v.Clear()
+	v.Add(-10, 0, 1, 2, 3, 4, 5, 20)
+	Sort(v)
+	assert.ElementsMatch(t, sorted, v.Collect())
+
+}
+
+func TestSortBy(t *testing.T) {
+
+	v := New[types.Int]()
+
+	// Case 1 : Sorting an empty vector does nothing.
+	SortBy(v, func(a, b types.Int) bool { return a < b })
+	assert.Equal(t, true, v.Empty())
+
+	// Case 2 : Sorting a vector with elements.
+	v.Add(-10, 20, 0, 5, 4, 3, 2, 1)
+	sorted := []types.Int{20, 5, 4, 3, 2, 1, 0, -10}
+	SortBy(v, func(a, b types.Int) bool { return a > b })
+	assert.ElementsMatch(t, sorted, v.Collect())
+
+	// Try adding to sorted vector to see if nothing broke.
+	v.Add(100)
+	assert.ElementsMatch(t, append(sorted, 100), v.Collect())
+	v.AddAt(0, 200)
+	assert.ElementsMatch(t, append([]types.Int{200}, append(sorted, 100)...), v.Collect())
+
+	// Case 2 : Sorting an already sorted vector.
+	v.Clear()
+	v.Add(-10, 0, 1, 2, 3, 4, 5, 20)
+	SortBy(v, func(a, b types.Int) bool { return a < b })
+	assert.ElementsMatch(t, sorted, v.Collect())
+
 }

@@ -3,6 +3,7 @@ package treemap
 import (
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps"
+	"github.com/phantom820/collections/trees"
 	"github.com/phantom820/collections/trees/rbt"
 	"github.com/phantom820/collections/types"
 )
@@ -65,9 +66,8 @@ func (treeMap *TreeMap[K, V]) ContainsKey(k K) bool {
 
 // treeMapIterator an iterator for moving through the keys and value of a HashMap.
 type treeMapIterator[K types.Comparable[K], V any] struct {
-	index  int
-	keys   []K
-	values []V
+	index int
+	nodes []trees.Node[K, V]
 }
 
 // Cycle resets the iterator.
@@ -77,7 +77,7 @@ func (it *treeMapIterator[K, V]) Cycle() {
 
 // HasNext checks if the iterator has a next value to yield.
 func (it *treeMapIterator[K, V]) HasNext() bool {
-	return it.index < len(it.keys)
+	return it.index < len(it.nodes)
 }
 
 // Next returns the next element in the iterator it. Will panic if iterator has been exhausted.
@@ -85,16 +85,15 @@ func (it *treeMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 	if !it.HasNext() {
 		panic(iterator.NoNextElementError)
 	}
-	key := it.keys[it.index]
-	value := it.values[it.index]
+	node := it.nodes[it.index]
 	it.index++
-	return maps.MapEntry[K, V]{Key: key, Value: value}
+	return maps.MapEntry[K, V]{Key: node.Key, Value: node.Value}
 }
 
 // Iterator returns an iterator for the map.
 func (treeMap *TreeMap[K, V]) Iterator() maps.MapIterator[K, V] {
-	keys, values := treeMap.tree.Pairs()
-	it := treeMapIterator[K, V]{keys: keys, values: values, index: 0}
+	nodes := treeMap.tree.Nodes()
+	it := treeMapIterator[K, V]{nodes: nodes, index: 0}
 	return &it
 }
 

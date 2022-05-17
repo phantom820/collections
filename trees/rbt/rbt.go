@@ -1,19 +1,21 @@
-// Package rbt provides an implementation of a Red Black Tree with nodes that store a key and an associated value.
+// Package rbt provides an implementation of a red Bback tree with nodes that stores a key and a value in a node.
 package rbt
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/phantom820/collections/trees"
 	"github.com/phantom820/collections/types"
 )
 
+// colors
 const (
 	black bool = true
 	red   bool = false
 )
 
-// RedBlackTree an implementation of a red black tree that has nodes identified by key K and stores values V.
+// RedBlackTree an implementation of a red black tree that stores a key and a value in a node.
 type RedBlackTree[K types.Comparable[K], V any] struct {
 	root *redBlackNode[K, V]
 	Nil  *redBlackNode[K, V]
@@ -26,7 +28,7 @@ func New[K types.Comparable[K], V any]() *RedBlackTree[K, V] {
 	return &RedBlackTree[K, V]{root: &Nil, Nil: &Nil}
 }
 
-// redBlackNode represent a node for an red black tree. Stores a key k and and associated data.
+// redBlackNode a node in a red black tree.
 type redBlackNode[K types.Comparable[K], V any] struct {
 	parent *redBlackNode[K, V]
 	left   *redBlackNode[K, V]
@@ -36,7 +38,7 @@ type redBlackNode[K types.Comparable[K], V any] struct {
 	value  V
 }
 
-// color gets the color of a node as a string. for pretty printing.
+// color returns the color of a red black node as a string for pretty printing.
 func (n *redBlackNode[K, V]) Color() string {
 	if n.color {
 		return "(B)"
@@ -44,13 +46,13 @@ func (n *redBlackNode[K, V]) Color() string {
 	return "(R)"
 }
 
-// newRedBlackNode constructs a new red black tree node.
-func newRedBlackNode[K types.Comparable[K], V any](k K, v V, Nil *redBlackNode[K, V]) *redBlackNode[K, V] {
-	return &redBlackNode[K, V]{parent: Nil, left: Nil, right: Nil, key: k, value: v}
+// newRedBlackNode creates a new red black node with the specified key and value.
+func newRedBlackNode[K types.Comparable[K], V any](key K, value V, Nil *redBlackNode[K, V]) *redBlackNode[K, V] {
+	return &redBlackNode[K, V]{parent: Nil, left: Nil, right: Nil, key: key, value: value}
 }
 
-// Update replaces the value at node with specified key  with the new given value and returns the old value. Will return zero value and false
-// if there was no such node in the tree.
+// Update replaces the value stored in the node identified by the key with the new value. Will return the previous value stored in the node otherwise will
+// return the zero value if a node with the given key does not exist in the tree.
 func (tree *RedBlackTree[K, V]) Update(key K, value V) (V, bool) {
 	node := tree.search(key)
 	if node == tree.Nil {
@@ -62,7 +64,7 @@ func (tree *RedBlackTree[K, V]) Update(key K, value V) (V, bool) {
 	return temp, true
 }
 
-// insert adds the node z to the tree.
+// insert inserts the node z into the tree. For internal use to support Insert.
 func (tree *RedBlackTree[K, V]) insert(z *redBlackNode[K, V]) {
 	var y *redBlackNode[K, V] = tree.Nil
 	x := tree.root
@@ -85,7 +87,7 @@ func (tree *RedBlackTree[K, V]) insert(z *redBlackNode[K, V]) {
 	z.color = red
 }
 
-// insertFix fixes the tree t after an insertion.
+// insertFix fixes the tree after an insertion. For internal use to support Insert.
 func (tree *RedBlackTree[K, V]) insertFix(z *redBlackNode[K, V]) {
 	var y *redBlackNode[K, V]
 	for z.parent.color == red {
@@ -129,7 +131,7 @@ func (tree *RedBlackTree[K, V]) insertFix(z *redBlackNode[K, V]) {
 	tree.root.color = black
 }
 
-// Insert insert a node with the specified key and value to the tree.
+// Insert inserts a node of the form (key,value) into the tree.
 func (tree *RedBlackTree[K, V]) Insert(key K, value V) bool {
 	node := newRedBlackNode(key, value, tree.Nil)
 	tree.insert(node)
@@ -138,7 +140,7 @@ func (tree *RedBlackTree[K, V]) Insert(key K, value V) bool {
 	return true
 }
 
-// leftRotate performs a left rotation aound node x of the tree.
+// leftRotate performs a left rotation around node x of the tree. For internal use to support deleteFix and insertFix.
 func (tree *RedBlackTree[K, V]) leftRotate(x *redBlackNode[K, V]) {
 	y := x.right
 	x.right = y.left
@@ -160,7 +162,7 @@ func (tree *RedBlackTree[K, V]) leftRotate(x *redBlackNode[K, V]) {
 	x.parent = y
 }
 
-// rightRotate performs a right rotation around the node y of the tree.
+// rightRotate performs a right rotation around the node y of the tree. For internal use to support deleteFix and insertFix.
 func (tree *RedBlackTree[K, V]) rightRotate(x *redBlackNode[K, V]) {
 	y := x.left
 	x.left = y.right
@@ -181,7 +183,7 @@ func (tree *RedBlackTree[K, V]) rightRotate(x *redBlackNode[K, V]) {
 	x.parent = y
 }
 
-// transplant performs transplant operation on the tree. For internal use only.
+// transplant performs transplant operation on the tree. For internal use to support deleteFix and insertFix.
 func (t *RedBlackTree[K, V]) transplant(u *redBlackNode[K, V], v *redBlackNode[K, V]) {
 	if u.parent == t.Nil {
 		t.root = v
@@ -193,12 +195,12 @@ func (t *RedBlackTree[K, V]) transplant(u *redBlackNode[K, V], v *redBlackNode[K
 	v.parent = u.parent
 }
 
-// minimum retrieves node with smallest key value in the tree. For internal use to support operation such as Minimum,Delete.
-func (t *RedBlackTree[K, V]) minimum(r *redBlackNode[K, V]) *redBlackNode[K, V] {
-	if r.left == t.Nil {
-		return r
+// minimum returns the node with smallest key value in the tree. For internal use to support Minimum, Delete.
+func (t *RedBlackTree[K, V]) minimum(node *redBlackNode[K, V]) *redBlackNode[K, V] {
+	if node.left == t.Nil {
+		return node
 	} else {
-		return t.minimum(r.left)
+		return t.minimum(node.left)
 	}
 }
 
@@ -219,18 +221,15 @@ func (t *RedBlackTree[K, V]) search(key K) *redBlackNode[K, V] {
 
 // Search checks if the tree contains a node with the specified key.
 func (tree *RedBlackTree[K, V]) Search(key K) bool {
-	if tree.search(key) != tree.Nil {
-		return true
-	}
-	return false
+	return (tree.search(key) != tree.Nil)
 }
 
-// Get returns the value in the node with the specified key. Will return the zero value and false if there is no such node.
+// Get returns the value in the node with the specified key. Will return the zero value if there is no such node.
 func (tree *RedBlackTree[K, V]) Get(key K) (V, bool) {
 	node := tree.search(key)
 	if node == tree.Nil {
-		var e V
-		return e, false
+		var value V
+		return value, false
 	}
 	return node.value, true
 }
@@ -250,7 +249,7 @@ func (tree *RedBlackTree[K, V]) Delete(key K) (V, bool) {
 	return temp, true
 }
 
-// Delete deletes the node z from the tree. for internal use to support Delete operation.
+// Delete deletes the node z from the tree. For internal use to support Delete.
 func (tree *RedBlackTree[K, V]) delete(z *redBlackNode[K, V]) {
 	var x, y *redBlackNode[K, V]
 	y = z
@@ -365,28 +364,25 @@ func (tree *RedBlackTree[K, V]) InOrderTraversal() []K {
 	return data
 }
 
-// pairs helper function for quick retrieval of both keys and values.
-func (tree *RedBlackTree[K, V]) pairs(node *redBlackNode[K, V], keys *[]K, values *[]V) {
+// nodes helper function for quick retrieval of nodes of the tree. For internal use to support Nodes.
+func (tree *RedBlackTree[K, V]) nodes(node *redBlackNode[K, V], nodes *[]trees.Node[K, V]) {
 	if node == tree.Nil {
 		return
 	}
 	if node.left != tree.Nil {
-		tree.pairs(node.left, keys, values)
+		tree.nodes(node.left, nodes)
 	}
-	*keys = append(*keys, node.key)
-	*values = append(*values, node.value)
-
+	*nodes = append(*nodes, trees.Node[K, V]{Key: node.key, Value: node.value})
 	if node.right != tree.Nil {
-		tree.pairs(node.right, keys, values)
+		tree.nodes(node.right, nodes)
 	}
 }
 
-// Pairs returns the keys and values of the tree using an in order traversal.
-func (tree *RedBlackTree[K, V]) Pairs() ([]K, []V) {
-	keys := []K{}
-	values := []V{}
-	tree.pairs(tree.root, &keys, &values)
-	return keys, values
+// Nodes returns the nodes in the tree.
+func (tree *RedBlackTree[K, V]) Nodes() []trees.Node[K, V] {
+	nodes := []trees.Node[K, V]{}
+	tree.nodes(tree.root, &nodes)
+	return nodes
 }
 
 // values collects all the values in the tree into a slice using an in order traversal.
@@ -411,7 +407,7 @@ func (tree *RedBlackTree[K, V]) Values() []V {
 	return data
 }
 
-// keys collects the keys in the ttrr into a slice using an in order traversal.
+// keys collects the keys in the tree into a slice using an in order traversal.
 func (tree *RedBlackTree[K, V]) keys(node *redBlackNode[K, V], data *[]K) {
 	if node == tree.Nil {
 		return

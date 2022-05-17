@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/phantom820/collections/trees"
 	"github.com/phantom820/collections/types"
 
 	"github.com/stretchr/testify/assert"
@@ -178,19 +179,15 @@ func TestPairs(t *testing.T) {
 
 	tree := New[types.Int, int]()
 
-	k, v := tree.Pairs()
-	assert.ElementsMatch(t, []types.Int{}, k)
-	assert.ElementsMatch(t, []int{}, v)
+	nodes := tree.Nodes()
+	assert.ElementsMatch(t, []trees.Node[types.Int, int]{}, nodes)
 
 	tree.Insert(1, 1)
 	tree.Insert(2, 2)
 	tree.Insert(3, 3)
 
-	keys := []types.Int{1, 2, 3}
-	values := []int{1, 2, 3}
+	nodes = []trees.Node[types.Int, int]{{1, 1}, {2, 2}, {3, 3}}
 
-	k, v = tree.Pairs()
-	assert.ElementsMatch(t, keys, k)
-	assert.ElementsMatch(t, values, v)
+	assert.ElementsMatch(t, nodes, tree.Nodes())
 
 }

@@ -15,3 +15,8 @@ type Tree[K any, V any] interface {
 	Empty() bool                     // Chekcs if the tree is empty.
 	Len() int                        // Returns the size of the tree.
 }
+
+type Node[K any, V any] struct {
+	Key   K
+	Value V
+}

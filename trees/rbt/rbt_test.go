@@ -103,12 +103,12 @@ func TestUpdate(t *testing.T) {
 	tree.Insert(10, 10)
 	tree.Insert(20, 20)
 
-	_, b := tree.Update(-1, 20)
-	assert.Equal(t, false, b)
-	v, _ := tree.Update(10, -20)
-	assert.Equal(t, 10, v)
-	v, _ = tree.Get(10)
-	assert.Equal(t, -20, v)
+	_, ok := tree.Update(-1, 20)
+	assert.Equal(t, false, ok)
+	value, _ := tree.Update(10, -20)
+	assert.Equal(t, 10, value)
+	value, _ = tree.Get(10)
+	assert.Equal(t, -20, value)
 
 }
 
@@ -133,6 +133,7 @@ func TestSearch(t *testing.T) {
 }
 
 func TestInOrderTraversal(t *testing.T) {
+
 	tree := New[types.Int, int]()
 
 	keys := make([]types.Int, 0)
@@ -159,8 +160,24 @@ func TestKeys(t *testing.T) {
 
 	keys = []types.Int{1, 2, 3}
 	assert.ElementsMatch(t, keys, tree.Keys())
+
 }
 
+func TestNodes(t *testing.T) {
+
+	tree := New[types.Int, int]()
+
+	nodes := []trees.Node[types.Int, int]{}
+	assert.ElementsMatch(t, nodes, tree.Nodes())
+
+	tree.Insert(1, 2)
+	tree.Insert(-10, 1)
+	tree.Insert(11, 0)
+
+	nodes = []trees.Node[types.Int, int]{{-10, 1}, {1, 2}, {11, 0}}
+	assert.ElementsMatch(t, nodes, tree.Nodes())
+
+}
 func TestValues(t *testing.T) {
 
 	tree := New[types.Int, int]()
@@ -173,21 +190,4 @@ func TestValues(t *testing.T) {
 
 	values = []int{1, 2, 3}
 	assert.ElementsMatch(t, values, tree.Values())
-}
-
-func TestPairs(t *testing.T) {
-
-	tree := New[types.Int, int]()
-
-	nodes := tree.Nodes()
-	assert.ElementsMatch(t, []trees.Node[types.Int, int]{}, nodes)
-
-	tree.Insert(1, 1)
-	tree.Insert(2, 2)
-	tree.Insert(3, 3)
-
-	nodes = []trees.Node[types.Int, int]{{1, 1}, {2, 2}, {3, 3}}
-
-	assert.ElementsMatch(t, nodes, tree.Nodes())
-
 }

@@ -10,13 +10,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestAdd covers tests for Add,AddAll and AddSlice.
 func TestAdd(t *testing.T) {
 
 	s := New[types.Int]()
 	assert.Equal(t, true, s.Empty())
 
-	// Case 1 : Add to an empty set.
+	// Case 1 : Add with no args.
+	assert.Equal(t, false, s.Add())
+
+	// Case 2 : Add to an empty set.
 	s.Add(1)
 	assert.Equal(t, 1, s.Len())
 	assert.Equal(t, false, s.Add(1))
@@ -26,7 +28,7 @@ func TestAdd(t *testing.T) {
 	assert.Equal(t, true, s.Contains(1))
 	assert.Equal(t, true, s.Contains(2))
 
-	// Case 2 : Add multiple elements from another iterable.
+	// Case 3 : Add multiple elements from another iterable.
 	s = New[types.Int]()
 	l := list.New[types.Int]()
 	for i := 0; i < 10; i++ {
@@ -42,16 +44,16 @@ func TestAdd(t *testing.T) {
 		assert.Equal(t, true, s.Contains(it.Next()))
 	}
 
-	// Case 3 : Adding a slice should work accordingly.
+	// Case 4 : Adding a slice should work accordingly.
 	s.Clear()
 
 	sl := []types.Int{1, 1, 2, 3, 4, 5}
-	s.AddSlice(sl)
+	s.Add(sl...)
 
 	sm := []types.Int{1, 2, 3, 4, 5}
 	assert.ElementsMatch(t, sm, s.Collect())
 
-	// Case 4 : Clear and add a vast colelction of values
+	// Case 5 : Clear and add a vast colelction of values
 	s.Clear()
 	slice := []types.Int{}
 	for i := 50; i >= 0; i-- {

@@ -16,12 +16,15 @@ type SliceQueue[T types.Equitable[T]] struct {
 // New creates a slice based queue with the specified elements. If no specified elements an empty queue is returned.
 func New[T types.Equitable[T]](elements ...T) *SliceQueue[T] {
 	queue := SliceQueue[T]{data: make([]T, len(elements))}
-	queue.AddSlice(elements)
+	queue.Add(elements...)
 	return &queue
 }
 
 // Add adds elements to the back of the queue.
 func (queue *SliceQueue[T]) Add(elements ...T) bool {
+	if len(elements) == 0 {
+		return false
+	}
 	queue.data = append(queue.data, elements...)
 	return true
 }
@@ -31,13 +34,6 @@ func (queue *SliceQueue[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		queue.Add(it.Next())
-	}
-}
-
-// AddSlice adds element from a slice s into the queue.
-func (queue *SliceQueue[T]) AddSlice(s []T) {
-	for _, e := range s {
-		queue.Add(e)
 	}
 }
 
@@ -122,8 +118,20 @@ func (queue *SliceQueue[T]) indexOf(e T) int {
 	return -1
 }
 
-// Remove removes an element from the queue.
-func (queue *SliceQueue[T]) Remove(element T) bool {
+// Remove removes elements from the list. Only the first occurence of each element is removed.
+func (queue *SliceQueue[T]) Remove(elements ...T) bool {
+	n := queue.Len()
+	for _, element := range elements {
+		queue.remove(element)
+		if queue.Empty() {
+			break
+		}
+	}
+	return n != queue.Len()
+}
+
+// remove removes the element from the queue. For internal use to support Remove.
+func (queue *SliceQueue[T]) remove(element T) bool {
 	i := queue.indexOf(element)
 	if i == -1 {
 		return false

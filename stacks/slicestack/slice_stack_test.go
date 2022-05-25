@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestSlicePeek covers tests for Peek and Add.
-func TestSlicePeek(t *testing.T) {
+// TestPeek covers tests for Peek and Add.
+func TestPeek(t *testing.T) {
 
 	s := New[types.Int]()
 
@@ -36,8 +36,8 @@ func TestSlicePeek(t *testing.T) {
 
 }
 
-// TestSlicePop covers tests for Pop.
-func TestSlicePop(t *testing.T) {
+// TestPop covers tests for Pop.
+func TestPop(t *testing.T) {
 
 	s := New[types.Int]()
 
@@ -53,12 +53,15 @@ func TestSlicePop(t *testing.T) {
 
 }
 
-// TestSliceAdd covers tests for AddAll and AddSlice.
-func TestSliceAdd(t *testing.T) {
+// TestAdd covers tests for AddAll and AddSlice.
+func TestAdd(t *testing.T) {
 
 	s := New[types.Int]()
 
-	// Case 1 : AddAll add items from an iterable should work accordingly.
+	// Case 1 : Add with no elements.
+	assert.Equal(t, false, s.Add())
+
+	// Case 2 : AddAll add items from an iterable should work accordingly.
 	l := forwardlist.New[types.Int]()
 	l.Add(1)
 	l.Add(2)
@@ -69,10 +72,10 @@ func TestSliceAdd(t *testing.T) {
 	assert.Equal(t, types.Int(2), s.Pop())
 	assert.Equal(t, types.Int(1), s.Pop())
 
-	// Case 2 : AddSlice add items from a slice.
+	// Case 3 : AddSlice add items from a slice.
 	s.Clear()
 	slice := []types.Int{2, 4, 6}
-	s.AddSlice(slice)
+	s.Add(slice...)
 
 	assert.Equal(t, types.Int(6), s.Pop())
 	assert.Equal(t, types.Int(4), s.Pop())
@@ -80,8 +83,8 @@ func TestSliceAdd(t *testing.T) {
 
 }
 
-// TestSliceRemove covers tests for Remove, RemoveAll and Contains.
-func TestSliceRemove(t *testing.T) {
+// TestRemove covers tests for Remove, RemoveAll and Contains.
+func TestRemove(t *testing.T) {
 
 	s := New[types.Int]()
 
@@ -109,8 +112,8 @@ func TestSliceRemove(t *testing.T) {
 
 }
 
-// TestSliceCollect covers tests for collect.
-func TestSliceCollect(t *testing.T) {
+// TestCollect covers tests for collect.
+func TestCollect(t *testing.T) {
 
 	s := New[types.Int]()
 
@@ -122,7 +125,7 @@ func TestSliceCollect(t *testing.T) {
 
 }
 
-func TestSliceIterator(t *testing.T) {
+func TestIterator(t *testing.T) {
 
 	s := New[types.Int]()
 

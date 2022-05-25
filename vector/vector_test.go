@@ -40,7 +40,7 @@ func TestAdd(t *testing.T) {
 	// Case 3 : Adding a slice should work accordingly
 	v.Clear()
 	s := []types.Int{1, 2, 3, 4}
-	v.AddSlice(s)
+	v.Add(s...)
 
 	assert.ElementsMatch(t, s, v.Collect())
 

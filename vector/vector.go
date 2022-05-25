@@ -1,4 +1,4 @@
-// Package vector provides an implementation of a vector which is b a wrapper around a slice.
+// Package vector provides an implementation of a vector which is a wrapper around a slice.
 package vector
 
 import (
@@ -19,10 +19,10 @@ type Vector[T types.Equitable[T]] struct {
 	data []T
 }
 
-// New creates a vector with the specified elements, if there are none an empty vector is created.
+// New creates a vector with the specified elements.
 func New[T types.Equitable[T]](elements ...T) *Vector[T] {
 	vector := Vector[T]{data: make([]T, 0)}
-	vector.AddSlice(elements)
+	vector.Add(elements...)
 	return &vector
 }
 
@@ -36,10 +36,11 @@ func (vector *Vector[T]) Set(i int, e T) T {
 	return temp
 }
 
-// Add adds elements to the back of the vector.
+// Add adds elements to the vector.
 func (vector *Vector[T]) Add(elements ...T) bool {
+	n := vector.Len()
 	vector.data = append(vector.data, elements...)
-	return true
+	return (n != vector.Len())
 }
 
 // AddAll adds the elements from some iterable elements to the vector.
@@ -48,11 +49,6 @@ func (vector *Vector[T]) AddAll(elements iterator.Iterable[T]) {
 	for it.HasNext() {
 		vector.Add(it.Next())
 	}
-}
-
-// AddSlice adds element from a slice s into the vector.
-func (vector *Vector[T]) AddSlice(s []T) {
-	vector.data = append(vector.data, s...)
 }
 
 // Clear removes all elements in the vector.
@@ -93,15 +89,15 @@ func (vector *Vector[T]) AddAt(i int, e T) {
 	}
 }
 
-// Collect converts vector into a slice.
+// Collect returns a slice containing all the elements in the vector.
 func (vector *Vector[T]) Collect() []T {
 	return vector.data
 }
 
-// Contains checks if the elemen e is in the vector.
-func (vector *Vector[T]) Contains(e T) bool {
+// Contains checks if the element is in the vector.
+func (vector *Vector[T]) Contains(element T) bool {
 	for i, _ := range vector.data {
-		if vector.data[i].Equals(e) {
+		if vector.data[i].Equals(element) {
 			return true
 		}
 	}
@@ -113,13 +109,13 @@ func (vector *Vector[T]) Empty() bool {
 	return len(vector.data) == 0
 }
 
-// vectorIterator model for implementing an iterator on a vector.
+// vectorIterator type for implementing an iterator on a vector.
 type vectorIterator[T types.Equitable[T]] struct {
 	slice []T
 	i     int
 }
 
-// HasNext check if the iterator has next element to produce.
+// HasNext checks if the iterator has a next element to yield.
 func (it *vectorIterator[T]) HasNext() bool {
 	if it.slice == nil || it.i >= len(it.slice) {
 		return false
@@ -127,7 +123,7 @@ func (it *vectorIterator[T]) HasNext() bool {
 	return true
 }
 
-// Next yields the next element from the iterator.
+// Next returns the next element in the iterator it. Will panic if iterator has no next element.
 func (it *vectorIterator[T]) Next() T {
 	if !it.HasNext() {
 		panic(iterator.NoNextElementError)
@@ -179,8 +175,20 @@ func (vector *Vector[T]) indexOf(e T) int {
 	return -1
 }
 
-// Remove deletes the element from the vector.
-func (vector *Vector[T]) Remove(element T) bool {
+// Remove removes elements from the list. Only the first occurence of each element is removed.
+func (vector *Vector[T]) Remove(elements ...T) bool {
+	n := vector.Len()
+	for _, element := range elements {
+		vector.remove(element)
+		if vector.Empty() {
+			break
+		}
+	}
+	return (n != vector.Len())
+}
+
+// remove deletes the element from the vector. For internal use to support Remove.
+func (vector *Vector[T]) remove(element T) bool {
 	i := vector.indexOf(element)
 	if i == -1 {
 		return false

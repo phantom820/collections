@@ -10,23 +10,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestAdd covers tests for Add,AddAll and AddSlice.
 func TestAdd(t *testing.T) {
 
 	s := New[types.Int]()
-	assert.Equal(t, true, s.Empty())
 
 	// Case 1 : Add to an empty set.
-	s.Add(1)
+	assert.Equal(t, true, s.Empty())
+	assert.Equal(t, true, s.Add(1))
 	assert.Equal(t, 1, s.Len())
-	assert.Equal(t, false, s.Add(1))
-	assert.Equal(t, 1, s.Len())
-	s.Add(2)
-	assert.Equal(t, 2, s.Len())
-	assert.Equal(t, true, s.Contains(1))
-	assert.Equal(t, true, s.Contains(2))
 
-	// Case 2 : Add multiple elements from another iterable.
+	// Case 2 : Add to a set with elements.
+	assert.Equal(t, true, s.Add(2))
+
+	// Case 3 : Add multiple elements from another iterable.
 	s = New[types.Int]()
 	l := list.New[types.Int]()
 	for i := 0; i < 10; i++ {
@@ -36,38 +32,12 @@ func TestAdd(t *testing.T) {
 	s.AddAll(l)
 	assert.Equal(t, l.Len(), s.Len())
 
-	// should contain all the added elements
-	it := l.Iterator()
-	for it.HasNext() {
-		assert.Equal(t, true, s.Contains(it.Next()))
-	}
-
-	// Case 3 : Adding a slice should work accordingly.
-	s.Clear()
-
-	sl := []types.Int{1, 1, 2, 3, 4, 5}
-	s.AddSlice(sl)
-
-	sm := []types.Int{1, 2, 3, 4, 5}
-	assert.ElementsMatch(t, sm, s.Collect())
-
-	// Case 4 : Clear and add a vast colelction of values
-	s.Clear()
-	slice := []types.Int{}
-	for i := 50; i >= 0; i-- {
-		s.Add(types.Int(i))
-		slice = append(slice, types.Int(i))
-	}
-	assert.ElementsMatch(t, slice, s.Collect())
-
 }
 
 func TestIterator(t *testing.T) {
 
 	s := New[types.Int]()
 	t.Run("panics", func(t *testing.T) {
-		// If the function panics, recover() will
-		// return a non nil value.
 		defer func() {
 			if r := recover(); r != nil {
 				assert.Equal(t, iterator.NoNextElementError, r.(error))
@@ -99,11 +69,15 @@ func TestRemove(t *testing.T) {
 
 	s := New[types.Int]()
 
+	// Case 1 : Remove an absent element.
 	assert.Equal(t, false, s.Remove(1))
+
+	// Case 2 : Remove a present element.
 	s.Add(1)
 	assert.Equal(t, true, s.Remove(1))
 	assert.Equal(t, 0, s.Len())
 
+	// Case 3 : Remove items from an iterable that are in the set.
 	l := list.New[types.Int]()
 	for i := 1; i <= 10; i++ {
 		s.Add(types.Int(i))
@@ -116,7 +90,6 @@ func TestRemove(t *testing.T) {
 
 }
 
-// TestUnion covers tests for Union operation.
 func TestUnion(t *testing.T) {
 
 	a := New[types.Int]()
@@ -138,7 +111,6 @@ func TestUnion(t *testing.T) {
 	assert.Equal(t, true, d.Equals(a.Union(b)))
 }
 
-// TestIntersection covers tests for Intersection operation.
 func TestIntersection(t *testing.T) {
 
 	a := New[types.Int]()
@@ -162,8 +134,7 @@ func TestIntersection(t *testing.T) {
 
 }
 
-// TestMapFilter covers tests for Map and Filter
-func TestMapFilter(t *testing.T) {
+func TestMap(t *testing.T) {
 
 	s := New[types.Int]()
 	for i := 0; i < 6; i++ {
@@ -176,15 +147,24 @@ func TestMapFilter(t *testing.T) {
 
 	assert.ElementsMatch(t, a, b)
 
+}
+
+func TestFilter(t *testing.T) {
+
+	s := New[types.Int]()
+
+	for i := 0; i < 6; i++ {
+		s.Add(types.Int(i))
+	}
+
 	c := []types.Int{0, 2, 4}
-	other = s.Filter(func(e types.Int) bool { return e%2 == 0 })
+	other := s.Filter(func(e types.Int) bool { return e%2 == 0 })
 	d := other.Collect()
 
 	assert.ElementsMatch(t, c, d)
 
 }
 
-// TestEquals covers tests for Equals.
 func TestEquals(t *testing.T) {
 
 	s := New[types.Int]()

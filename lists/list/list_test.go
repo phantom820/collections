@@ -11,12 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestAddFront covers tests for Front and  AddFront.
 func TestAddFront(t *testing.T) {
 
 	l := New[types.Int]()
 
-	// Case 1 : Empty list jhas no front and should panic.
+	// Case 1 : Front on an empty list should panic.
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -25,24 +24,25 @@ func TestAddFront(t *testing.T) {
 		}()
 		l.Front()
 	})
-	assert.Equal(t, 0, l.Len())
 
-	// Case 2 : Elements added to front should be reflected by Front().
-	l.AddFront(22)
-	assert.Equal(t, types.Int(22), l.Front())
+	// Case 2 : Add front to an empty list.
+	assert.Equal(t, true, l.Empty())
+	l.AddFront(1)
 	assert.Equal(t, 1, l.Len())
-	l.AddFront(23)
-	assert.Equal(t, types.Int(23), l.Front())
+	assert.Equal(t, types.Int(1), l.Front())
+
+	// Case 3 : Add front to a populated list.
+	l.AddFront(2)
 	assert.Equal(t, 2, l.Len())
+	assert.Equal(t, types.Int(2), l.Front())
 
 }
 
-// TestAddBack covers tests Back and AddBack.
 func TestAddBack(t *testing.T) {
 
 	l := New[types.Int]()
 
-	// Case 1 : Empty list has no back element should panic.
+	// Case 1 : Back of an empty list should panic.
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -52,23 +52,48 @@ func TestAddBack(t *testing.T) {
 		l.Back()
 	})
 
-	assert.Equal(t, 0, l.Len())
-
-	// Case 2 : Elements added to the back should be reflected by Back().
-	l.AddBack(22)
-	assert.Equal(t, types.Int(22), l.Back())
+	// Case 2 : Add back to an empty list.
+	assert.Equal(t, true, l.Empty())
+	l.AddBack(1)
 	assert.Equal(t, 1, l.Len())
-	l.AddBack(23)
-	assert.Equal(t, types.Int(23), l.Back())
-	assert.Equal(t, 2, l.Len()) // len of the ;list should change accordingly.
+	assert.Equal(t, types.Int(1), l.Back())
+
+	// Case 3 : Add back to a populated list.
+	l.AddFront(2)
+	assert.Equal(t, 2, l.Len())
+	assert.Equal(t, types.Int(2), l.Front())
 
 }
 
-// TestAt covers tests for At
+func TestReverse(t *testing.T) {
+
+	l := New[types.Int]()
+
+	l.Add(1)
+	l.Add(2)
+	l.Add(3)
+
+	r := []types.Int{3, 2, 1}
+
+	l.Reverse()
+	assert.ElementsMatch(t, r, l.Collect())
+
+	// add to a reversed list
+	l.AddFront(23)
+	assert.Equal(t, types.Int(23), l.Front())
+
+	l.AddBack(90)
+	assert.Equal(t, types.Int(90), l.Back())
+
+	l.AddAt(1, 77)
+	assert.Equal(t, types.Int(77), l.At(1))
+
+}
+
 func TestAt(t *testing.T) {
 	l := New[types.Int]()
 
-	// Case 1 : Empty list should not be indexable.
+	// Case 1 : At on an empty list should panic.
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -78,7 +103,7 @@ func TestAt(t *testing.T) {
 		l.At(0)
 	})
 
-	// Case 2 : Elements added should appear at appropiate index.
+	// Case 2 : At on a populated list.
 	l.AddBack(1)
 	l.AddBack(2)
 	l.AddBack(3)
@@ -88,26 +113,22 @@ func TestAt(t *testing.T) {
 
 }
 
-// TestEquals for Equals method of lists.
 func TestEquals(t *testing.T) {
 
 	l := New[types.Int]()
 	other := New[types.Int]()
 
-	// Case 1 : A list is equal to its self.
+	// Case 1 : Self equivalence and empty lists.
 	assert.Equal(t, true, l.Equals(l))
-
-	// Case 2 : 2 empty lists are equal.
 	assert.Equal(t, true, l.Equals(other))
 
-	// Case 3 : lists of unequal sizes should not be equal.
+	// Case 2 : Lists of unequal sizes should not be equal.
 	for i := 1; i < 6; i++ {
 		other.Add(types.Int(i))
 	}
-
 	assert.Equal(t, false, l.Equals(other))
 
-	// Case 4 : list of equal sizes but different elements should not be equal.
+	// Case 3 : Lists of equal sizes but different elements should not be equal.
 	for i := 1; i < 6; i++ {
 		l.Add(types.Int(i + 1))
 	}
@@ -115,28 +136,30 @@ func TestEquals(t *testing.T) {
 	assert.Equal(t, false, l.Equals(other))
 	l.Clear()
 
-	// Case 5 : lists with same size and elements should be equal.
+	// Case 4 : Lists with same size and elements should be equal.
 
 	for i := 1; i < 6; i++ {
 		l.Add(types.Int(i))
 	}
 
-	fmt.Println(l.len)
-	fmt.Println(other.len)
 	assert.Equal(t, true, other.Equals(l))
 
 }
 
-// TestAdd covers tests for Add, AddAll, AddSlice
 func TestAdd(t *testing.T) {
-	// Case 1 : Just add should add at back.
-	l := New[types.Int](1, 2)
+
+	l := New[types.Int]()
 	other := New[types.Int]()
 
-	assert.Equal(t, types.Int(2), l.Back())
+	// Case 1 : Add with no elements.
+	assert.Equal(t, false, l.Add())
+
+	// Case 2 : Just add should add to the back of the list.
+	assert.Equal(t, true, l.Add(1, 2, 3))
+	assert.Equal(t, types.Int(3), l.Back())
 	l.Clear()
 
-	// Case 2 : AddAll should add all the elements from another iterable.
+	// Case 3 : AddAll should add all the elements from another iterable.
 	for i := 1; i < 6; i++ {
 		other.Add(types.Int(i))
 	}
@@ -144,43 +167,14 @@ func TestAdd(t *testing.T) {
 	l.AddAll(other)
 	assert.Equal(t, true, l.Equals(other))
 
-	l.Clear()
-
-	// Case 4 : AddSlice should behave accordingly.
-	s := []types.Int{1, 2, 3, 4}
-	l.AddSlice(s)
-
-	assert.ElementsMatch(t, s, l.Collect())
 }
 
-// TestReverse covers tests for Reverse.
-func TestReverse(t *testing.T) {
-
-	l := New[types.Int]()
-
-	assert.Equal(t, true, l.Equals(l.Reverse()))
-
-	l.Add(1)
-	l.Add(2)
-	l.Add(3)
-
-	r := New[types.Int]()
-	r.Add(3)
-	r.Add(2)
-	r.Add(1)
-
-	assert.Equal(t, true, l.Reverse().Equals(r))
-	assert.Equal(t, true, l.Equals(r.Reverse()))
-}
-
-// TestAddAt covers tests for AddAt adding at specified index.
 func TestAddAt(t *testing.T) {
+
 	l := New[types.Int]()
 
 	// Case 1 : Adding out of bounds.
 	t.Run("panics", func(t *testing.T) {
-		// If the function panics, recover() will
-		// return a non nil value.
 		defer func() {
 			if r := recover(); r != nil {
 				assert.Equal(t, lists.ErrOutOfBounds, r.(error))
@@ -190,21 +184,18 @@ func TestAddAt(t *testing.T) {
 	})
 
 	// Case 2 : Adding at allowed index.
-	l.Add(10)
-	l.Add(20)
-	l.Add(30)
-
+	l.Add(10, 20, 30)
 	l.AddAt(0, 22)
 	assert.Equal(t, types.Int(22), l.At(0))
 	l.AddAt(l.Len()-1, 25)
-	assert.Equal(t, types.Int(25), l.At(l.Len()-2))
+	assert.Equal(t, types.Int(25), l.At(l.Len()-1))
 	l.AddAt(2, -5)
 	assert.Equal(t, types.Int(-5), l.At(2))
 
 }
 
-// TestSwap covers tests for Swap swapping elements at specified indices.
 func TestSwap(t *testing.T) {
+
 	l := New[types.Int]()
 
 	// Case 1 : Swapping out of bounds should panic.
@@ -218,12 +209,7 @@ func TestSwap(t *testing.T) {
 	})
 
 	// Case 2 : Swapping at legal index.
-
-	l.Add(2)
-	l.Add(3)
-	l.Add(4)
-	l.Add(5)
-	l.Add(10)
+	l.Add(2, 3, 4, 5, 10)
 
 	l.Swap(0, 1)
 	assert.Equal(t, types.Int(3), l.Front())
@@ -237,7 +223,6 @@ func TestSwap(t *testing.T) {
 
 }
 
-// TestRemoveFront covers test for RemoveFront
 func TestRemoveFront(t *testing.T) {
 
 	l := New[types.Int]()
@@ -253,21 +238,19 @@ func TestRemoveFront(t *testing.T) {
 	})
 
 	// Case 2 : Removing front from list with elements.
-	l.Add(22)
-	l.Add(23)
-	l.Add(234)
+	l.Add(22, 23, 234)
+
 	assert.Equal(t, types.Int(22), l.RemoveFront())
 	assert.Equal(t, types.Int(23), l.RemoveFront())
 	assert.Equal(t, types.Int(234), l.RemoveFront())
 
 }
 
-// TestSet covers tests for Set overriding value at specified index.
 func TestSet(t *testing.T) {
 
 	l := New[types.Int]()
 
-	// Case 1 : set on empty list should panic.
+	// Case 1 : Set on empty list should panic.
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -278,10 +261,7 @@ func TestSet(t *testing.T) {
 	})
 
 	// Case 2 : Set at legal indices.
-	l.Add(1)
-	l.Add(2)
-	l.Add(3)
-
+	l.Add(1, 2, 3)
 	l.Set(0, 45)
 	assert.Equal(t, types.Int(45), l.Front())
 	l.Set(2, -33)
@@ -303,10 +283,7 @@ func TestRemoveBack(t *testing.T) {
 	})
 
 	// Case 2 : Remove back from list with elements.
-	l.Add(22)
-	l.Add(23)
-	l.Add(234)
-	l.Add(-2)
+	l.Add(22, 23, 234, -2)
 
 	assert.Equal(t, types.Int(-2), l.RemoveBack())
 	assert.Equal(t, l.Len(), 3)
@@ -318,7 +295,6 @@ func TestRemoveBack(t *testing.T) {
 
 }
 
-// TestRemoveAt covers tests for RemoveAt.
 func TestRemoveAt(t *testing.T) {
 
 	l := New[types.Int]()
@@ -334,12 +310,7 @@ func TestRemoveAt(t *testing.T) {
 	})
 
 	// Case 2 : Remove from list with elements.
-	l.Add(1)
-	l.Add(2)
-	l.Add(3)
-	l.Add(6)
-	l.Add(9)
-	l.Add(80)
+	l.Add(1, 2, 3, 6, 9, 80)
 
 	l.RemoveAt(0)
 	assert.Equal(t, types.Int(2), l.Front())
@@ -360,23 +331,13 @@ func TestRemoveAt(t *testing.T) {
 
 }
 
-// TestRemove covers tests for Remove.
 func TestRemove(t *testing.T) {
 	l := New[types.Int]()
 	other := New[types.Int]()
 
-	l.Add(1)
-	l.Add(2)
-	l.Add(3)
-	l.Add(6)
-	l.Add(9)
+	l.Add(1, 2, 3, 6, 9)
 
-	other.Add(1)
-	other.Add(2)
-	other.Add(3)
-	other.Add(4)
-	other.Add(6)
-	other.Add(9)
+	other.Add(1, 2, 3, 4, 6, 9)
 
 	assert.Equal(t, true, l.Contains(1))
 	l.Remove(1)
@@ -388,9 +349,9 @@ func TestRemove(t *testing.T) {
 	assert.Equal(t, false, l.Contains(3))
 	l.RemoveAll(other)
 	assert.Equal(t, true, l.Empty())
+
 }
 
-// TestIterator covers tests for Iterator.
 func TestIterator(t *testing.T) {
 
 	l := New[types.Int]()
@@ -422,7 +383,6 @@ func TestIterator(t *testing.T) {
 
 }
 
-// TestMapFilter covers tests for Map and Filter.
 func TestMapFilter(t *testing.T) {
 	l := New[types.Int]()
 
@@ -446,7 +406,21 @@ func TestMapFilter(t *testing.T) {
 
 }
 
-// TestClear covers tests for Clear.
+func TestFilter(t *testing.T) {
+	l := New[types.Int]()
+
+	for i := 0; i < 6; i++ {
+		l.Add(types.Int(i))
+	}
+
+	// Case 2 : Filter to create new list.
+	c := []types.Int{0, 2, 4}
+	other := l.Filter(func(e types.Int) bool { return e%2 == 0 })
+	d := other.Collect()
+	assert.ElementsMatch(t, c, d)
+
+}
+
 func TestClear(t *testing.T) {
 	l := New[types.Int]()
 
@@ -460,17 +434,11 @@ func TestClear(t *testing.T) {
 
 }
 
-// TestString covers tests for String used in printing.
 func TestString(t *testing.T) {
 
 	l := New[types.Int]()
 
-	l.Add(2)
-	l.Add(3)
-	l.Add(4)
-	l.Add(5)
-	l.Add(10)
-
+	l.Add(2, 3, 4, 5, 10)
 	assert.Equal(t, "[2 3 4 5 10]", fmt.Sprint(l))
 
 }
@@ -523,7 +491,7 @@ func TestSortBy(t *testing.T) {
 	l.AddFront(200)
 	assert.ElementsMatch(t, append([]types.Int{200}, append(sorted, 100)...), l.Collect())
 
-	// Case 2 : Sorting an already sorted list.
+	// Case 3 : Sorting an already sorted list.
 	l.Clear()
 	l.Add(-10, 0, 1, 2, 3, 4, 5, 20)
 	SortBy(l, func(a, b types.Int) bool { return a < b })

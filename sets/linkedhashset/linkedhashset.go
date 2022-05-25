@@ -1,4 +1,4 @@
-// Package linkedhashset provides an implementation of a set that is backed by a LinkedHashMap.
+// Package linkedhashset provides an implementation of a set that keeps track of the insertion order of elements.
 package linkedhashset
 
 import (
@@ -21,7 +21,7 @@ type LinkedHashSet[T types.Hashable[T]] struct {
 func New[T types.Hashable[T]](elements ...T) *LinkedHashSet[T] {
 	data := linkedhashmap.New[T, bool]()
 	set := LinkedHashSet[T]{data: data}
-	set.AddSlice(elements)
+	set.Add(elements...)
 	return &set
 }
 
@@ -75,16 +75,16 @@ func (set *LinkedHashSet[T]) Contains(element T) bool {
 	return ok
 }
 
-// Add adds elements  if not already in the set. Returns true if the set changed as a result of this call false otherwise.
+// Add adds elements to the set. Only elements that are not already in the set are added.
 func (set *LinkedHashSet[T]) Add(elements ...T) bool {
-	ok := false
+	n := set.Len()
 	for _, element := range elements {
-		ok = set.data.PutIfAbsent(element, true)
+		set.data.PutIfAbsent(element, true)
 	}
-	return ok
+	return (n != set.Len())
 }
 
-// AddAll adds all elements from an iterable to the set.
+// AddAll adds all elements from an iterable to the set. Only elements that are not in the set are added.
 func (set *LinkedHashSet[T]) AddAll(iterable iterator.Iterable[T]) {
 	iterator := iterable.Iterator()
 	for iterator.HasNext() {
@@ -92,25 +92,24 @@ func (set *LinkedHashSet[T]) AddAll(iterable iterator.Iterable[T]) {
 	}
 }
 
-// AddSlice adds element from a slice to the set.
-func (set *LinkedHashSet[T]) AddSlice(slice []T) {
-	for _, element := range slice {
-		set.Add(element)
+// Remove removes elements from the set.
+func (set *LinkedHashSet[T]) Remove(elements ...T) bool {
+	n := set.Len()
+	for _, element := range elements {
+		set.data.Remove(element)
+		if set.Empty() {
+			break
+		}
 	}
+	return (n != set.Len())
 }
 
-// Remove removes the element from the set if it is present.
-func (set *LinkedHashSet[T]) Remove(e T) bool {
-	_, ok := set.data.Remove(e)
-	return ok
-}
-
-// RemoveAll removes all entries from an iterable from the set.
+// RemoveAll removes all elements from an iterable from the set.
 func (set *LinkedHashSet[T]) RemoveAll(iterable iterator.Iterable[T]) {
 	set.data.RemoveAll(iterable)
 }
 
-// RetainAll removes all entries from the set that do not appear in the other collection. Returns true if the set was modified.
+// RetainAll removes all entries from the set that do not appear in the other collection.
 func (set *LinkedHashSet[T]) RetainAll(collection collections.Collection[T]) bool {
 	iterator := set.Iterator()
 	changed := false
@@ -126,7 +125,7 @@ func (set *LinkedHashSet[T]) RetainAll(collection collections.Collection[T]) boo
 	return changed
 }
 
-// Clear removes all elements in the set.
+// Clear removes all elements from the set.
 func (set *LinkedHashSet[T]) Clear() {
 	set.data.Clear()
 }
@@ -136,7 +135,7 @@ func (set *LinkedHashSet[T]) Empty() bool {
 	return set.data.Empty()
 }
 
-// Collect collects all elements of the set into a slice.
+// Collect returns a slice containing all the elements in the set.
 func (set *LinkedHashSet[T]) Collect() []T {
 	data := make([]T, set.data.Len())
 	i := 0
@@ -147,7 +146,8 @@ func (set *LinkedHashSet[T]) Collect() []T {
 	return data
 }
 
-// Map applies a transformation on elements of the set using the function f and returns a new set with transformed element.
+// Map applies a transformation on an elements of the set , using the function f and returns a new set with the
+// transformed elements.
 func (set *LinkedHashSet[T]) Map(f func(e T) T) *LinkedHashSet[T] {
 	newSet := New[T]()
 	for _, element := range set.data.Keys() { // Should we use the iterator here ??
@@ -156,7 +156,7 @@ func (set *LinkedHashSet[T]) Map(f func(e T) T) *LinkedHashSet[T] {
 	return newSet
 }
 
-// Filter filters the set using the predicate function f and returns a new set with elements satisfying the predicate.
+// Filter filters the set using the predicate function  f and returns a new set containing only elements that satisfy the predicate.
 func (set *LinkedHashSet[T]) Filter(f func(e T) bool) *LinkedHashSet[T] {
 	newSet := New[T]()
 	for _, element := range set.data.Keys() {
@@ -207,8 +207,7 @@ func (a *LinkedHashSet[T]) Intersection(b *LinkedHashSet[T]) *LinkedHashSet[T] {
 	return intersection(a, b)
 }
 
-// Equals check if the set is equals the other set. This is true only if they are the same reference or they are of the same size with the
-// same elements.
+// Equals checks if the set is equal to another set. Two sets are equal if they are the same reference or have the same size and contain the same elements.
 func (set *LinkedHashSet[T]) Equals(other *LinkedHashSet[T]) bool {
 	if set == other {
 		return true

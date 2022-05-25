@@ -1,3 +1,4 @@
+// Package treemap provides an implementation of a TreeMap which is a map that stores in a sorted order.
 package treemap
 
 import (
@@ -8,7 +9,7 @@ import (
 	"github.com/phantom820/collections/types"
 )
 
-// TreeMap a map that stores entries in sorted order.
+// TreeMap an implementation of a map in which entries are stored according to their defined ordering.
 type TreeMap[K types.Comparable[K], V any] struct {
 	tree *rbt.RedBlackTree[K, V]
 }
@@ -20,7 +21,7 @@ func New[K types.Comparable[K], V any]() *TreeMap[K, V] {
 }
 
 // Put associates the specified value with the specified key in the map. If the key already exists then its value will be updated. It
-// returns the old value associated with the key or zero value if no previous association.
+// returns the old value associated with the key or zero value if no previous association with a key.
 func (treeMap *TreeMap[K, V]) Put(k K, v V) V {
 	if val, ok := treeMap.tree.Get(k); ok {
 		treeMap.tree.Update(k, v)
@@ -40,8 +41,8 @@ func (treeMap *TreeMap[K, V]) PutIfAbsent(k K, v V) bool {
 	return true
 }
 
-// PutAll adds all the values from other map into the map. Note this has the side effect that if a key
-// is present in the map and in other map then the associated value  in m will be replaced by the associated value  in other.
+// PutAll adds all the values from another map into the map. Note this has the side effect that if a key
+// is present in the map and in other map then the associated value in the m will be replaced by the associated value in other map.
 func (treeMap *TreeMap[K, V]) PutAll(other maps.Map[K, V]) {
 	for _, k := range other.Keys() {
 		v, _ := other.Get(k)
@@ -54,17 +55,12 @@ func (treeMap *TreeMap[K, V]) Len() int {
 	return treeMap.tree.Len()
 }
 
-// Get retrieves the value associated with key in the map treeMap. If there is no such value the zero value is returned along with false.
+// Get retrieves the value associated with the key in the map. If there is no such value then the zero value is returned along with false.
 func (treeMap *TreeMap[K, V]) Get(k K) (V, bool) {
 	return treeMap.tree.Get(k)
 }
 
-// ContainsKey checks if the map contains a mapping for the key.
-func (treeMap *TreeMap[K, V]) ContainsKey(k K) bool {
-	return treeMap.tree.Search(k)
-}
-
-// treeMapIterator an iterator for moving through the keys and value of a HashMap.
+// treeMapIterator an iterator to iterate through the entries of the map.
 type treeMapIterator[K types.Comparable[K], V any] struct {
 	index int
 	nodes []trees.Node[K, V]
@@ -75,12 +71,12 @@ func (it *treeMapIterator[K, V]) Cycle() {
 	it.index = 0
 }
 
-// HasNext checks if the iterator has a next value to yield.
+// HasNext checks if the iterator has a next element to yield.
 func (it *treeMapIterator[K, V]) HasNext() bool {
 	return it.index < len(it.nodes)
 }
 
-// Next returns the next element in the iterator it. Will panic if iterator has been exhausted.
+// Next yields the next element in the iterator. Will panic if the iterator has no next element.
 func (it *treeMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 	if !it.HasNext() {
 		panic(iterator.NoNextElementError)
@@ -97,7 +93,12 @@ func (treeMap *TreeMap[K, V]) Iterator() maps.MapIterator[K, V] {
 	return &it
 }
 
-// ContainsValue checks if the map has an entry whose value is the specified value. func equals is used to compare value for equality.
+// ContainsKey checks if the map contains a mapping for the key.
+func (treeMap *TreeMap[K, V]) ContainsKey(k K) bool {
+	return treeMap.tree.Search(k)
+}
+
+// ContainsValue checks if the map has an entry whose value is the specified value. func equals is used to compare values for equality.
 func (treeMap *TreeMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool {
 	it := treeMap.Iterator()
 	for it.HasNext() {
@@ -109,12 +110,12 @@ func (treeMap *TreeMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool 
 	return false
 }
 
-// Remove removes the map entry <k,V> from map m if it exists.
+// Remove removes the map entry <k,V> from the map if it exists.
 func (treeMap *TreeMap[K, V]) Remove(k K) (V, bool) {
 	return treeMap.tree.Delete(k)
 }
 
-// RemoveAll removes all keys that are in the specified iterable from treeMap.
+// RemoveAll removes all keys entries that are in the specified iterable from the map.
 func (treeMap *TreeMap[K, V]) RemoveAll(keys iterator.Iterable[K]) {
 	it := keys.Iterator()
 	for it.HasNext() {
@@ -122,12 +123,12 @@ func (treeMap *TreeMap[K, V]) RemoveAll(keys iterator.Iterable[K]) {
 	}
 }
 
-// Values collects all the values of the map into a slice.
+// Values returns a slice containing all the values in the map.
 func (treeMap *TreeMap[K, V]) Values() []V {
 	return treeMap.tree.Values()
 }
 
-// Keys collects the keys of the map into a slice.
+// Keys returns a slice containing all the keys in the map.
 func (treeMap *TreeMap[K, V]) Keys() []K {
 	return treeMap.tree.Keys()
 }
@@ -137,12 +138,12 @@ func (treeMap *TreeMap[K, V]) Empty() bool {
 	return treeMap.tree.Empty()
 }
 
-// Clear removes all entries in the map.
+// Clear removes all entries from the map.
 func (treeMap *TreeMap[K, V]) Clear() {
 	treeMap.tree.Clear()
 }
 
-// Equals check if map m is equal to map other. This checks that the two maps have the same entries (k,v), the values are compared
+// Equals checks if the map is equal to map other. This checks that the two maps have the same entries (k,v), the values are compared
 // using the specified equals function for two values. Keys are compared using their corresponding Equals method.
 // Only returns true if the 2 maps are the same reference or have the same size and entries.
 func (treeMap *TreeMap[K, V]) Equals(other *TreeMap[K, V], equals func(a V, b V) bool) bool {
@@ -168,8 +169,8 @@ func (treeMap *TreeMap[K, V]) Equals(other *TreeMap[K, V], equals func(a V, b V)
 	}
 }
 
-// Map applies a transformation on an entry of m i.e f((k,v)) -> (k*,v*) , using a function f and returns a new TreeMap of which its keys
-// and values have been transformed.
+// Map applies a transformation on an entry of the map i.e f((k,v)) -> (k*,v*) , using the function f and returns a new map with the
+// transformed entries.
 func (treeMap *TreeMap[K, V]) Map(f func(e maps.MapEntry[K, V]) maps.MapEntry[K, V]) *TreeMap[K, V] {
 	newMap := New[K, V]()
 	it := treeMap.Iterator()
@@ -181,8 +182,7 @@ func (treeMap *TreeMap[K, V]) Map(f func(e maps.MapEntry[K, V]) maps.MapEntry[K,
 	return newMap
 }
 
-// Filter filters the TreeMap m using a predicate function that indicates whether an entry should be kept or not in a
-// TreeMap to be returned.
+// Filter filters the map using the predicate function  f and returns a new map containing only entries that satisfy the predicate.
 func (treeMap *TreeMap[K, V]) Filter(f func(e maps.MapEntry[K, V]) bool) *TreeMap[K, V] {
 	newMap := New[K, V]()
 	it := treeMap.Iterator()

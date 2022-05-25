@@ -20,7 +20,10 @@ func TestAdd(t *testing.T) {
 	// q Starts out as empty.
 	assert.Equal(t, true, q.Empty())
 
-	// Case 1 : Add individual elements.
+	// Case 1 : Add with no alements
+	assert.Equal(t, false, q.Add())
+
+	// Case 2 : Add individual elements.
 	q.Add(1)
 	assert.Equal(t, false, q.Empty())
 	assert.Equal(t, 1, q.Len())
@@ -34,15 +37,15 @@ func TestAdd(t *testing.T) {
 		l.Add(types.Int(i))
 	}
 
-	// Case 2 : Add a number of elements at once.
+	// Case 3 : Add a number of elements at once.
 	q.AddAll(l)
 	assert.Equal(t, 10, q.Len())
 
-	// Case 3 : Adding a slice should work accordingly
+	// Case 4 : Adding a slice should work accordingly
 	q.Clear()
 
 	s := []types.Int{1, 2, 3, 4}
-	q.AddSlice(s)
+	q.Add(s...)
 
 	assert.ElementsMatch(t, s, q.Collect())
 

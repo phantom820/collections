@@ -16,7 +16,7 @@ type SliceStack[T types.Equitable[T]] struct {
 // New creates a slice based stack with the specified elements, if there are none an empty stack is created.
 func New[T types.Equitable[T]](elements ...T) *SliceStack[T] {
 	stack := SliceStack[T]{data: make([]T, 0)}
-	stack.AddSlice(elements)
+	stack.Add(elements...)
 	return &stack
 }
 
@@ -40,6 +40,9 @@ func (stack *SliceStack[T]) Pop() T {
 
 // Add pushes the elements to the stack.
 func (stack *SliceStack[T]) Add(elements ...T) bool {
+	if len(elements) == 0 {
+		return false
+	}
 	stack.data = append(stack.data, elements...)
 	return true
 }
@@ -50,11 +53,6 @@ func (stack *SliceStack[T]) AddAll(elements iterator.Iterable[T]) {
 	for it.HasNext() {
 		stack.Add(it.Next())
 	}
-}
-
-// AddSlice adds element from a slice s into the stack q.
-func (stack *SliceStack[T]) AddSlice(slice []T) {
-	stack.data = append(stack.data, slice...)
 }
 
 // Clear removes all elements in the stack.
@@ -131,8 +129,20 @@ func (stack *SliceStack[T]) indexOf(e T) int {
 	return -1
 }
 
-// Removes the first occurence of element  from the stack.
-func (stack *SliceStack[T]) Remove(e T) bool {
+// Remove remove the elements from the stack.
+func (stack *SliceStack[T]) Remove(elements ...T) bool {
+	n := stack.Len()
+	for _, element := range elements {
+		stack.remove(element)
+		if stack.Empty() {
+			break
+		}
+	}
+	return (n != stack.Len())
+}
+
+// removes the first occurence of element  from the stack.
+func (stack *SliceStack[T]) remove(e T) bool {
 	i := stack.indexOf(e)
 	if i == -1 {
 		return false

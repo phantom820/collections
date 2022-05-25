@@ -1,3 +1,4 @@
+// Package forwadlist provides an implementation of a singly linked list with a tail pointer.
 package forwardlist
 
 import (
@@ -9,7 +10,7 @@ import (
 	"github.com/phantom820/collections/types"
 )
 
-// ForwardList an implementation of a singly linked list.
+// ForwardList an implementation of a singly linked list with a tail pointer.
 type ForwardList[T types.Equitable[T]] struct {
 	head *node[T]
 	tail *node[T]
@@ -19,7 +20,7 @@ type ForwardList[T types.Equitable[T]] struct {
 // New creates a list with the specified elements. If no elements are specified an empty list is created.
 func New[T types.Equitable[T]](elements ...T) *ForwardList[T] {
 	list := ForwardList[T]{head: nil, len: 0}
-	list.AddSlice(elements)
+	list.Add(elements...)
 	return &list
 }
 
@@ -30,33 +31,33 @@ type node[T types.Equitable[T]] struct {
 	value T
 }
 
-// newNode creates a new node with the value v.
-func newNode[T types.Equitable[T]](v T) *node[T] {
-	return &node[T]{value: v, next: nil}
+// newNode creates a new node with the specified value.
+func newNode[T types.Equitable[T]](value T) *node[T] {
+	return &node[T]{value: value, next: nil}
 }
 
-// forwadListIterator struct to implement an iterator for a ForwardList.
+// forwadListIterator a type implement an iterator for the list.
 type forwardListIterator[T types.Equitable[T]] struct {
 	n     *node[T] // Used for Next() and HasNext().
 	start *node[T] // Used to cycle an iterator.
 }
 
-// HasNext checks if the iterator it has a next element to yield.
-func (iterator *forwardListIterator[T]) HasNext() bool {
-	return iterator.n != nil
+// HasNext checks if the iterator has a next element to yield.
+func (it *forwardListIterator[T]) HasNext() bool {
+	return it.n != nil
 }
 
-// Next returns the next element in the iterator it. Will panic if iterator is exhausted.
-func (iter *forwardListIterator[T]) Next() T {
-	if !iter.HasNext() {
+// Next yields the next element in the iterator. Will panic if the iterator has no next element.
+func (it *forwardListIterator[T]) Next() T {
+	if !it.HasNext() {
 		panic(iterator.NoNextElementError)
 	}
-	n := iter.n
-	iter.n = iter.n.next
+	n := it.n
+	it.n = it.n.next
 	return n.value
 }
 
-// Cycle resets the iterator it.
+// Cycle resets the iterator.
 func (iterator *forwardListIterator[T]) Cycle() {
 	iterator.n = iterator.start
 }
@@ -82,7 +83,7 @@ func (list *ForwardList[T]) Back() T {
 	panic(lists.ErrEmptyList)
 }
 
-// Swap swaps the element at index i and the element at index j. This is done using links. Will panic if one/both of the specified indices
+// Swap swaps the element at index i and the element at index j. This is done using links. Will panic if one/both of the specified indices is
 //  out of bounds.
 func (list *ForwardList[T]) Swap(i, j int) {
 	if i < 0 || i >= list.len || j < 0 || j >= list.len {
@@ -139,7 +140,7 @@ func (list *ForwardList[T]) nodeAt(i int) *node[T] {
 	return n
 }
 
-// At retrieves the element at index i in list. Will panic If i is out of bounds.
+// At retrieves the element at index i in the list. Will panic If index is out of bounds.
 func (list *ForwardList[T]) At(i int) T {
 	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
@@ -184,7 +185,7 @@ func (list *ForwardList[T]) AddBack(e T) {
 	list.len++
 }
 
-// AddAt adds an element to list at specified index i. Will panic if i is out of bounds.
+// AddAt adds an element to the list at specified index. Will panic if index is out of bounds.
 func (list *ForwardList[T]) AddAt(i int, e T) {
 	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
@@ -211,35 +212,32 @@ func (list *ForwardList[T]) AddAt(i int, e T) {
 
 // Add adds elements to the back of the list.
 func (list *ForwardList[T]) Add(elements ...T) bool {
-	for _, e := range elements {
-		list.AddBack(e)
+	if len(elements) == 0 {
+		return false
+	}
+	for _, element := range elements {
+		list.AddBack(element)
 	}
 	return true
 }
 
-// Set replaces the element at index i in the list with the new element. Returns the old element that was at index i.
-func (list *ForwardList[T]) Set(i int, e T) T {
+// Set replaces the element at the specified index in the list with the new element. Returns the old element that was at the index. Will panic
+// if index is out of bounds.
+func (list *ForwardList[T]) Set(i int, element T) T {
 	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	}
 	n := list.nodeAt(i)
 	temp := n.value
-	n.value = e
+	n.value = element
 	return temp
 }
 
-// AddAll adds all elements from an iterable elements to the list.
+// AddAll adds all elements from iterable elements to the list.
 func (list *ForwardList[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		list.Add(it.Next())
-	}
-}
-
-// AddSlice adds element from a slice s into the list.
-func (list *ForwardList[T]) AddSlice(s []T) {
-	for _, e := range s {
-		list.Add(e)
 	}
 }
 
@@ -260,18 +258,18 @@ func (list *ForwardList[T]) search(e T) *node[T] {
 	return nil
 }
 
-// Contains checks if element is in the list.
-func (list *ForwardList[T]) Contains(e T) bool {
-	return list.search(e) != nil
+// Contains checks if the element is in the list.
+func (list *ForwardList[T]) Contains(element T) bool {
+	return list.search(element) != nil
 }
 
-// RemoveFront removes and returns the front element of the list. Will panic if l has no front element.
+// RemoveFront removes and returns the front element of the list. Will panic if list has no front element.
 func (list *ForwardList[T]) RemoveFront() T {
 	if list.len == 0 {
 		panic(lists.ErrEmptyList)
 	} else if list.len == 1 {
 		n := list.head
-		list.head = n.next // subsequent operations are to avoid memory leaks.
+		list.head = n.next
 		list.tail = nil
 		list.len -= 1
 		v := n.value
@@ -289,7 +287,7 @@ func (list *ForwardList[T]) RemoveFront() T {
 	}
 }
 
-// RemoveBack removes and returns the back element of the list. Will panic if l has no back element.
+// RemoveBack removes and returns the back element of the list. Will panic if the list has no back element.
 func (list *ForwardList[T]) RemoveBack() T {
 	if list.len <= 1 {
 		return list.RemoveFront()
@@ -305,7 +303,7 @@ func (list *ForwardList[T]) RemoveBack() T {
 	}
 }
 
-// RemoveAt removes the element at the specified index i in the list. Will panic if index i is out of bounds.
+// RemoveAt removes the element at the specified index in the list. Will panic if index is out of bounds.
 func (list *ForwardList[T]) RemoveAt(i int) T {
 	if list.Empty() {
 		panic(lists.ErrEmptyList)
@@ -321,7 +319,7 @@ func (list *ForwardList[T]) RemoveAt(i int) T {
 	}
 }
 
-// removeNode removes the specified node curr where prev is the node before it. For internal use for functions such as remove at.
+// removeNode removes the specified node curr where prev is the node before it. For internal use to support operations such as RemoveAt.
 func (list *ForwardList[T]) removeNode(prev *node[T], curr *node[T]) T {
 	prev.next = curr.next
 	list.len -= 1
@@ -331,8 +329,20 @@ func (list *ForwardList[T]) removeNode(prev *node[T], curr *node[T]) T {
 	return v
 }
 
-// Remove removes element from the list if its present. This removes the first occurence of e.
-func (list *ForwardList[T]) Remove(e T) bool {
+// Remove removes elements from the list. Only the first occurence of an element is removed.
+func (list *ForwardList[T]) Remove(elements ...T) bool {
+	n := list.len
+	for _, element := range elements {
+		list.remove(element)
+		if list.Empty() {
+			break
+		}
+	}
+	return (n != list.len)
+}
+
+// remove removes element from the list if its present. This removes the first occurence of the element.
+func (list *ForwardList[T]) remove(e T) bool {
 	curr := list.search(e)
 	if curr == nil {
 		return false
@@ -377,8 +387,7 @@ func (list *ForwardList[T]) Clear() {
 	}
 }
 
-// Equals checks if list and other list are equal. If they are the same reference/ have same size and elements then they are equal.
-// Otherwise they are not equal.
+// Equals checks if the list is equal to another list. Two lists are equal if they are the same reference or have the same size and their elements match.
 func (list *ForwardList[T]) Equals(other *ForwardList[T]) bool {
 	if list == other {
 		return true
@@ -414,7 +423,7 @@ func (list *ForwardList[T]) Reverse() *ForwardList[T] {
 	return r
 }
 
-// Collect collects all elements of the list into a slice.
+// Collect returns a slice containing all the elements in the list.
 func (list *ForwardList[T]) Collect() []T {
 	data := make([]T, list.len)
 	i := 0
@@ -439,7 +448,8 @@ func (list *ForwardList[T]) String() string {
 	return list.traversal()
 }
 
-// Map transforms each element of the list using a function f and returns a new list with transformed elements.
+// Map applies a transformation on each element of the list, using the function f and returns a new list with the
+// transformed elements.
 func (list *ForwardList[T]) Map(f func(e T) T) *ForwardList[T] {
 	newList := New[T]()
 	for e := list.head; e != nil; e = e.next {
@@ -449,7 +459,7 @@ func (list *ForwardList[T]) Map(f func(e T) T) *ForwardList[T] {
 	return newList
 }
 
-// Filter filters the elements of the list using a predicate function f and returns new list with elements satisfying predicate.
+// Filter filters the list using the predicate function  f and returns a new list containing only elements that satisfy the predicate.
 func (list *ForwardList[T]) Filter(f func(e T) bool) *ForwardList[T] {
 	newList := New[T]()
 	for e := list.head; e != nil; e = e.next {
@@ -460,7 +470,7 @@ func (list *ForwardList[T]) Filter(f func(e T) bool) *ForwardList[T] {
 	return newList
 }
 
-// locateMid finds the mid of a list using The Tortoise and The Hare approach.
+// locateMid finds the mid of a list using The Tortoise and The Hare approach.  For internal use to support sorting.
 func locateMid[T types.Equitable[T]](head *node[T]) *node[T] {
 	slow := head
 	fast := head.next
@@ -471,7 +481,7 @@ func locateMid[T types.Equitable[T]](head *node[T]) *node[T] {
 	return slow
 }
 
-// merge combines 2 list that have been sorted by natural ordering of elements.
+// merge combines 2 list that have been sorted by natural ordering of elements. For internal use to support Sort.
 func merge[T types.Comparable[T]](leftHead *node[T], rightHead *node[T]) (*node[T], *node[T]) {
 
 	falseHead := &node[T]{}
@@ -563,7 +573,7 @@ func mergeBy[T types.Equitable[T]](leftHead *node[T], rightHead *node[T], less f
 	return falseHead.next, sentinel
 }
 
-// sortBy sorts the list using the specified function less for ordering. The sorting algorithm is merge sort.
+// sortBy sorts the list using the specified function less for ordering. The underlying sorting algorithms is merge sort.
 func sortBy[T types.Equitable[T]](head *node[T], less func(a, b T) bool) (*node[T], *node[T]) {
 	if head.next == nil {
 		return head, nil
@@ -577,7 +587,7 @@ func sortBy[T types.Equitable[T]](head *node[T], less func(a, b T) bool) (*node[
 	return finalHead, finalTail
 }
 
-// SortBy sorts the list using the function less for comparison of two element . if less(a,b) = true then it means a comes before b in the sorted list.
+// SortBy sorts the list using the function less for comparison of two element . If less(a,b) = true then it means a comes before b in the sorted list.
 func SortBy[T types.Equitable[T]](list *ForwardList[T], less func(a, b T) bool) {
 	if list.Empty() || list.len == 1 {
 		return

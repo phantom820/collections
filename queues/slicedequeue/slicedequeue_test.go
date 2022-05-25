@@ -1,4 +1,4 @@
-package slicequeue
+package slicedequeue
 
 import (
 	"fmt"
@@ -20,10 +20,11 @@ func TestAdd(t *testing.T) {
 	// q Starts out as empty.
 	assert.Equal(t, true, q.Empty())
 
-	// Case 1 : Add with no elements.
+	// Case 1 : Add with no alements
 	assert.Equal(t, false, q.Add())
 
 	// Case 2 : Add individual elements.
+	assert.Equal(t, false, q.Contains(1))
 	q.Add(1)
 	assert.Equal(t, false, q.Empty())
 	assert.Equal(t, 1, q.Len())
@@ -43,6 +44,7 @@ func TestAdd(t *testing.T) {
 
 	// Case 4 : Adding a slice should work accordingly
 	q.Clear()
+
 	s := []types.Int{1, 2, 3, 4}
 	q.Add(s...)
 
@@ -65,7 +67,12 @@ func TestFront(t *testing.T) {
 		q.Front()
 	})
 
-	// Case 2 : Front and RemoveFront should behave accordingly.
+	// Case 2 : Front and back the same.
+	q.Add(-1)
+	assert.Equal(t, types.Int(-1), q.Front())
+	assert.Equal(t, types.Int(-1), q.RemoveFront())
+
+	// Case 3 : Front and RemoveFront should behave accordingly.
 	for i := 1; i <= 10; i++ {
 		q.Add(types.Int(i))
 	}
@@ -136,7 +143,6 @@ func TestRemove(t *testing.T) {
 	q.Add(5)
 
 	assert.Equal(t, true, q.Remove(5))
-	assert.Equal(t, false, q.Contains(5))
 
 	s := forwardlist.New[types.Int]()
 	s.Add(1)
@@ -145,11 +151,6 @@ func TestRemove(t *testing.T) {
 	// Case 3 : Removing multiple elements at once.
 	q.RemoveAll(s)
 	assert.Equal(t, 1, q.Len())
-	assert.Equal(t, types.Int(4), q.Front())
-
-	q.Add(4, 45, 90)
-	q.Remove(90)
-	assert.Equal(t, false, q.Contains(90))
 
 }
 
@@ -162,4 +163,61 @@ func TestString(t *testing.T) {
 	q.Add(3)
 
 	assert.Equal(t, "[1 2 3]", fmt.Sprint(q))
+}
+
+// TestBack covers tests for Back and RemoveBack.
+func TestBack(t *testing.T) {
+
+	q := New[types.Int]()
+
+	// Case 1 : Back on an empty queue should paanic
+	t.Run("panics", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				assert.Equal(t, queues.ErrNoBackElement, r.(error))
+			}
+		}()
+		q.Back()
+	})
+
+	// Case 2 : Back and RemoveBack should behave accordingly.
+	q.Add(1, 2, 3, 4, 5)
+
+	assert.Equal(t, types.Int(5), q.Back())
+	assert.Equal(t, types.Int(5), q.RemoveBack())
+	assert.Equal(t, types.Int(4), q.Back())
+	assert.Equal(t, types.Int(4), q.RemoveBack())
+
+	q.Clear()
+	assert.Equal(t, true, q.Empty())
+
+	// Case 3 : RemoveFront should panic on an empty queue
+	t.Run("panics", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				assert.Equal(t, queues.ErrNoBackElement, r.(error))
+			}
+		}()
+		q.RemoveBack()
+	})
+
+}
+
+func TestAddFront(t *testing.T) {
+
+	q := New[types.Int]()
+
+	// Case 1: Add front for an empty dequeue.
+	q.AddFront(23)
+	assert.Equal(t, types.Int(23), q.Front())
+
+	// Case 2 : Add front to already populated dequeue.
+	q.AddFront(1)
+	assert.Equal(t, types.Int(1), q.Front())
+
+	q.AddFront(1, 2, 3)
+	assert.Equal(t, types.Int(3), q.Front())
+
+	assert.Equal(t, 5, q.Len())
+
 }

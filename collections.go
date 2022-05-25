@@ -12,10 +12,9 @@ type Collection[T types.Equitable[T]] interface {
 	iterator.Iterable[T]              // Returns an iterator for iterating through the collection.
 	Add(elements ...T) bool           // Adds elements to the collection.
 	AddAll(c iterator.Iterable[T])    // Adds all elements from another collection into the collection.
-	AddSlice(s []T)                   // Adds all elements from a slice into the collection.
 	Len() int                         // Returns the size (number of items) stored in the collection.
 	Contains(e T) bool                // Checks if the element e is a member of the collection.
-	Remove(e T) bool                  // Tries to remove a specified element in the collection. It removes the first occurence of the element.
+	Remove(elements ...T) bool        // Tries to remove the specified element(s) from the collection. Only first occurence of an element is removed.
 	RemoveAll(c iterator.Iterable[T]) // Removes all elements from another collections that appear in the collection.
 	Empty() bool                      // Checks if the collection contains any elements.
 	Clear()                           // Removes all elements in the collection.

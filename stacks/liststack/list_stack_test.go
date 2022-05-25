@@ -51,12 +51,15 @@ func TestPop(t *testing.T) {
 
 }
 
-// TestAdd covers tests for AddAll and AddSlice.
+// TestAdd covers tests for AddAll.
 func TestAdd(t *testing.T) {
 
 	s := New[types.Int]()
 
-	// Case 1 : AddAll add items from an iterable should work accordingly.
+	// Case 1  Add with empty elements.
+	assert.Equal(t, false, s.Add())
+
+	// Case 2 : AddAll add items from an iterable should work accordingly.
 	l := forwardlist.New[types.Int]()
 	l.Add(1)
 	l.Add(2)
@@ -67,10 +70,10 @@ func TestAdd(t *testing.T) {
 	assert.Equal(t, types.Int(2), s.Pop())
 	assert.Equal(t, types.Int(1), s.Pop())
 
-	// Case 2 : AddSlice add items from a slice.
+	// Case 3 : AddSlice add items from a slice.
 	s.Clear()
 	slice := []types.Int{2, 4, 6}
-	s.AddSlice(slice)
+	s.Add(slice...)
 
 	assert.Equal(t, types.Int(6), s.Pop())
 	assert.Equal(t, types.Int(4), s.Pop())

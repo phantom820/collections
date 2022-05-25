@@ -11,10 +11,20 @@ import (
 // Errors for operations that may be inapplicable on a queue.
 var (
 	ErrNoFrontElement = errors.New("queue has no front element")
+	ErrNoBackElement  = errors.New("dequeue has no back element")
 )
 
 type Queue[T types.Equitable[T]] interface {
 	collections.Collection[T]
 	Front() T       //  Returns the front element of the queue. Will panic if no front element.
 	RemoveFront() T // Returns and removes the front element of the queue. Will panic if no front element.
+}
+
+type DeqQueue[T types.Equitable[T]] interface {
+	collections.Collection[T]
+	AddFront(elements ...T) // Adds elements to the front of the queue.
+	Front() T               //  Returns the front element of the queue. Will panic if no front element.
+	RemoveFront() T         // Returns and removes the front element of the queue. Will panic if no front element.
+	Back() T                //  Returns the back element of the queue. Will panic if no back element.
+	RemoveBack() T          //  Returns and removes the item at the back of the queue
 }

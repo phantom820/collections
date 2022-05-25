@@ -1,6 +1,7 @@
 package treemap
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/phantom820/collections/iterator"
@@ -10,114 +11,102 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestPut also covers tests for PutAll, Empty, Len, Keys, Values, Clear.
 func TestPut(t *testing.T) {
 
 	m := New[types.String, string]()
 
-	// Case 1 : An empty map.
-	assert.Equal(t, true, m.Empty())
-	assert.ElementsMatch(t, []types.Int{}, m.Keys())
-	v := m.Put("A", "A")
-	assert.Equal(t, false, m.Empty())
+	// Case 1 : Put with a new key.
+	assert.Equal(t, 0, m.Len())
+	assert.Equal(t, false, m.ContainsKey("A"))
+	m.Put("A", "A")
 	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, "", v)
-	assert.Equal(t, []types.String{"A"}, m.Keys())
+	assert.Equal(t, true, m.ContainsKey("A"))
+	assert.Equal(t, true, m.ContainsValue("A", func(a, b string) bool { return a == b }))
 
-	// Case 2 : An already mapped key.
-	v = m.Put("A", "B")
+	// Case 2 : Put with an existing key.
+	value := m.Put("A", "B")
 	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, "A", v)
+	assert.Equal(t, "A", value)
+	assert.Equal(t, true, m.ContainsKey("A"))
+	assert.Equal(t, false, m.ContainsValue("A", func(a, b string) bool { return a == b }))
+	assert.Equal(t, true, m.ContainsValue("B", func(a, b string) bool { return a == b }))
 
-	// Case 3 : A non empty map with a new key.
-	v = m.Put("B", "B")
+	// Case 3 : Put with a key that will map to an empty bucket.
+	m.Put("B", "B")
 	assert.Equal(t, 2, m.Len())
-	assert.Equal(t, "", v)
-	assert.Equal(t, []types.String{"A", "B"}, m.Keys())
+	assert.Equal(t, true, m.ContainsKey("B"))
 
-	// Case 4 : Ordering of keys and values.
-	for i := 14; i >= 2; i-- {
-		m.Put(types.String(string(rune(80-i))), string(rune(80-i)))
-	}
+	// Case 4 : PutAll for keys comming from another map.
+	otherMap := New[types.String, string]()
+	otherMap.Put("A", "D")
+	otherMap.Put("C", "C")
+	otherMap.Put("D", "D")
+	m.PutAll(otherMap)
 
-	keys := []types.String{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}
-	values := []string{"B", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}
-
-	assert.Equal(t, keys, m.Keys())
-	assert.Equal(t, values, m.Values())
-
-	// Case 5 : Adding all values from another map.
-	other := New[types.String, string]()
-	other.Put("O", "O")
-	other.Put("P", "P")
-	other.Put("Q", "Q")
-
-	m.PutAll(other)
-	assert.ElementsMatch(t, append(keys, "O", "P", "Q"), m.Keys())
-	assert.ElementsMatch(t, append(values, "O", "P", "Q"), m.Values())
-
-	m.Clear()
-	assert.Equal(t, true, m.Empty())
+	assert.Equal(t, 4, m.Len())
+	value, _ = m.Get("A") // Value should have been updated with one in other map.
+	assert.Equal(t, "D", value)
 
 }
 
-// TestPutIfAbsent also covers tests for ContainsKey, ContainsValue.
 func TestPutIfAbsent(t *testing.T) {
 
-	m := New[types.Int, string]()
+	m := New[types.String, string]()
 
-	// Case 1 : An empty map.
-	assert.Equal(t, true, m.Empty())
-	assert.Equal(t, false, m.ContainsKey(1))
-	assert.Equal(t, false, m.ContainsValue("A", func(a, b string) bool { return a == b }))
-	b := m.PutIfAbsent(1, "A")
-	assert.Equal(t, false, m.Empty())
-	assert.Equal(t, true, m.ContainsKey(1))
-	assert.Equal(t, true, m.ContainsValue("A", func(a, b string) bool { return a == b }))
-	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, true, b)
+	// Case 1 : PutIfAbsent with a new key.
+	assert.Equal(t, true, m.PutIfAbsent("A", "A"))
 
-	// Case 2 : An already mapped key.
-	b = m.PutIfAbsent(1, "B")
-	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, false, b)
+	// Case 2 : PutIfAbsent with an already mapped key.
+	assert.Equal(t, false, m.PutIfAbsent("A", "B"))
 
-	// Case 3 : A non empty map with a new key.
-	b = m.PutIfAbsent(2, "C")
-	assert.Equal(t, 2, m.Len())
-	assert.Equal(t, true, b)
+	// Case 3 : PutIfAbsent with a key mapping to non empty bucket.
+	assert.Equal(t, true, m.PutIfAbsent("\x10AAAA", "\x10AAAA"))
+	assert.Equal(t, true, m.PutIfAbsent("\x00AAAA", "\x00AAAA")) // maps to non empty bucket.
 
 }
 
-// TestRemove also covers tests for Remove, RemoveAll
 func TestRemove(t *testing.T) {
 
 	m := New[types.Int, string]()
 
-	// Case 1 : Key to remove absent.
-	_, b := m.Remove(1)
-	assert.Equal(t, false, b)
+	// Case 1 : Remove an absent key.
+	_, ok := m.Remove(1)
+	assert.Equal(t, false, ok)
 
-	// Case 2 : Keys to remove is mapped.
+	// Case 2 : Remove a mapped key
 	m.Put(1, "A")
-	v, _ := m.Remove(1)
-	assert.Equal(t, "A", v)
+	value, ok := m.Remove(1)
+	assert.Equal(t, true, ok)
+	assert.Equal(t, "A", value)
 
+	// Case 3 : Remove a number of keys.
 	m.Put(1, "A")
 	m.Put(2, "B")
 	m.Put(3, "C")
 	m.Put(4, "D")
 	m.Put(5, "E")
 
-	v, _ = m.Remove(2)
-	assert.Equal(t, "B", v)
-	assert.ElementsMatch(t, []types.Int{1, 3, 4, 5}, m.Keys())
-	assert.ElementsMatch(t, []string{"A", "C", "D", "E"}, m.Values())
-
-	// Case 3 : Remove a number of keys.
 	l := list.New[types.Int](1, 3, 4, 5)
 	m.RemoveAll(l)
 
+	assert.Equal(t, 1, m.Len())
+	assert.Equal(t, false, m.ContainsKey(1))
+	assert.Equal(t, false, m.ContainsKey(3))
+	assert.Equal(t, false, m.ContainsKey(4))
+	assert.Equal(t, false, m.ContainsKey(5))
+
+}
+
+func TestClear(t *testing.T) {
+
+	m := New[types.Int, int]()
+
+	for i := 0; i < 20; i++ {
+		m.Put(types.Int(i), i)
+	}
+
+	assert.Equal(t, 20, m.Len())
+	m.Clear()
 	assert.Equal(t, true, m.Empty())
 
 }
@@ -131,23 +120,23 @@ func TestEquals(t *testing.T) {
 	assert.Equal(t, true, m.Equals(other, func(a, b string) bool { return a == b }))
 	assert.Equal(t, true, m.Equals(m, func(a, b string) bool { return a == b }))
 
-	// Case 2 : Different sizes.
+	// Case 2 : Equals with different sizes should fail.
 	m.Put(1, "A")
 	m.Put(2, "B")
 
 	assert.Equal(t, false, m.Equals(other, func(a, b string) bool { return a == b }))
 
-	// Case 3 : Same sizes different keys.
+	// Case 3 : Same sizes with different keys should fail.
 	other.Put(1, "A")
 	other.Put(3, "B")
 	assert.Equal(t, false, m.Equals(other, func(a, b string) bool { return a == b }))
 
-	// Case 4 : Same sizes different values.
+	// Case 4 : Same sizes with different values should fail.
 	other.Remove(3)
 	other.Put(2, "C")
 	assert.Equal(t, false, m.Equals(other, func(a, b string) bool { return a == b }))
 
-	// Case 5 : Equal maps.
+	// Case 5 : Same sizes and entries should pass.
 	other.Put(2, "B")
 	assert.Equal(t, true, m.Equals(other, func(a, b string) bool { return a == b }))
 
@@ -157,20 +146,31 @@ func TestIterator(t *testing.T) {
 
 	m := New[types.Int, string]()
 
-	// Case 1 : Legal iterator.
-	m.Put(1, "A")
-	m.Put(2, "B")
-	m.Put(3, "C")
+	// Case 1 : Iterating on a populated map.
+	for i := 14; i > 0; i-- {
+		m.Put(types.Int(i), string(rune(64+i)))
+	}
+
+	orderedKeys := []types.Int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
+	orderedValues := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}
 
 	it := m.Iterator()
 	keys := []types.Int{}
+	values := []string{}
+
 	for it.HasNext() {
-		keys = append(keys, it.Next().Key)
+		entry := it.Next()
+		keys = append(keys, entry.Key)
+		values = append(values, entry.Value)
 	}
 
-	assert.ElementsMatch(t, []types.Int{1, 2, 3}, keys)
+	fmt.Println(values)
+	assert.ElementsMatch(t, orderedKeys, keys)
+	assert.ElementsMatch(t, orderedValues, values)
+	assert.ElementsMatch(t, orderedKeys, m.Keys())
+	assert.ElementsMatch(t, orderedValues, m.Values())
 
-	// Case 2 : Exhausted iterator.
+	// Case 2 : Next on exhausted iterator should panic.
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -180,41 +180,62 @@ func TestIterator(t *testing.T) {
 		it.Next()
 	})
 
-	// Case 3 : Recylce iterator.
+	// Case 3 : Recycle iterator.
 	it.Cycle()
 
-	v := it.Next().Value
-	assert.Equal(t, "A", v)
+	value := it.Next().Value
+	assert.Equal(t, "A", value)
 
 }
 
 func TestMap(t *testing.T) {
 
 	m := New[types.Int, string]()
+
+	// Case 1 : Mapping an empty map should give an empty map.
+	other := m.Map(func(entry maps.MapEntry[types.Int, string]) maps.MapEntry[types.Int, string] {
+		return maps.MapEntry[types.Int, string]{Key: entry.Key, Value: entry.Value}
+	})
+	assert.Equal(t, true, other.Empty())
+
+	// Case 2 : Mapping a map with entries.
 	m.Put(1, "A")
 	m.Put(2, "B")
 	m.Put(3, "C")
 
-	other := m.Map(func(e maps.MapEntry[types.Int, string]) maps.MapEntry[types.Int, string] {
-		return maps.MapEntry[types.Int, string]{Key: e.Key, Value: e.Value + "$"}
+	other = m.Map(func(entry maps.MapEntry[types.Int, string]) maps.MapEntry[types.Int, string] {
+		return maps.MapEntry[types.Int, string]{Key: entry.Key + 1, Value: entry.Value + "$"}
 	})
 
-	assert.Equal(t, true, m.Equals(other, func(a, b string) bool { return a+"$" == b }))
+	assert.Equal(t, 3, other.Len())
+	value, _ := other.Get(2)
+	assert.Equal(t, "A$", value)
+	value, _ = other.Get(3)
+	assert.Equal(t, "B$", value)
+	value, _ = other.Get(4)
+	assert.Equal(t, "C$", value)
 
 }
 
 func TestFilter(t *testing.T) {
 
 	m := New[types.Int, string]()
+
+	// Case 1 : Filtering an empty map should give an empty map.
+	other := m.Filter(func(entry maps.MapEntry[types.Int, string]) bool { return entry.Key%2 == 0 })
+	assert.Equal(t, true, other.Empty())
+
+	// Case 2 : Filtering a map with entries.
 	m.Put(1, "A")
 	m.Put(2, "B")
 	m.Put(3, "C")
 
-	other := m.Filter(func(e maps.MapEntry[types.Int, string]) bool { return e.Key%2 == 0 })
+	other = m.Filter(func(entry maps.MapEntry[types.Int, string]) bool { return entry.Key%2 == 0 })
 
-	n := New[types.Int, string]()
-	n.Put(2, "B")
-
-	assert.Equal(t, true, n.Equals(other, func(a, b string) bool { return a == b }))
+	assert.Equal(t, 1, other.Len())
+	assert.Equal(t, false, other.ContainsKey(1))
+	assert.Equal(t, false, other.ContainsKey(3))
+	value, _ := other.Get(2)
+	assert.Equal(t, "B", value)
 
 }

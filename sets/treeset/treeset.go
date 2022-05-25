@@ -1,4 +1,4 @@
-// Package treeset provides an implementation of a set that is backed by a treemap.
+// Package treeset provides an implementation of a set that stores elements in sorted order.
 package treeset
 
 import (
@@ -17,11 +17,11 @@ type TreeSet[T types.Comparable[T]] struct {
 	data *treemap.TreeMap[T, bool]
 }
 
-// New creates a TreeSet with the specified elements, if there none an empty set is returned.
+// New creates a TreeSet with the specified elements.
 func New[T types.Comparable[T]](elements ...T) *TreeSet[T] {
 	data := treemap.New[T, bool]()
 	set := TreeSet[T]{data: data}
-	set.AddSlice(elements)
+	set.Add(elements...)
 	return &set
 }
 
@@ -75,16 +75,16 @@ func (set *TreeSet[T]) Contains(element T) bool {
 	return ok
 }
 
-// Add adds elements  if not already in the set. Returns true if the set changed as a result of this call false otherwise.
+// Add adds elements to the set. Only elements that are not in the set are added.
 func (set *TreeSet[T]) Add(elements ...T) bool {
-	ok := false
+	n := set.Len()
 	for _, element := range elements {
-		ok = set.data.PutIfAbsent(element, true)
+		set.data.PutIfAbsent(element, true)
 	}
-	return ok
+	return (n != set.Len())
 }
 
-// AddAll adds all elements from an iterable to the set.
+// AddAll adds all elements from an iterable to the set. Only elements that are not in the set are added.
 func (set *TreeSet[T]) AddAll(iterable iterator.Iterable[T]) {
 	iterator := iterable.Iterator()
 	for iterator.HasNext() {
@@ -92,38 +92,36 @@ func (set *TreeSet[T]) AddAll(iterable iterator.Iterable[T]) {
 	}
 }
 
-// AddSlice adds element from a slice to the set.
-func (set *TreeSet[T]) AddSlice(slice []T) {
-	for _, element := range slice {
-		set.Add(element)
+// Remove removes elements from the set.
+func (set *TreeSet[T]) Remove(elements ...T) bool {
+	n := set.Len()
+	for _, element := range elements {
+		set.data.Remove(element)
+		if set.Empty() {
+			break
+		}
 	}
+	return (n != set.Len())
 }
 
-// Remove removes the element from the set if it is present.
-func (set *TreeSet[T]) Remove(e T) bool {
-	_, ok := set.data.Remove(e)
-	return ok
-}
-
-// RemoveAll removes all entries from an iterable from the set.
+// RemoveAll removes all elements from an iterable from the set.
 func (set *TreeSet[T]) RemoveAll(iterable iterator.Iterable[T]) {
 	set.data.RemoveAll(iterable)
 }
 
 // RetainAll removes all entries from the set that do not appear in the other collection. Returns true if the set was modified.
 func (set *TreeSet[T]) RetainAll(collection collections.Collection[T]) bool {
-	iterator := set.Iterator()
-	changed := false
-	for iterator.HasNext() {
-		element := iterator.Next()
+	it := set.Iterator()
+	n := set.Len()
+	for it.HasNext() {
+		element := it.Next()
 		if collection.Contains(element) {
 			continue
 		} else {
 			set.Remove(element)
-			changed = true
 		}
 	}
-	return changed
+	return (n != set.Len())
 }
 
 // Clear removes all elements in the set.
@@ -136,7 +134,7 @@ func (set *TreeSet[T]) Empty() bool {
 	return set.data.Empty()
 }
 
-// Collect collects all elements of the set into a slice.
+// Collect returns a slice containing all the elements in the set.
 func (set *TreeSet[T]) Collect() []T {
 	data := make([]T, set.data.Len())
 	i := 0
@@ -147,7 +145,8 @@ func (set *TreeSet[T]) Collect() []T {
 	return data
 }
 
-// Map applies a transformation on elements of the set using the function f and returns a new set with transformed element.
+// Map applies a transformation on an elements of the set , using the function f and returns a new set with the
+// transformed elements.
 func (set *TreeSet[T]) Map(f func(e T) T) *TreeSet[T] {
 	newSet := New[T]()
 	for _, element := range set.data.Keys() { // Should we use the iterator here ??
@@ -156,7 +155,7 @@ func (set *TreeSet[T]) Map(f func(e T) T) *TreeSet[T] {
 	return newSet
 }
 
-// Filter filters the set using the predicate function f and returns a new set with elements satisfying the predicate.
+// Filter filters the set using the predicate function  f and returns a new set containing only elements that satisfy the predicate.
 func (set *TreeSet[T]) Filter(f func(e T) bool) *TreeSet[T] {
 	newSet := New[T]()
 	for _, element := range set.data.Keys() {
@@ -207,8 +206,7 @@ func (a *TreeSet[T]) Intersection(b *TreeSet[T]) *TreeSet[T] {
 	return intersection(a, b)
 }
 
-// Equals check if the set is equals the other set. This is true only if they are the same reference or they are of the same size with the
-// same elements.
+// Equals checks if the set is equal to another set. Two sets are equal if they are the same reference or have the same size and contain the same elements.
 func (set *TreeSet[T]) Equals(other *TreeSet[T]) bool {
 	if set == other {
 		return true

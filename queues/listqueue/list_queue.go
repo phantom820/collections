@@ -18,19 +18,20 @@ type ListQueue[T types.Equitable[T]] struct {
 // New creates a list based queue with the specified elements. If no specified elements an empty queue is returned.
 func New[T types.Equitable[T]](elements ...T) *ListQueue[T] {
 	queue := ListQueue[T]{list: forwardlist.New[T]()}
-	queue.AddSlice(elements)
+	queue.Add(elements...)
 	return &queue
 }
 
-// Add adds elements to the back of the queue.
+// Add adds elements to the back of the queue. Only first occurence of an element is removed
 func (queue *ListQueue[T]) Add(elements ...T) bool {
+	n := queue.Len()
 	for _, e := range elements {
 		queue.list.Add(e)
 	}
-	return true
+	return (n != queue.Len())
 }
 
-// AddAll adds the elements from some iterable elements to the queue.
+// AddAll adds the elements from some iterable elements to the back of the queue.
 func (queue *ListQueue[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
@@ -38,14 +39,9 @@ func (queue *ListQueue[T]) AddAll(elements iterator.Iterable[T]) {
 	}
 }
 
-// AddSlice adds element from some slice s into the queue.
-func (queue *ListQueue[T]) AddSlice(s []T) {
-	queue.list.AddSlice(s)
-}
-
-// Remove removes the element e from the queue .
-func (queue *ListQueue[T]) Remove(e T) bool {
-	return queue.list.Remove(e)
+// Remove removes the elements from the queue .
+func (queue *ListQueue[T]) Remove(elements ...T) bool {
+	return queue.list.Remove(elements...)
 }
 
 // Clear removes all elements in the queue.
@@ -58,9 +54,9 @@ func (queue *ListQueue[T]) Collect() []T {
 	return queue.list.Collect()
 }
 
-// Contains checks if the elemen e is in the queue.
-func (queue *ListQueue[T]) Contains(e T) bool {
-	return queue.list.Contains(e)
+// Contains checks if the elemen is in the queue.
+func (queue *ListQueue[T]) Contains(element T) bool {
+	return queue.list.Contains(element)
 }
 
 // Empty checks if the queue is empty.

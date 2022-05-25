@@ -17,11 +17,11 @@ type HashSet[T types.Hashable[T]] struct {
 	data *hashmap.HashMap[T, bool]
 }
 
-// New creates a HashSet with the specified elements, if there none an empty set is returned.
+// New creates a HashSet with the specified elements.
 func New[T types.Hashable[T]](elements ...T) *HashSet[T] {
 	data := hashmap.New[T, bool]()
 	set := HashSet[T]{data: data}
-	set.AddSlice(elements)
+	set.Add(elements...)
 	return &set
 }
 
@@ -75,42 +75,41 @@ func (set *HashSet[T]) Contains(element T) bool {
 	return ok
 }
 
-// Add adds elements  if not already in the set. Returns true if the set changed as a result of this call false otherwise.
+// Add adds elements to the set. Only elements that are not in the set are added.
 func (set *HashSet[T]) Add(elements ...T) bool {
-	ok := false
+	n := set.Len()
 	for _, element := range elements {
-		ok = set.data.PutIfAbsent(element, true)
+		set.data.PutIfAbsent(element, true)
 	}
-	return ok
+	return (n != set.Len())
 }
 
-// AddAll adds all elements from an iterable to the set.
+// AddAll adds all elements from an iterable to the set. Only elements that are not in the set are added.
 func (set *HashSet[T]) AddAll(iterable iterator.Iterable[T]) {
-	iterator := iterable.Iterator()
-	for iterator.HasNext() {
-		set.Add(iterator.Next())
+	it := iterable.Iterator()
+	for it.HasNext() {
+		set.Add(it.Next())
 	}
 }
 
-// AddSlice adds element from a slice to the set.
-func (set *HashSet[T]) AddSlice(slice []T) {
-	for _, element := range slice {
-		set.Add(element)
+// Remove removes elements from the set.
+func (set *HashSet[T]) Remove(elements ...T) bool {
+	n := set.Len()
+	for _, element := range elements {
+		set.data.Remove(element)
+		if set.Empty() {
+			break
+		}
 	}
+	return (n != set.Len())
 }
 
-// Remove removes the element from the set if it is present.
-func (set *HashSet[T]) Remove(e T) bool {
-	_, ok := set.data.Remove(e)
-	return ok
-}
-
-// RemoveAll removes all entries from an iterable from the set.
+// RemoveAll removes all elements from an iterable from the set.
 func (set *HashSet[T]) RemoveAll(iterable iterator.Iterable[T]) {
 	set.data.RemoveAll(iterable)
 }
 
-// RetainAll removes all entries from the set that do not appear in the other collection. Returns true if the set was modified.
+// RetainAll removes all entries from the set that do not appear in the other collection.
 func (set *HashSet[T]) RetainAll(collection collections.Collection[T]) bool {
 	iterator := set.Iterator()
 	changed := false
@@ -126,7 +125,7 @@ func (set *HashSet[T]) RetainAll(collection collections.Collection[T]) bool {
 	return changed
 }
 
-// Clear removes all elements in the set.
+// Clear removes all elements from the set.
 func (set *HashSet[T]) Clear() {
 	set.data.Clear()
 }
@@ -136,7 +135,7 @@ func (set *HashSet[T]) Empty() bool {
 	return set.data.Empty()
 }
 
-// Collect collects all elements of the set into a slice.
+// Collect returns a slice containing all the elements in the set.
 func (set *HashSet[T]) Collect() []T {
 	data := make([]T, set.data.Len())
 	i := 0
@@ -147,8 +146,9 @@ func (set *HashSet[T]) Collect() []T {
 	return data
 }
 
-// Map applies a transformation on elements of the set using the function f and returns a new set with transformed element.
-func (set *HashSet[T]) Map(f func(e T) T) *HashSet[T] {
+// Map applies a transformation on an elements of the set , using the function f and returns a new set with the
+// transformed elements.
+func (set *HashSet[T]) Map(f func(element T) T) *HashSet[T] {
 	newSet := New[T]()
 	for _, element := range set.data.Keys() { // Should we use the iterator here ??
 		newSet.Add(f(element))
@@ -156,8 +156,8 @@ func (set *HashSet[T]) Map(f func(e T) T) *HashSet[T] {
 	return newSet
 }
 
-// Filter filters the set using the predicate function f and returns a new set with elements satisfying the predicate.
-func (set *HashSet[T]) Filter(f func(e T) bool) *HashSet[T] {
+// Filter filters the set using the predicate function  f and returns a new set containing only elements that satisfy the predicate.
+func (set *HashSet[T]) Filter(f func(element T) bool) *HashSet[T] {
 	newSet := New[T]()
 	for _, element := range set.data.Keys() {
 		if f(element) {
@@ -207,8 +207,7 @@ func (a *HashSet[T]) Intersection(b *HashSet[T]) *HashSet[T] {
 	return intersection(a, b)
 }
 
-// Equals check if the set is equals the other set. This is true only if they are the same reference or they are of the same size with the
-// same elements.
+// Equals checks if the set is equal to another set. Two sets are equal if they are the same reference or have the same size and contain the same elements.
 func (set *HashSet[T]) Equals(other *HashSet[T]) bool {
 	if set == other {
 		return true

@@ -15,7 +15,7 @@ type ListStack[T types.Equitable[T]] struct {
 // New creates a stack with the specified elements, if there are none an empty stack is created.
 func New[T types.Equitable[T]](elements ...T) *ListStack[T] {
 	var stack ListStack[T] = ListStack[T]{list: forwardlist.New[T]()}
-	stack.AddSlice(elements)
+	stack.Add(elements...)
 	return &stack
 }
 
@@ -41,10 +41,12 @@ func (stack *ListStack[T]) Pop() T {
 
 // Add pushes elements  to the stack.
 func (stack *ListStack[T]) Add(elements ...T) bool {
+	ok := false
 	for _, e := range elements {
 		stack.list.AddFront(e)
+		ok = true
 	}
-	return true
+	return ok
 }
 
 // AddAll pushes all the element from an iterable elements to the stack.
@@ -52,13 +54,6 @@ func (stack *ListStack[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
 		stack.list.AddFront(it.Next())
-	}
-}
-
-// AddSlices pushes all the elements from a slice to the stack.
-func (stack *ListStack[T]) AddSlice(slice []T) {
-	for _, e := range slice {
-		stack.list.AddFront(e)
 	}
 }
 
@@ -92,9 +87,9 @@ func (stack *ListStack[T]) Len() int {
 	return stack.list.Len()
 }
 
-// Remove removes the first occurence of element e from the stack.
-func (stack *ListStack[T]) Remove(e T) bool {
-	return stack.list.Remove(e)
+// Remove removes elements from the stack.
+func (stack *ListStack[T]) Remove(elements ...T) bool {
+	return stack.list.Remove(elements...)
 }
 
 // RemoveAll removes all elements from the stack that occur in iterable elementstack.

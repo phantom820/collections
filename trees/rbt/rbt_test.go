@@ -14,6 +14,9 @@ func TestInsert(t *testing.T) {
 
 	tree := New[types.Int, int]()
 
+	// Note these tests check the state of the tree after an insertion using an in order traversal. The state of the tree should
+	// correspond to the results obtained by doing the operations by hand.
+
 	assert.Equal(t, true, tree.Empty())
 	assert.Equal(t, "", fmt.Sprint(tree))
 	tree.Insert(20, 1)
@@ -37,6 +40,9 @@ func TestInsert(t *testing.T) {
 func TestDelete(t *testing.T) {
 
 	tree := New[types.Int, int]()
+
+	// Note these tests check the state of the tree after a deletion using an in order traversal. The state of the tree should
+	// correspond to the results obtained by doing the operations by hand.
 
 	tree.Insert(20, 10)
 	tree.Insert(30, 20)
@@ -78,8 +84,8 @@ func TestDelete(t *testing.T) {
 
 	tree.Clear()
 	assert.Equal(t, true, tree.Empty())
-	_, b := tree.Delete(1)
-	assert.Equal(t, false, b)
+	_, ok := tree.Delete(1)
+	assert.Equal(t, false, ok)
 
 	tree.Insert(50, 1)
 	tree.Insert(80, 1)

@@ -1,4 +1,4 @@
-// Package priorityqueue provides an implementation of a priority queue
+// Package priorityqueue provides an implementation of a priority queue.
 package priorityqueue
 
 import (
@@ -31,12 +31,13 @@ func New[T types.Comparable[T]](min bool, elements ...T) *PriorityQueue[T] {
 
 // Add adds elements to the queue.
 func (queue *PriorityQueue[T]) Add(elements ...T) bool {
-	ok := false
+	if len(elements) == 0 {
+		return false
+	}
 	for _, e := range elements {
 		queue.heap.Insert(e)
-		ok = true
 	}
-	return ok
+	return true
 }
 
 // AddAll adds the elements from some iterable elements to the queue.

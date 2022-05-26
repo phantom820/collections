@@ -229,6 +229,8 @@ func TestSet(t *testing.T) {
 	v.Add(1, 2, 3)
 	v.Set(1, -4)
 	assert.Equal(t, types.Int(-4), v.At(1))
+	v.Set(v.Len()-1, -5)
+	assert.Equal(t, types.Int(-5), v.At(v.Len()-1))
 
 }
 

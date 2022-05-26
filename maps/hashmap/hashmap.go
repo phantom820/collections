@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	loadFactorLimit = 0.75
-	Capacity        = 16
+	loadFactorLimit = 0.75 // threshold for doubling the capacity of the hash table
+	capacity        = 16   // initial size of the hash table.
 )
 
-// HashMap an implementation of a map that uses a hash table with red black tree as a container for its individual buckets.
+// HashMap an implementation of a map that uses a hash table with red black tree as a container for its buckets.
 type HashMap[K types.Hashable[K], V any] struct {
 	defaultCapacity int
 	capacity        int
@@ -22,42 +22,41 @@ type HashMap[K types.Hashable[K], V any] struct {
 	len             int
 }
 
-// New creates an empty HashMap with default initial capacity of 16 and load factor limit of 0.75.
+// New creates and returns an empty HashMap with capacity of 16 and load factor limit of 0.75 .
 func New[K types.Hashable[K], V any]() *HashMap[K, V] {
-	buckets := make([]*rbt.RedBlackTree[mapKey[K], V], Capacity)
-	m := HashMap[K, V]{defaultCapacity: Capacity, capacity: Capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0}
-	return &m
+	buckets := make([]*rbt.RedBlackTree[mapKey[K], V], capacity)
+	hashMap := HashMap[K, V]{defaultCapacity: capacity, capacity: capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0}
+	return &hashMap
 }
 
-// NewWith creates an empty HashMap with the specified capacity and load factor limit.
+// NewWith creates and returns an empty HashMap with the specified capacity and load factor limit.
 func NewWith[K types.Hashable[K], V any](capacity int, loadFactorLimit float32) *HashMap[K, V] {
 	buckets := make([]*rbt.RedBlackTree[mapKey[K], V], capacity)
 	hashMap := HashMap[K, V]{defaultCapacity: capacity, capacity: capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0}
 	return &hashMap
 }
 
-// mapKey a struct used to represent an underlying key for a HashMap. The actual supplied key and its hash value so that it can
-// be used in a red black tree that needs values to compare keys for operations.
+// mapKey a type to be used to represent an underlying key for a HashMap. The key and its hash value are stored to avoid recomputing the
+// hash value when using this as the key for the underlying red black tree in a bucket. For internal use only.
 type mapKey[K types.Hashable[K]] struct {
 	key  K
 	hash int
 }
 
-// Less compares tow keys based on their hash values.
+// Less compares two mapKeys based using their hash values.
 func (mapKey mapKey[K]) Less(other mapKey[K]) bool {
 	return mapKey.hash < other.hash
 }
 
-// Equals checks if 2 keys are equal by using their Equals method.
+// Equals checks if 2 mapKeys are equal by using their underlying keys.
 func (mapKey mapKey[K]) Equals(other mapKey[K]) bool {
 	return mapKey.key.Equals(other.key)
 }
 
-// hashMapIterator an iterator to iterate through the entries of the map.
+// hashMapIterator a type to implement an iterator for the map.
 type hashMapIterator[K types.Hashable[K], V any] struct {
 	index      int
 	maxIndex   int
-	exhausted  bool // check if the iterator has been used up (passed all values)
 	bucket     []mapKey[K]
 	values     []V
 	keys       int
@@ -77,7 +76,6 @@ func (it *hashMapIterator[K, V]) HasNext() bool {
 	if it.index < it.maxIndex && it.keys < it.maxkeys {
 		return true
 	}
-	it.exhausted = true
 	return false
 }
 
@@ -96,8 +94,8 @@ func (it *hashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 			entry := maps.MapEntry[K, V]{Key: key, Value: value}
 			return entry
 		} else {
-			// find a non empty bucket and take values from iter. This should be somewhat quick, O(m) collecting keys, O(m) collecting values
-			// Where m is the average number of items in the underlting red black tree.
+			// Find a non empty bucket and take values from it using iterator. This should be somewhat quick, O(m) collecting keys, O(m) collecting values
+			// where m is the average number of items in the underlying red black tree.
 			var key K
 			var value V
 			for i := it.index; i < it.maxIndex; i++ {
@@ -144,18 +142,18 @@ func (hashMap *HashMap[K, V]) resize() {
 	newMap = nil
 }
 
-// Capacity retrieves the capacity of the map.
+// Capacity returns the capacity (size of the hash table) of the map.
 func (hashMap *HashMap[K, V]) Capacity() int {
 	return hashMap.capacity
 }
 
-// Put associates the specified value with the specified key in the map. If the key already exists then its value will be updated. It
-// returns the old value associated with the key or zero value if no previous association with a key.
+// Put inserts the entry <key,value> into the map. If an entry with the given key already exists then its value is updated. Returns the previous value
+// associated with the key or zero value if there is no previous value.
 func (hashMap *HashMap[K, V]) Put(key K, value V) V {
-	if hashMap.LoadFactor() >= hashMap.loadFactorLimit { // if we have crossed the load factor limit resize.
+	if hashMap.LoadFactor() >= hashMap.loadFactorLimit { // If we have crossed the load factor limit resize.
 		hashMap.resize()
 	}
-	_key := mapKey[K]{key: key, hash: key.HashCode()} // internal key for use by underlying red black tree.
+	_key := mapKey[K]{key: key, hash: key.HashCode()} // Internal key for use by underlying red black tree.
 	index := _key.hash % hashMap.capacity
 	if hashMap.buckets[index] == nil {
 		hashMap.buckets[index] = rbt.New[mapKey[K], V]()
@@ -174,7 +172,7 @@ func (hashMap *HashMap[K, V]) Put(key K, value V) V {
 	}
 }
 
-// PutIfAbsent adds the value with the specified key to the map only if the key has not been mapped already.
+// PutIfAbsent inserts the entry <key,value> into the map if the key does not already exist in the map. Returns true if the new entry was made.
 func (hashMap *HashMap[K, V]) PutIfAbsent(key K, value V) bool {
 	_key := mapKey[K]{key: key, hash: key.HashCode()}
 	index := _key.hash % hashMap.capacity
@@ -190,7 +188,7 @@ func (hashMap *HashMap[K, V]) PutIfAbsent(key K, value V) bool {
 }
 
 // PutAll adds all the values from another map into the map. Note this has the side effect that if a key
-// is present in the map and in other map then the associated value in the m will be replaced by the associated value in other map.
+// is present in the map and in the passed map then the associated value in the map will be replaced by the associated value from the passed map.
 func (hashMap *HashMap[K, V]) PutAll(other maps.Map[K, V]) {
 	for _, key := range other.Keys() {
 		value, _ := other.Get(key)
@@ -203,7 +201,8 @@ func (hashMap *HashMap[K, V]) Len() int {
 	return hashMap.len
 }
 
-// Get retrieves the value associated with the key in the map. If there is no such value then the zero value is returned along with false.
+// Get retrieves the value associated with the key in the map. Returns a value and a boolean indicating if the value is valid or invalid.
+// An invalid value results when there is no entry for the given key and the zero value is returned.
 func (hashMap *HashMap[K, V]) Get(key K) (V, bool) {
 	_key := mapKey[K]{key: key, hash: key.HashCode()}
 	index := _key.hash % hashMap.capacity
@@ -214,7 +213,7 @@ func (hashMap *HashMap[K, V]) Get(key K) (V, bool) {
 	return hashMap.buckets[index].Get(_key)
 }
 
-// ContainsKey checks if the map contains a mapping for the key.
+// ContainsKey checks if the map contains an entry with the given key.
 func (hashMap *HashMap[K, V]) ContainsKey(key K) bool {
 	hash := key.HashCode()
 	index := hash % hashMap.capacity
@@ -225,7 +224,7 @@ func (hashMap *HashMap[K, V]) ContainsKey(key K) bool {
 	return hashMap.buckets[index].Search(_key)
 }
 
-// ContainsValue checks if the map has an entry whose value is the specified value. func equals is used to compare values for equality.
+// ContainsValue checks if the map has an entry whose value is the specified value. The function equals is used to check values for equality.
 func (hashMap *HashMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool {
 	it := hashMap.Iterator()
 	for it.HasNext() {
@@ -237,7 +236,8 @@ func (hashMap *HashMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool 
 	return false
 }
 
-// Remove removes the map entry <k,V> from the map if it exists.
+// Remove removes the map entry <key,value> from the map if it exists. Returns the previous value associated with the key and a boolean indicating if the returned
+// values is valid or invalid. An invalid value results when there is no entry in the map associated with the given key.
 func (hashMap *HashMap[K, V]) Remove(key K) (V, bool) {
 	_key := mapKey[K]{key: key, hash: key.HashCode()}
 	index := _key.hash % hashMap.capacity
@@ -255,7 +255,7 @@ func (hashMap *HashMap[K, V]) Remove(key K) (V, bool) {
 	return value, ok
 }
 
-// RemoveAll removes all keys entries that are in the specified iterable from the map.
+// RemoveAll removes all key entries from the map that appear in the iterable keys.
 func (hashMap *HashMap[K, V]) RemoveAll(keys iterator.Iterable[K]) {
 	it := keys.Iterator()
 	for it.HasNext() {
@@ -314,7 +314,7 @@ func (hashMap *HashMap[K, V]) Clear() {
 }
 
 // Equals checks if the map is equal to map other. This checks that the two maps have the same entries (k,v), the values are compared
-// using the specified equals function for two values. Keys are compared using their corresponding Equals method.
+// using the specified equals function. Keys are compared using their corresponding Equals method.
 // Only returns true if the 2 maps are the same reference or have the same size and entries.
 func (hashMap *HashMap[K, V]) Equals(other *HashMap[K, V], equals func(a V, b V) bool) bool {
 	if hashMap == other {

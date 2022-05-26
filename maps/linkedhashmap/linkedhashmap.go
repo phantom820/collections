@@ -1,4 +1,4 @@
-// Package linkedhashmap provides an implementation of a LinkedHashMap which is a map that prserves insertion order.
+// Package linkedhashmap provides an implementation of a LinkedHashMap which is a map that preserves insertion order oof its entries.
 package linkedhashmap
 
 import (
@@ -8,7 +8,7 @@ import (
 	"github.com/phantom820/collections/types"
 )
 
-// LinkedHashMap a HashMap that maintains insertion order.
+// LinkedHashMap an implementation of a map that keeps track of insertion order of entries.
 type LinkedHashMap[K types.Hashable[K], V any] struct {
 	data *hashmap.HashMap[K, *linkedMapEntry[K, V]]
 	head *linkedMapEntry[K, V]
@@ -23,14 +23,14 @@ type linkedMapEntry[K types.Hashable[K], V any] struct {
 	next  *linkedMapEntry[K, V]
 }
 
-// New creates an empty LinkedHashMap.
+// New creates and returns an empty LinkedHashMap.
 func New[K types.Hashable[K], V any]() *LinkedHashMap[K, V] {
 	data := hashmap.New[K, *linkedMapEntry[K, V]]()
 	linkedMap := LinkedHashMap[K, V]{data: data}
 	return &linkedMap
 }
 
-// linkedHashMapIterator  an iterator to iterate through the entries of the map.
+// linkedHashMapIterator  a type to implement an iterator for the map.
 type linkedHashMapIterator[K types.Hashable[K], V any] struct {
 	head *linkedMapEntry[K, V]
 	node *linkedMapEntry[K, V]
@@ -62,8 +62,8 @@ func (m *LinkedHashMap[K, V]) Iterator() maps.MapIterator[K, V] {
 	return &it
 }
 
-// Put associates the specified value with the specified key in the map. If the key already exists then its value will be updated. It
-// returns the old value associated with the key or zero value if no previous association with a key.
+// Put inserts the entry <key,value> into the map. If an entry with the given key already exists then its value is updated. Returns the previous value
+// associated with the key or zero value if there is no previous value.
 func (linkedHashMap *LinkedHashMap[K, V]) Put(key K, value V) V {
 	if linkedHashMap.Empty() {
 		entry := linkedMapEntry[K, V]{key: key, value: value, prev: nil, next: nil}
@@ -88,7 +88,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) Put(key K, value V) V {
 	return zero
 }
 
-// PutIfAbsent adds the value with the specified key to the map only if the key has not been mapped already.
+// PutIfAbsent inserts the entry <key,value> into the map if the key does not already exist in the map. Returns true if the new entry was made.
 func (linkedHashMap *LinkedHashMap[K, V]) PutIfAbsent(key K, value V) bool {
 	if linkedHashMap.data.ContainsKey(key) {
 		return false
@@ -98,7 +98,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) PutIfAbsent(key K, value V) bool {
 }
 
 // PutAll adds all the values from another map into the map. Note this has the side effect that if a key
-// is present in the map and in other map then the associated value in the m will be replaced by the associated value in other map.
+// is present in the map and in the passed map then the associated value in the map will be replaced by the associated value from the passed map.
 func (linkedHashMap *LinkedHashMap[K, V]) PutAll(other maps.Map[K, V]) {
 	for _, key := range other.Keys() {
 		value, _ := other.Get(key)
@@ -111,7 +111,8 @@ func (linkedHashMap *LinkedHashMap[K, V]) Len() int {
 	return linkedHashMap.data.Len()
 }
 
-// Get retrieves the value associated with the key in the map. If there is no such value then the zero value is returned along with false.
+// Get retrieves the value associated with the key in the map. Returns a value and a boolean indicating if the value is valid or invalid.
+// An invalid value results when there is no entry for the given key and the zero value is returned.
 func (linkedHashMap *LinkedHashMap[K, V]) Get(key K) (V, bool) {
 	entry, ok := linkedHashMap.data.Get(key)
 	if ok {
@@ -121,12 +122,12 @@ func (linkedHashMap *LinkedHashMap[K, V]) Get(key K) (V, bool) {
 	return e, ok
 }
 
-// ContainsKey checks if the map contains a mapping for the key.
+// ContainsKey checks if the map contains an entry with the given key.
 func (linkedHashMap *LinkedHashMap[K, V]) ContainsKey(k K) bool {
 	return linkedHashMap.data.ContainsKey(k)
 }
 
-// ContainsValue checks if the map has an entry whose value is the specified value. func equals is used to compare values for equality.
+// ContainsValue checks if the map has an entry whose value is the specified value. The function equals is used to check values for equality.
 func (linkedHashMap *LinkedHashMap[K, V]) ContainsValue(value V, equals func(a, b V) bool) bool {
 	it := linkedHashMap.data.Iterator()
 	for it.HasNext() {
@@ -138,7 +139,8 @@ func (linkedHashMap *LinkedHashMap[K, V]) ContainsValue(value V, equals func(a, 
 	return false
 }
 
-// Remove removes the map entry <k,V> from the map if it exists.
+// Remove removes the map entry <key,value> from the map if it exists. Returns the previous value associated with the key and a boolean indicating if the returned
+// values is valid or invalid. An invalid value results when there is no entry in the map associated with the given key.
 func (linkedHashMap *LinkedHashMap[K, V]) Remove(key K) (V, bool) {
 	entry, ok := linkedHashMap.data.Get(key)
 	if !ok {
@@ -161,7 +163,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) Remove(key K) (V, bool) {
 	return prevEntry.value, ok
 }
 
-// RemoveAll removes all keys entries that are in the specified iterable from the map.
+// RemoveAll removes all key entries from the map that appear in the iterable keys.
 func (linkedHashMap *LinkedHashMap[K, V]) RemoveAll(keys iterator.Iterable[K]) {
 	it := keys.Iterator()
 	for it.HasNext() {

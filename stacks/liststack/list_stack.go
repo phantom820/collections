@@ -41,12 +41,13 @@ func (stack *ListStack[T]) Pop() T {
 
 // Add pushes elements  to the stack.
 func (stack *ListStack[T]) Add(elements ...T) bool {
-	ok := false
+	if len(elements) == 0 {
+		return false
+	}
 	for _, e := range elements {
 		stack.list.AddFront(e)
-		ok = true
 	}
-	return ok
+	return true
 }
 
 // AddAll pushes all the element from an iterable elements to the stack.

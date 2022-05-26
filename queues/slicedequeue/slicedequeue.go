@@ -1,3 +1,4 @@
+// Package slicedequeue provides a circular array based implementation of a double ended queue.
 package slicedequeue
 
 import (

@@ -1,3 +1,4 @@
+// Package listdequeue provides a singly linked list (with tail pointer) based implementation of a double ended queue.
 package listdequeue
 
 import (
@@ -24,11 +25,13 @@ func New[T types.Equitable[T]](elements ...T) *ListDequeue[T] {
 
 // Add adds elements to the back of the queue.
 func (queue *ListDequeue[T]) Add(elements ...T) bool {
-	n := queue.Len()
+	if len(elements) == 0 {
+		return false
+	}
 	for _, e := range elements {
 		queue.list.Add(e)
 	}
-	return (n != queue.Len())
+	return true
 }
 
 // Add adds elements to the front of the queue.

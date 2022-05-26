@@ -1,4 +1,4 @@
-// Package treemap provides an implementation of a TreeMap which is a map that stores in a sorted order.
+// Package treemap provides an implementation of a TreeMap which is a map that stores entries in a sorted order.
 package treemap
 
 import (
@@ -14,14 +14,14 @@ type TreeMap[K types.Comparable[K], V any] struct {
 	tree *rbt.RedBlackTree[K, V]
 }
 
-// New creates an empty TreeMap.
+// New creates and returns an empty TreeMap.
 func New[K types.Comparable[K], V any]() *TreeMap[K, V] {
 	treeMap := TreeMap[K, V]{tree: rbt.New[K, V]()}
 	return &treeMap
 }
 
-// Put associates the specified value with the specified key in the map. If the key already exists then its value will be updated. It
-// returns the old value associated with the key or zero value if no previous association with a key.
+// Put inserts the entry <key,value> into the map. If an entry with the given key already exists then its value is updated. Returns the previous value
+// associated with the key or zero value if there is no previous value.
 func (treeMap *TreeMap[K, V]) Put(k K, v V) V {
 	if val, ok := treeMap.tree.Get(k); ok {
 		treeMap.tree.Update(k, v)
@@ -32,7 +32,7 @@ func (treeMap *TreeMap[K, V]) Put(k K, v V) V {
 	return val
 }
 
-// PutIfAbsent adds the value with the specified key to the map only if the key has not been mapped already.
+// PutIfAbsent inserts the entry <key,value> into the map if the key does not already exist in the map. Returns true if the new entry was made.
 func (treeMap *TreeMap[K, V]) PutIfAbsent(k K, v V) bool {
 	if _, ok := treeMap.tree.Get(k); ok {
 		return false
@@ -42,7 +42,7 @@ func (treeMap *TreeMap[K, V]) PutIfAbsent(k K, v V) bool {
 }
 
 // PutAll adds all the values from another map into the map. Note this has the side effect that if a key
-// is present in the map and in other map then the associated value in the m will be replaced by the associated value in other map.
+// is present in the map and in the passed map then the associated value in the map will be replaced by the associated value from the passed map.
 func (treeMap *TreeMap[K, V]) PutAll(other maps.Map[K, V]) {
 	for _, k := range other.Keys() {
 		v, _ := other.Get(k)
@@ -55,12 +55,13 @@ func (treeMap *TreeMap[K, V]) Len() int {
 	return treeMap.tree.Len()
 }
 
-// Get retrieves the value associated with the key in the map. If there is no such value then the zero value is returned along with false.
+// Get retrieves the value associated with the key in the map. Returns a value and a boolean indicating if the value is valid or invalid.
+// An invalid value results when there is no entry for the given key and the zero value is returned.
 func (treeMap *TreeMap[K, V]) Get(k K) (V, bool) {
 	return treeMap.tree.Get(k)
 }
 
-// treeMapIterator an iterator to iterate through the entries of the map.
+// treeMapIterator a type to implement an iterator for the map.
 type treeMapIterator[K types.Comparable[K], V any] struct {
 	index int
 	nodes []trees.Node[K, V]
@@ -93,12 +94,12 @@ func (treeMap *TreeMap[K, V]) Iterator() maps.MapIterator[K, V] {
 	return &it
 }
 
-// ContainsKey checks if the map contains a mapping for the key.
+// ContainsKey checks if the map contains an entry with the given key.
 func (treeMap *TreeMap[K, V]) ContainsKey(k K) bool {
 	return treeMap.tree.Search(k)
 }
 
-// ContainsValue checks if the map has an entry whose value is the specified value. func equals is used to compare values for equality.
+// ContainsValue checks if the map has an entry whose value is the specified value. The function equals is used to check values for equality.
 func (treeMap *TreeMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool {
 	it := treeMap.Iterator()
 	for it.HasNext() {
@@ -110,12 +111,13 @@ func (treeMap *TreeMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool 
 	return false
 }
 
-// Remove removes the map entry <k,V> from the map if it exists.
+// Remove removes the map entry <key,value> from the map if it exists. Returns the previous value associated with the key and a boolean indicating if the returned
+// values is valid or invalid. An invalid value results when there is no entry in the map associated with the given key.
 func (treeMap *TreeMap[K, V]) Remove(k K) (V, bool) {
 	return treeMap.tree.Delete(k)
 }
 
-// RemoveAll removes all keys entries that are in the specified iterable from the map.
+// RemoveAll removes all key entries from the map that appear in the iterable keys.
 func (treeMap *TreeMap[K, V]) RemoveAll(keys iterator.Iterable[K]) {
 	it := keys.Iterator()
 	for it.HasNext() {

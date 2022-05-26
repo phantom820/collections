@@ -24,11 +24,13 @@ func New[T types.Equitable[T]](elements ...T) *ListQueue[T] {
 
 // Add adds elements to the back of the queue. Only first occurence of an element is removed
 func (queue *ListQueue[T]) Add(elements ...T) bool {
-	n := queue.Len()
+	if len(elements) == 0 {
+		return false
+	}
 	for _, e := range elements {
 		queue.list.Add(e)
 	}
-	return (n != queue.Len())
+	return true
 }
 
 // AddAll adds the elements from some iterable elements to the back of the queue.

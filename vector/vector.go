@@ -14,7 +14,7 @@ var (
 	ErrOutOfBounds = errors.New("index out of bounds")
 )
 
-// Vector a wrapper around a slice.
+// Vector an implementation of a vector by wrapping around a slice.
 type Vector[T types.Equitable[T]] struct {
 	data []T
 }

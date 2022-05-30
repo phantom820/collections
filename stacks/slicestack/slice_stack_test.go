@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestPeek covers tests for Peek and Add.
 func TestPeek(t *testing.T) {
 
 	s := New[types.Int]()
@@ -27,16 +26,13 @@ func TestPeek(t *testing.T) {
 		s.Peek()
 	})
 
-	// Case 2 : Peek on stack with elements should work accordingly.
-	assert.Equal(t, true, s.Empty()) // stack starts ou empty.
-	s.Add(2)
-	s.Add(3)
-
+	// Case 2 : Peek on stack with elements.
+	assert.Equal(t, true, s.Empty())
+	s.Add(2, 3)
 	assert.Equal(t, types.Int(3), s.Peek())
 
 }
 
-// TestPop covers tests for Pop.
 func TestPop(t *testing.T) {
 
 	s := New[types.Int]()
@@ -51,9 +47,14 @@ func TestPop(t *testing.T) {
 		s.Pop()
 	})
 
+	// Case 2 : Pop on a stack with elements.
+	s.Add(1, 2, 3)
+	assert.Equal(t, types.Int(3), s.Pop())
+	assert.Equal(t, types.Int(2), s.Pop())
+	assert.Equal(t, types.Int(1), s.Pop())
+
 }
 
-// TestAdd covers tests for AddAll and AddSlice.
 func TestAdd(t *testing.T) {
 
 	s := New[types.Int]()
@@ -61,18 +62,16 @@ func TestAdd(t *testing.T) {
 	// Case 1 : Add with no elements.
 	assert.Equal(t, false, s.Add())
 
-	// Case 2 : AddAll add items from an iterable should work accordingly.
+	// Case 2 : AddAll add items from an iterable.
 	l := forwardlist.New[types.Int]()
-	l.Add(1)
-	l.Add(2)
-	l.Add(3)
+	l.Add(1, 2, 3)
 	s.AddAll(l)
 
 	assert.Equal(t, types.Int(3), s.Pop())
 	assert.Equal(t, types.Int(2), s.Pop())
 	assert.Equal(t, types.Int(1), s.Pop())
 
-	// Case 3 : AddSlice add items from a slice.
+	// Case 3 : Adding a slice.
 	s.Clear()
 	slice := []types.Int{2, 4, 6}
 	s.Add(slice...)
@@ -83,15 +82,11 @@ func TestAdd(t *testing.T) {
 
 }
 
-// TestRemove covers tests for Remove, RemoveAll and Contains.
 func TestRemove(t *testing.T) {
 
 	s := New[types.Int]()
 
-	s.Add(1)
-	s.Add(2)
-	s.Add(3)
-	s.Add(4)
+	s.Add(1, 2, 3, 4)
 
 	// Case 1 : Remove an individual item.
 	assert.Equal(t, true, s.Contains(4))
@@ -102,23 +97,18 @@ func TestRemove(t *testing.T) {
 
 	// Case 2 : RemoveAll remove a number of items from an iterable.
 	l := forwardlist.New[types.Int]()
-
-	l.Add(1)
-	l.Add(2)
-	l.Add(3)
+	l.Add(1, 2, 3)
 
 	s.RemoveAll(l)
 	assert.Equal(t, 0, s.Len())
 
 }
 
-// TestCollect covers tests for collect.
 func TestCollect(t *testing.T) {
 
 	s := New[types.Int]()
 
-	s.Add(1)
-	s.Add(2)
+	s.Add(1, 2)
 	sl := []types.Int{2, 1}
 
 	assert.ElementsMatch(t, sl, s.Collect())
@@ -140,7 +130,7 @@ func TestIterator(t *testing.T) {
 		it.Next()
 	})
 
-	// Case 2 : Iterator should work accordingly on populated stack.
+	// Case 2 : Iterator on a populated stack.
 	for i := 1; i < 6; i++ {
 		s.Add(types.Int(i))
 	}

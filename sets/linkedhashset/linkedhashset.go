@@ -148,7 +148,7 @@ func (set *LinkedHashSet[T]) Collect() []T {
 
 // Map applies a transformation on an elements of the set , using the function f and returns a new set with the
 // transformed elements.
-func (set *LinkedHashSet[T]) Map(f func(e T) T) *LinkedHashSet[T] {
+func (set *LinkedHashSet[T]) Map(f func(element T) T) *LinkedHashSet[T] {
 	newSet := New[T]()
 	for _, element := range set.data.Keys() { // Should we use the iterator here ??
 		newSet.Add(f(element))
@@ -157,7 +157,7 @@ func (set *LinkedHashSet[T]) Map(f func(e T) T) *LinkedHashSet[T] {
 }
 
 // Filter filters the set using the predicate function  f and returns a new set containing only elements that satisfy the predicate.
-func (set *LinkedHashSet[T]) Filter(f func(e T) bool) *LinkedHashSet[T] {
+func (set *LinkedHashSet[T]) Filter(f func(element T) bool) *LinkedHashSet[T] {
 	newSet := New[T]()
 	for _, element := range set.data.Keys() {
 		if f(element) {

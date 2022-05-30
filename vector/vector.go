@@ -215,7 +215,7 @@ func (vector *Vector[T]) RemoveAll(elements iterator.Iterable[T]) {
 }
 
 // Map transforms each element in the vector the function f and returns a new vector with transformed elements.
-func (vector *Vector[T]) Map(f func(e T) T) *Vector[T] {
+func (vector *Vector[T]) Map(f func(element T) T) *Vector[T] {
 	newVector := New[T]()
 	for _, e := range vector.data {
 		newVector.Add(f(e))
@@ -224,7 +224,7 @@ func (vector *Vector[T]) Map(f func(e T) T) *Vector[T] {
 }
 
 // Filter filters elements of the vector using the predicate function f and returns a new vector with elements satisfying predicate.
-func (vector *Vector[T]) Filter(f func(e T) bool) *Vector[T] {
+func (vector *Vector[T]) Filter(f func(element T) bool) *Vector[T] {
 	newVector := New[T]()
 	for _, e := range vector.data {
 		if f(e) {

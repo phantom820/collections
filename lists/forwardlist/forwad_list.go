@@ -450,7 +450,7 @@ func (list *ForwardList[T]) String() string {
 
 // Map applies a transformation on each element of the list, using the function f and returns a new list with the
 // transformed elements.
-func (list *ForwardList[T]) Map(f func(e T) T) *ForwardList[T] {
+func (list *ForwardList[T]) Map(f func(element T) T) *ForwardList[T] {
 	newList := New[T]()
 	for e := list.head; e != nil; e = e.next {
 		newE := f(e.value)
@@ -460,7 +460,7 @@ func (list *ForwardList[T]) Map(f func(e T) T) *ForwardList[T] {
 }
 
 // Filter filters the list using the predicate function  f and returns a new list containing only elements that satisfy the predicate.
-func (list *ForwardList[T]) Filter(f func(e T) bool) *ForwardList[T] {
+func (list *ForwardList[T]) Filter(f func(element T) bool) *ForwardList[T] {
 	newList := New[T]()
 	for e := list.head; e != nil; e = e.next {
 		if f(e.value) {

@@ -11,15 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestAdd covers tests for Add, Empty, Contains.
 func TestAdd(t *testing.T) {
 
 	v := New[types.Int]()
 
-	// v Starts out as empty.
-	assert.Equal(t, true, v.Empty())
-
 	// Case 1 : Add individual elements.
+	assert.Equal(t, true, v.Empty())
 	v.Add(1)
 	assert.Equal(t, false, v.Empty())
 	assert.Equal(t, 1, v.Len())
@@ -27,11 +24,7 @@ func TestAdd(t *testing.T) {
 	v.Add(2)
 	assert.Equal(t, true, v.Contains(2))
 
-	l := forwardlist.New[types.Int]()
-
-	for i := 3; i <= 10; i++ {
-		l.Add(types.Int(i))
-	}
+	l := forwardlist.New[types.Int](3, 4, 5, 6, 7, 8, 9, 10)
 
 	// Case 2 : Add a number of elements at once.
 	v.AddAll(l)
@@ -46,8 +39,8 @@ func TestAdd(t *testing.T) {
 
 }
 
-// Covers tests for Iterator.
 func TestIterator(t *testing.T) {
+
 	v := New[types.Int]()
 
 	// Case 1 : Next on empty vector should panic.
@@ -62,11 +55,11 @@ func TestIterator(t *testing.T) {
 	})
 
 	// Case 2 : Iterator should work accordingly on populated queue.
-	for i := 1; i < 6; i++ {
-		v.Add(types.Int(i))
-	}
+	v.Add(1, 2, 3, 4, 5)
+
 	a := v.Collect()
 	b := make([]types.Int, 0)
+
 	it := v.Iterator()
 	for it.HasNext() {
 		b = append(b, it.Next())
@@ -77,7 +70,6 @@ func TestIterator(t *testing.T) {
 
 }
 
-// TestRemove covers tests for Remove and RemoveAll.
 func TestRemove(t *testing.T) {
 
 	v := New[types.Int]()
@@ -86,25 +78,18 @@ func TestRemove(t *testing.T) {
 	assert.Equal(t, false, v.Remove(22))
 
 	// Case 2 : Removing from poplated.
-	v.Add(1)
-	v.Add(2)
-	v.Add(4)
-	v.Add(5)
+	v.Add(1, 2, 4, 5)
 
 	assert.Equal(t, true, v.Remove(5))
 	assert.Equal(t, false, v.Contains(5))
 
-	s := forwardlist.New[types.Int]()
-	s.Add(1)
-	s.Add(2)
-
 	// Case 3 : Removing multiple elements at once.
-	v.RemoveAll(s)
+	l := forwardlist.New[types.Int](1, 2)
+	v.RemoveAll(l)
 	assert.Equal(t, 1, v.Len())
 
 }
 
-// TestAddAt
 func TestAddAt(t *testing.T) {
 
 	v := New[types.Int]()
@@ -130,7 +115,6 @@ func TestAddAt(t *testing.T) {
 
 }
 
-// TestRemoveAt covers tests for remove at
 func TestRemoveAt(t *testing.T) {
 
 	v := New[types.Int]()
@@ -152,7 +136,6 @@ func TestRemoveAt(t *testing.T) {
 
 }
 
-// TestEquals for Equals method of vectors.
 func TestEquals(t *testing.T) {
 
 	v := New[types.Int]()
@@ -165,31 +148,20 @@ func TestEquals(t *testing.T) {
 	assert.Equal(t, true, v.Equals(other))
 
 	// Case 3 : vectors of unequal sizes should not be equal.
-	for i := 1; i < 6; i++ {
-		other.Add(types.Int(i))
-	}
-
+	other.Add(1, 2, 3, 4, 5)
 	assert.Equal(t, false, v.Equals(other))
 
 	// Case 4 : vectors of equal sizes but different elements should not be equal.
-	for i := 1; i < 6; i++ {
-		v.Add(types.Int(i + 1))
-	}
-
+	v.Add(2, 3, 4, 5, 6)
 	assert.Equal(t, false, v.Equals(other))
 	v.Clear()
 
 	// Case 5 : vectors with same size and elements should be equal.
-
-	for i := 1; i < 6; i++ {
-		v.Add(types.Int(i))
-	}
-
+	v.Add(1, 2, 3, 4, 5)
 	assert.Equal(t, true, other.Equals(v))
 
 }
 
-// TestAt covers tests for At.
 func TestAt(t *testing.T) {
 
 	v := New[types.Int]()
@@ -211,7 +183,6 @@ func TestAt(t *testing.T) {
 
 }
 
-// TestSet covers tests for set.
 func TestSet(t *testing.T) {
 
 	v := New[types.Int]()
@@ -234,38 +205,35 @@ func TestSet(t *testing.T) {
 
 }
 
-// TestMapFilter covers tests for Map and Filter.
-func TestMapFilter(t *testing.T) {
-	v := New[types.Int]()
+func TestMap(t *testing.T) {
 
-	for i := 0; i < 6; i++ {
-		v.Add(types.Int(i))
-	}
+	v := New[types.Int](0, 1, 2, 3, 4, 5)
 
 	// Case 1 : Map to a new vector.
 	other := v.Map(func(e types.Int) types.Int { return e + 10 })
 
 	a := []types.Int{10, 11, 12, 13, 14, 15}
 	b := other.Collect()
-
 	assert.ElementsMatch(t, a, b)
+}
+
+func TestFilter(t *testing.T) {
+
+	v := New[types.Int](0, 1, 2, 3, 4, 5)
 
 	// Case 2 : Filter to create new vector.
 	c := []types.Int{0, 2, 4}
-	other = v.Filter(func(e types.Int) bool { return e%2 == 0 })
+	other := v.Filter(func(e types.Int) bool { return e%2 == 0 })
 	d := other.Collect()
 	assert.ElementsMatch(t, c, d)
+
 }
 
-// TestString covers tests for String.
 func TestString(t *testing.T) {
-	v := New[types.Int]()
 
-	v.Add(1)
-	v.Add(2)
-	v.Add(3)
-
+	v := New[types.Int](1, 2, 3)
 	assert.Equal(t, "[1 2 3]", fmt.Sprint(v))
+
 }
 
 func TestSort(t *testing.T) {

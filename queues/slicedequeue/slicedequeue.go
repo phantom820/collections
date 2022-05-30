@@ -142,7 +142,6 @@ func (queue *SliceDequeue[T]) addRear(element T) {
 		queue.back = queue.back + 1
 	}
 	// insert current element into Deque
-	// fmt.Println(len(queue.data))
 	queue.data[queue.back] = element
 	queue.len++
 }

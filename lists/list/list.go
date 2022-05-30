@@ -472,7 +472,7 @@ func (list *List[T]) String() string {
 
 // Map applies a transformation on each element of the list, using the function f and returns a new list with the
 // transformed elements.
-func (list *List[T]) Map(f func(e T) T) *List[T] {
+func (list *List[T]) Map(f func(element T) T) *List[T] {
 	newList := New[T]()
 	for e := list.head; e != nil; e = e.next {
 		newE := f(e.value)
@@ -482,7 +482,7 @@ func (list *List[T]) Map(f func(e T) T) *List[T] {
 }
 
 // Filter filters the list using the predicate function  f and returns a new list containing only elements that satisfy the predicate.
-func (list *List[T]) Filter(f func(e T) bool) *List[T] {
+func (list *List[T]) Filter(f func(element T) bool) *List[T] {
 	newList := New[T]()
 	for e := list.head; e != nil; e = e.next {
 		if f(e.value) {

@@ -12,15 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestAdd covers tests for Add, Empty, Contains.
 func TestAdd(t *testing.T) {
 
 	q := New[types.Int]()
 
-	// q Starts out as empty.
-	assert.Equal(t, true, q.Empty())
-
 	// Case 1 : Add with no elements.
+	assert.Equal(t, true, q.Empty())
 	assert.Equal(t, false, q.Add())
 
 	// Case 2 : Add individual elements.
@@ -31,17 +28,13 @@ func TestAdd(t *testing.T) {
 	q.Add(2)
 	assert.Equal(t, true, q.Contains(2))
 
-	l := forwardlist.New[types.Int]()
-
-	for i := 3; i <= 10; i++ {
-		l.Add(types.Int(i))
-	}
+	l := forwardlist.New[types.Int](3, 4, 5, 6, 7, 8, 9, 10)
 
 	// Case 3 : Add a number of elements at once.
 	q.AddAll(l)
 	assert.Equal(t, 10, q.Len())
 
-	// Case 4 : Adding a slice should work accordingly
+	// Case 4 : Adding a slice.
 	q.Clear()
 	s := []types.Int{1, 2, 3, 4}
 	q.Add(s...)
@@ -50,7 +43,6 @@ func TestAdd(t *testing.T) {
 
 }
 
-// TestFront covers tests for Front and RemoveFront.
 func TestFront(t *testing.T) {
 
 	q := New[types.Int]()
@@ -66,9 +58,7 @@ func TestFront(t *testing.T) {
 	})
 
 	// Case 2 : Front and RemoveFront should behave accordingly.
-	for i := 1; i <= 10; i++ {
-		q.Add(types.Int(i))
-	}
+	q.Add(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 	assert.Equal(t, types.Int(1), q.Front())
 	assert.Equal(t, types.Int(1), q.RemoveFront())
@@ -90,8 +80,8 @@ func TestFront(t *testing.T) {
 
 }
 
-// Covers tests for Iterator.
 func TestIterator(t *testing.T) {
+
 	q := New[types.Int]()
 
 	// Case 1 : Next on empty queue should panic.
@@ -105,23 +95,23 @@ func TestIterator(t *testing.T) {
 		it.Next()
 	})
 
-	// Case 2 : Iterator should work accordingly on populated queue.
-	for i := 1; i < 6; i++ {
-		q.Add(types.Int(i))
-	}
+	// Case 2 : Iterator should work accordingly on a queue with elements.
+	q.Add(1, 2, 3, 4, 5)
+
 	a := q.Collect()
 	b := make([]types.Int, 0)
+
 	it := q.Iterator()
 	for it.HasNext() {
 		b = append(b, it.Next())
 	}
+
 	assert.ElementsMatch(t, a, b)
 	it.Cycle()
 	assert.Equal(t, types.Int(1), it.Next())
 
 }
 
-// TestRemove covers tests for Remove and RemoveAll.
 func TestRemove(t *testing.T) {
 
 	q := New[types.Int]()
@@ -130,20 +120,16 @@ func TestRemove(t *testing.T) {
 	assert.Equal(t, false, q.Remove(22))
 
 	// Case 2 : Removing from poplated.
-	q.Add(1)
-	q.Add(2)
-	q.Add(4)
-	q.Add(5)
+	q.Add(1, 2, 4, 5)
 
 	assert.Equal(t, true, q.Remove(5))
 	assert.Equal(t, false, q.Contains(5))
 
-	s := forwardlist.New[types.Int]()
-	s.Add(1)
-	s.Add(2)
+	s := forwardlist.New[types.Int](1, 2)
 
 	// Case 3 : Removing multiple elements at once.
 	q.RemoveAll(s)
+
 	assert.Equal(t, 1, q.Len())
 	assert.Equal(t, types.Int(4), q.Front())
 
@@ -153,13 +139,9 @@ func TestRemove(t *testing.T) {
 
 }
 
-// TestString covers tests for String.
 func TestString(t *testing.T) {
 	q := New[types.Int]()
 
-	q.Add(1)
-	q.Add(2)
-	q.Add(3)
-
+	q.Add(1, 2, 3)
 	assert.Equal(t, "[1 2 3]", fmt.Sprint(q))
 }

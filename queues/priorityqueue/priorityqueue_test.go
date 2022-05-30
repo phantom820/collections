@@ -11,16 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestAdd covers tests for Add, Empty, Contains.
 func TestAdd(t *testing.T) {
 
 	q := New[types.Int](true)
 
-	// q Starts out as empty.
-	assert.Equal(t, true, q.Empty())
-
 	// Case 1 : Add with no alements
 	assert.Equal(t, false, q.Add())
+	assert.Equal(t, true, q.Empty())
 
 	// Case 2 : Add individual elements.
 	q.Add(1)
@@ -30,11 +27,7 @@ func TestAdd(t *testing.T) {
 	q.Add(2)
 	assert.Equal(t, true, q.Contains(2))
 
-	l := forwardlist.New[types.Int]()
-
-	for i := 3; i <= 10; i++ {
-		l.Add(types.Int(i))
-	}
+	l := forwardlist.New[types.Int](3, 4, 5, 6, 7, 8, 9, 10)
 
 	// Case 3 : Add a number of elements at once.
 	q.AddAll(l)
@@ -120,7 +113,6 @@ func TestRemoveFront(t *testing.T) {
 
 }
 
-// TestRemove also covers tests for remove all.
 func TestRemove(t *testing.T) {
 
 	maxQ := New[types.Int](false)
@@ -157,7 +149,6 @@ func TestIterator(t *testing.T) {
 	})
 
 	// Case 2 : Iterator on populated queue
-
 	minQ.Add(1, 2, 3, 4, 5)
 	it := minQ.Iterator()
 

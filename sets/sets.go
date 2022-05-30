@@ -58,3 +58,13 @@ func Intersection[T types.Equitable[T]](a Set[T], b Set[T], c Set[T]) error {
 	intersection(a, b, c)
 	return nil
 }
+
+// Difference performs the difference of sets a and b, results of the operation are placed in the set c.
+func Difference[T types.Equitable[T]](a Set[T], b Set[T], c Set[T]) error {
+	if !c.Empty() {
+		return errInvalidDestinationSet
+	}
+	c.AddAll(a)
+	c.RemoveAll(b)
+	return nil
+}

@@ -616,7 +616,7 @@ func sortBy[T types.Equitable[T]](head *node[T], less func(a, b T) bool) (*node[
 	return finalHead, finalTail
 }
 
-// SortBy sorts the list using the function less for comparison of two element . If less(a,b) = true then it means a comes before b in the sorted list.
+// SortBy sorts the list using the function less for comparison of two element . If less(a,b) = true then a comes before b in the sorted list.
 func SortBy[T types.Equitable[T]](list *List[T], less func(a, b T) bool) {
 	if list.Empty() || list.len == 1 {
 		return

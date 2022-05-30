@@ -1,3 +1,4 @@
+// Package liststack provides a singly linked list based implementation of a stack.
 package liststack
 
 import (
@@ -58,17 +59,17 @@ func (stack *ListStack[T]) AddAll(elements iterator.Iterable[T]) {
 	}
 }
 
-// Clear removes all items on the stack.
+// Clear removes all elements in the stack.
 func (stack *ListStack[T]) Clear() {
 	stack.list.Clear()
 }
 
-// Collect returns the stack as a slice.
+// Collect returns a slice containing all the elements in the stack.
 func (stack *ListStack[T]) Collect() []T {
 	return stack.list.Collect()
 }
 
-// Contains checks if element e is part of the stack.
+// Contains checks if the element is in the stack.
 func (stack *ListStack[T]) Contains(e T) bool {
 	return stack.list.Contains(e)
 }
@@ -78,7 +79,7 @@ func (stack *ListStack[T]) Empty() bool {
 	return stack.list.Empty()
 }
 
-// Iterator returns in iterator for iterating through the stack.
+// Iterator returns an iterator for the stack.
 func (stack *ListStack[T]) Iterator() iterator.Iterator[T] {
 	return stack.list.Iterator()
 }
@@ -93,7 +94,7 @@ func (stack *ListStack[T]) Remove(elements ...T) bool {
 	return stack.list.Remove(elements...)
 }
 
-// RemoveAll removes all elements from the stack that occur in iterable elementstack.
-func (stack *ListStack[T]) RemoveAll(elements iterator.Iterable[T]) {
-	stack.list.RemoveAll(elements)
+// RemoveAll removes all the elements in the stack that appear in the iterable.
+func (stack *ListStack[T]) RemoveAll(iterable iterator.Iterable[T]) {
+	stack.list.RemoveAll(iterable)
 }

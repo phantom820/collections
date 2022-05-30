@@ -140,9 +140,9 @@ func (queue *SliceQueue[T]) remove(element T) bool {
 	return true
 }
 
-// RemoveAll removes all the elements from an iterable elements that are in the queue.
-func (queue *SliceQueue[T]) RemoveAll(elements iterator.Iterable[T]) {
-	it := elements.Iterator()
+// RemoveAll removes all the elements in the queue that appear in the iterable.
+func (queue *SliceQueue[T]) RemoveAll(iterable iterator.Iterable[T]) {
+	it := iterable.Iterator()
 	for it.HasNext() {
 		queue.Remove(it.Next())
 	}

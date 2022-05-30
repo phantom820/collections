@@ -367,14 +367,14 @@ func (list *ForwardList[T]) remove(e T) bool {
 	}
 }
 
-// RemoveAll removes all the elements from list that appear in iterable elements.
-func (list *ForwardList[T]) RemoveAll(elements iterator.Iterable[T]) {
+// RemoveAll removes all the elements in the list that appear in the iterable.
+func (list *ForwardList[T]) RemoveAll(iterable iterator.Iterable[T]) {
 	defer func() {
 		if r := recover(); r != nil {
 			// do nothing just fail safe if l ends up empty from the removals.
 		}
 	}()
-	it := elements.Iterator()
+	it := iterable.Iterator()
 	for it.HasNext() {
 		list.Remove(it.Next())
 	}

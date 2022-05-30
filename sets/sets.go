@@ -1,3 +1,4 @@
+// Package sets provides some utils functons for sets and an interface set implementation must follow.
 package sets
 
 import (

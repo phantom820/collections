@@ -1,3 +1,4 @@
+// Package slicestack provides a slice based implementation of a stack.
 package slicestack
 
 import (
@@ -20,7 +21,7 @@ func New[T types.Equitable[T]](elements ...T) *SliceStack[T] {
 	return &stack
 }
 
-// Peek returns the top element of stack without removing it. Will panic if s has no top element.
+// Peek returns the top element of stack without removing it. Will panic if there is no top element.
 func (stack *SliceStack[T]) Peek() T {
 	if stack.Empty() {
 		panic(stacks.ErrNoTopElement)
@@ -28,7 +29,7 @@ func (stack *SliceStack[T]) Peek() T {
 	return stack.data[stack.Len()-1]
 }
 
-// Pop removes and returns the top element of stack. Will panic if s has no top element.
+// Pop removes and returns the top element of stack. Will panic if there is no top element.
 func (stack *SliceStack[T]) Pop() T {
 	if stack.Empty() {
 		panic(stacks.ErrNoTopElement)
@@ -38,7 +39,7 @@ func (stack *SliceStack[T]) Pop() T {
 	return t
 }
 
-// Add pushes the elements to the stack.
+// Add pushes elements to the stack.
 func (stack *SliceStack[T]) Add(elements ...T) bool {
 	if len(elements) == 0 {
 		return false
@@ -47,7 +48,7 @@ func (stack *SliceStack[T]) Add(elements ...T) bool {
 	return true
 }
 
-// AddAll pushes elements from iterable elements onto the stack.
+// AddAll pushes elements from an iterable onto the stack.
 func (stack *SliceStack[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
@@ -60,15 +61,15 @@ func (stack *SliceStack[T]) Clear() {
 	stack.data = make([]T, 0)
 }
 
-// Collect converts stack into a slice by returning underlying slice.
+// Collect returns a slice containing all the elements in the stack.
 func (stack *SliceStack[T]) Collect() []T {
 	return stack.data
 }
 
-// Contains checks if the element e is in the stack.
-func (stack *SliceStack[T]) Contains(e T) bool {
+// Contains checks if the element is in the stack.
+func (stack *SliceStack[T]) Contains(element T) bool {
 	for i, _ := range stack.data {
-		if stack.data[i].Equals(e) {
+		if stack.data[i].Equals(element) {
 			return true
 		}
 	}
@@ -86,7 +87,7 @@ type sliceStackIterator[T types.Equitable[T]] struct {
 	i     int
 }
 
-// HasNext check if the iterator has next element to produce.
+// HasNext checks if the iterator has a next element to yield.
 func (it *sliceStackIterator[T]) HasNext() bool {
 	if it.slice == nil || it.i < 0 {
 		return false
@@ -94,7 +95,7 @@ func (it *sliceStackIterator[T]) HasNext() bool {
 	return true
 }
 
-// Next yields the next element from the iterator it.
+// Next yields the next element in the iterator. Will panic if the iterator has no next element.
 func (it *sliceStackIterator[T]) Next() T {
 	if !it.HasNext() {
 		panic(iterator.NoNextElementError)
@@ -104,12 +105,12 @@ func (it *sliceStackIterator[T]) Next() T {
 	return e
 }
 
-// Cycle resets the iterator it.
+// Cycle resets the iterator.
 func (it *sliceStackIterator[T]) Cycle() {
 	it.i = len(it.slice) - 1
 }
 
-// Iterator returns an iterator for iterating through stack q.
+// Iterator returns an iterator for the stack.
 func (stack *SliceStack[T]) Iterator() iterator.Iterator[T] {
 	return &sliceStackIterator[T]{slice: stack.data, i: len(stack.data) - 1}
 }
@@ -129,7 +130,7 @@ func (stack *SliceStack[T]) indexOf(e T) int {
 	return -1
 }
 
-// Remove remove the elements from the stack.
+// Remove removes elements from the stack.
 func (stack *SliceStack[T]) Remove(elements ...T) bool {
 	n := stack.Len()
 	for _, element := range elements {
@@ -141,9 +142,9 @@ func (stack *SliceStack[T]) Remove(elements ...T) bool {
 	return (n != stack.Len())
 }
 
-// removes the first occurence of element  from the stack.
-func (stack *SliceStack[T]) remove(e T) bool {
-	i := stack.indexOf(e)
+// removes the first occurence of the element  from the stack.
+func (stack *SliceStack[T]) remove(element T) bool {
+	i := stack.indexOf(element)
 	if i == -1 {
 		return false
 	}
@@ -151,9 +152,9 @@ func (stack *SliceStack[T]) remove(e T) bool {
 	return true
 }
 
-// RemoveAll removes all the elements from some iterable elements that are in the stack.
-func (stack *SliceStack[T]) RemoveAll(elements iterator.Iterable[T]) {
-	it := elements.Iterator()
+// RemoveAll removes all the elements in the stack that appear in the iterable.
+func (stack *SliceStack[T]) RemoveAll(iterable iterator.Iterable[T]) {
+	it := iterable.Iterator()
 	for it.HasNext() {
 		stack.Remove(it.Next())
 	}

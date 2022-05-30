@@ -17,7 +17,7 @@ type PriorityQueue[T types.Comparable[T]] struct {
 	heap heaps.Heap[T]
 }
 
-// New creates an empty priority queue. If min is true the its a min priority queue if min is false then its a max priority queue with the specified elements.
+// New creates an empty priority queue. If min is true the its a min priority queue otherwise a max priority queue with the specified elements.
 func New[T types.Comparable[T]](min bool, elements ...T) *PriorityQueue[T] {
 	var queue PriorityQueue[T]
 	if min {
@@ -34,13 +34,13 @@ func (queue *PriorityQueue[T]) Add(elements ...T) bool {
 	if len(elements) == 0 {
 		return false
 	}
-	for _, e := range elements {
-		queue.heap.Insert(e)
+	for _, element := range elements {
+		queue.heap.Insert(element)
 	}
 	return true
 }
 
-// AddAll adds the elements from some iterable elements to the queue.
+// AddAll adds the elements from iterable elements to the queue.
 func (queue *PriorityQueue[T]) AddAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
@@ -48,16 +48,16 @@ func (queue *PriorityQueue[T]) AddAll(elements iterator.Iterable[T]) {
 	}
 }
 
-// Remove removes the elements from the queue .
+// Remove removes the elements from the queue.
 func (queue *PriorityQueue[T]) Remove(elements ...T) bool {
-	ok := false
+	n := queue.Len()
 	for _, element := range elements {
-		ok = queue.heap.Delete(element)
+		queue.heap.Delete(element)
 		if queue.Empty() {
-			return ok
+			return n != queue.Len()
 		}
 	}
-	return ok
+	return n != queue.Len()
 }
 
 // Clear removes all elements in the queue.
@@ -65,12 +65,12 @@ func (queue *PriorityQueue[T]) Clear() {
 	queue.heap.Clear()
 }
 
-// Collect converts queue into a slice. The elements in the slice are not ordered.
+// Collect returns a slice containing all the elements in the priority. The elements of the slice are not ordered.
 func (queue *PriorityQueue[T]) Collect() []T {
 	return queue.heap.Collect()
 }
 
-// Contains checks if the element is in the queue.
+//  Contains checks if an element is in the queue.
 func (queue *PriorityQueue[T]) Contains(element T) bool {
 	return queue.heap.Search(element)
 }
@@ -102,12 +102,12 @@ func (iterator *priorityQueueIterator[T]) HasNext() bool {
 }
 
 // Next returns the next element in the iterator it. Will panic if iterator is exhausted.
-func (iter *priorityQueueIterator[T]) Next() T {
-	if !iter.HasNext() {
+func (it *priorityQueueIterator[T]) Next() T {
+	if !it.HasNext() {
 		panic(iterator.NoNextElementError)
 	}
-	n := iter.data[iter.i]
-	iter.i++
+	n := it.data[it.i]
+	it.i++
 	return n
 }
 
@@ -127,18 +127,18 @@ func (queue *PriorityQueue[T]) Len() int {
 	return queue.heap.Len()
 }
 
-// RemoveAll removes all the elements from some iterable elements that are in the queue.
-func (queue *PriorityQueue[T]) RemoveAll(elements iterator.Iterable[T]) {
-	iter := elements.Iterator()
-	for iter.HasNext() {
-		queue.heap.Delete(iter.Next())
+// RemoveAll removes all the elements in the queue that appear in the iterable.
+func (queue *PriorityQueue[T]) RemoveAll(iterable iterator.Iterable[T]) {
+	it := iterable.Iterator()
+	for it.HasNext() {
+		queue.heap.Delete(it.Next())
 		if queue.Empty() {
 			break
 		}
 	}
 }
 
-// RemoveFront removes and returns the front element of the queue. Wil panic if no such element.
+// RemoveFront removes and returns the front element of the queue. Will panic if there is no such element.
 func (queue *PriorityQueue[T]) RemoveFront() T {
 	defer func() {
 		if r := recover(); r != nil {

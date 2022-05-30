@@ -147,7 +147,7 @@ func (queue *SliceDequeue[T]) addRear(element T) {
 	queue.len++
 }
 
-// Front returns the front element of the queue without removing it. Will panic if no such element.
+// Front returns the front element of the queue without removing it. Will panic if there is no such element.
 func (queue *SliceDequeue[T]) Front() T {
 	if queue.Empty() {
 		panic(queues.ErrNoFrontElement)
@@ -155,7 +155,7 @@ func (queue *SliceDequeue[T]) Front() T {
 	return queue.data[queue.front]
 }
 
-// Back returns the back element of the queue without removing it. Will panic if no such element.
+// Back returns the back element of the queue without removing it. Will panic if there is no such element.
 func (queue *SliceDequeue[T]) Back() T {
 	if queue.Empty() {
 		panic(queues.ErrNoBackElement)
@@ -169,7 +169,7 @@ type sliceQueueIterator[T types.Equitable[T]] struct {
 	i     int
 }
 
-// HasNext check if the iterator has next element to produce.
+// HasNext checks if the iterator has a next element to yield.
 func (it *sliceQueueIterator[T]) HasNext() bool {
 	if it.slice == nil || it.i >= len(it.slice) {
 		return false
@@ -240,7 +240,7 @@ func (queue *SliceDequeue[T]) remove(element T) bool {
 	return true
 }
 
-// RemoveAll removes all the elements from an iterable elements that are in the queue.
+// RemoveAll removes all the elements in queue set that appear in the iterable.
 func (queue *SliceDequeue[T]) RemoveAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {

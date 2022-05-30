@@ -86,9 +86,9 @@ func (queue *ListQueue[T]) Len() int {
 	return queue.list.Len()
 }
 
-// RemoveAll removes all the elements from some iterable elements that are in the queue.
-func (queue *ListQueue[T]) RemoveAll(elements iterator.Iterable[T]) {
-	queue.list.RemoveAll(elements)
+// RemoveAll removes all the elements in the queue that appear in the iterable.
+func (queue *ListQueue[T]) RemoveAll(iterable iterator.Iterable[T]) {
+	queue.list.RemoveAll(iterable)
 }
 
 // RemoveFront removes and returns the front element of the queue. Wil panic if no such element.

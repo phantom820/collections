@@ -19,7 +19,7 @@ type Vector[T types.Equitable[T]] struct {
 	data []T
 }
 
-// New creates a vector with the specified elements.
+// New creates a vector with the specified elements. If no elements are specified an empty vector is created.
 func New[T types.Equitable[T]](elements ...T) *Vector[T] {
 	vector := Vector[T]{data: make([]T, 0)}
 	vector.Add(elements...)
@@ -43,9 +43,9 @@ func (vector *Vector[T]) Add(elements ...T) bool {
 	return (n != vector.Len())
 }
 
-// AddAll adds the elements from some iterable elements to the vector.
-func (vector *Vector[T]) AddAll(elements iterator.Iterable[T]) {
-	it := elements.Iterator()
+// AddAll adds the elements from iterable to the vector.
+func (vector *Vector[T]) AddAll(iterable iterator.Iterable[T]) {
+	it := iterable.Iterator()
 	for it.HasNext() {
 		vector.Add(it.Next())
 	}
@@ -65,7 +65,7 @@ func (vector *Vector[T]) At(i int) T {
 	return vector.data[i]
 }
 
-//AddAt adds an element at the specified index in the vector. Will panic if index is out of bounds.
+// AddAt adds an element at the specified index in the vector. Will panic if index is out of bounds.
 func (vector *Vector[T]) AddAt(i int, e T) {
 	if i < 0 || i >= len(vector.data) {
 		panic(ErrOutOfBounds)
@@ -138,8 +138,7 @@ func (it *vectorIterator[T]) Cycle() {
 	it.i = 0
 }
 
-// Equals checks if the vector is equals to other. This only true if they are the same reference or have the same size and element wise comparison passes
-// otherwise false.
+// Equals checks if the vector is equals to other. This only true if they are the same reference or have the same size and their elements match.
 func (vector *Vector[T]) Equals(other *Vector[T]) bool {
 	if vector == other {
 		return true
@@ -155,7 +154,7 @@ func (vector *Vector[T]) Equals(other *Vector[T]) bool {
 	}
 }
 
-// Iterator returns an iterator for iterating through a vector.
+// Iterator returns an iterator for the vector.
 func (vector *Vector[T]) Iterator() iterator.Iterator[T] {
 	return &vectorIterator[T]{slice: vector.data, i: 0}
 }
@@ -175,7 +174,7 @@ func (vector *Vector[T]) indexOf(e T) int {
 	return -1
 }
 
-// Remove removes elements from the list. Only the first occurence of each element is removed.
+// Remove removes elements from the vector. Only the first occurence of an element is removed.
 func (vector *Vector[T]) Remove(elements ...T) bool {
 	n := vector.Len()
 	for _, element := range elements {
@@ -207,7 +206,7 @@ func (vector *Vector[T]) RemoveAt(i int) T {
 	return temp
 }
 
-// RemoveAll removes all the elements from iterable elements that are in the vector.
+// RemoveAll removes all the elements in the vector that appear in the iterable.
 func (vector *Vector[T]) RemoveAll(elements iterator.Iterable[T]) {
 	it := elements.Iterator()
 	for it.HasNext() {
@@ -215,7 +214,7 @@ func (vector *Vector[T]) RemoveAll(elements iterator.Iterable[T]) {
 	}
 }
 
-// Map transforms each element in the vector using a specified function and returns a new vector with transformed elements.
+// Map transforms each element in the vector the function f and returns a new vector with transformed elements.
 func (vector *Vector[T]) Map(f func(e T) T) *Vector[T] {
 	newVector := New[T]()
 	for _, e := range vector.data {

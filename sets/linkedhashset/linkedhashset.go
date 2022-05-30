@@ -104,7 +104,7 @@ func (set *LinkedHashSet[T]) Remove(elements ...T) bool {
 	return (n != set.Len())
 }
 
-// RemoveAll removes all elements from an iterable from the set.
+// RemoveAll removes all the elements in the set that appear in the iterable.
 func (set *LinkedHashSet[T]) RemoveAll(iterable iterator.Iterable[T]) {
 	set.data.RemoveAll(iterable)
 }

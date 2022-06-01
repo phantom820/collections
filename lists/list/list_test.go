@@ -67,11 +67,7 @@ func TestAddBack(t *testing.T) {
 
 func TestReverse(t *testing.T) {
 
-	l := New[types.Int]()
-
-	l.Add(1)
-	l.Add(2)
-	l.Add(3)
+	l := New[types.Int](1, 2, 3)
 
 	r := []types.Int{3, 2, 1}
 
@@ -270,6 +266,7 @@ func TestSet(t *testing.T) {
 }
 
 func TestRemoveBack(t *testing.T) {
+
 	l := New[types.Int]()
 
 	// Case 1 : Removing back from empty list should panic.
@@ -332,6 +329,7 @@ func TestRemoveAt(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
+
 	l := New[types.Int]()
 	other := New[types.Int]()
 
@@ -383,12 +381,9 @@ func TestIterator(t *testing.T) {
 
 }
 
-func TestMapFilter(t *testing.T) {
-	l := New[types.Int]()
+func TestMap(t *testing.T) {
 
-	for i := 0; i < 6; i++ {
-		l.Add(types.Int(i))
-	}
+	l := New[types.Int](0, 1, 2, 3, 4, 5)
 
 	// Case 1 : Map to a new list.
 	other := l.Map(func(e types.Int) types.Int { return e + 10 })
@@ -398,20 +393,11 @@ func TestMapFilter(t *testing.T) {
 
 	assert.ElementsMatch(t, a, b)
 
-	// Case 2 : Filter to create new list.
-	c := []types.Int{0, 2, 4}
-	other = l.Filter(func(e types.Int) bool { return e%2 == 0 })
-	d := other.Collect()
-	assert.ElementsMatch(t, c, d)
-
 }
 
 func TestFilter(t *testing.T) {
-	l := New[types.Int]()
 
-	for i := 0; i < 6; i++ {
-		l.Add(types.Int(i))
-	}
+	l := New[types.Int](0, 1, 2, 3, 4, 5)
 
 	// Case 2 : Filter to create new list.
 	c := []types.Int{0, 2, 4}
@@ -422,11 +408,8 @@ func TestFilter(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
-	l := New[types.Int]()
 
-	for i := 0; i < 20; i++ {
-		l.Add(types.Int(i))
-	}
+	l := New[types.Int](0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
 
 	assert.Equal(t, 20, l.Len())
 	l.Clear()

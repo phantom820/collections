@@ -377,12 +377,9 @@ func TestIterator(t *testing.T) {
 
 }
 
-func TestMapFilter(t *testing.T) {
-	l := New[types.Int]()
+func TestMap(t *testing.T) {
 
-	for i := 0; i < 6; i++ {
-		l.Add(types.Int(i))
-	}
+	l := New[types.Int](0, 1, 2, 3, 4, 5)
 
 	// Case 1 : Map to a new list.
 	other := l.Map(func(e types.Int) types.Int { return e + 10 })
@@ -392,20 +389,11 @@ func TestMapFilter(t *testing.T) {
 
 	assert.ElementsMatch(t, a, b)
 
-	// Case 2 : Filter to create new list.
-	c := []types.Int{0, 2, 4}
-	other = l.Filter(func(e types.Int) bool { return e%2 == 0 })
-	d := other.Collect()
-	assert.ElementsMatch(t, c, d)
-
 }
 
 func TestFilter(t *testing.T) {
-	l := New[types.Int]()
 
-	for i := 0; i < 6; i++ {
-		l.Add(types.Int(i))
-	}
+	l := New[types.Int](0, 1, 2, 3, 4, 5)
 
 	// Case 2 : Filter to create new list.
 	c := []types.Int{0, 2, 4}

@@ -122,27 +122,7 @@ type Stack[T types.Equitable[T]] interface {
 	Peek() T // Returns the top element in the stack. Will panic if no top element.
 	Pop() T  // Returns and  removes the top element in the stack. Will panic if no top element.
 }
-
-
-s := slicestack.New[types.Int]()
-s.Add(2, 4, 6, 7)
-s.Peek() // 7
-s.Pop()  // 7
-s.Peek() // 6
-// checkout docs for more .
 ```
-- Set
-- `HashSet` : a set implementation based on a `HashMap`.
-```go
-s := hashset.New[types.Int](1, 2, 4) // {1,2,4}
-s.Add(1, 2, 10)                          // {1,2,4,10} order not gueranteed
-s.Contains(1)                            // true
-
-_ = s.Filter(func(e types.Int) bool { return e%2 == 0 })    // {2,4,10}
-_ = s.Map(func(e types.Int) types.Int { return e - 1 }) // {0,1,3,9}
-// checkout docs for more .
-```
-
 
 ### Trees
 Tree based data structures.
@@ -164,16 +144,6 @@ type Tree[K any, V any] interface {
 
 - `Red Black Tree` : a red black tree implementation witho nodes that store a key and an associated value.
 
-```go
-t := rbt.New[types.Int, string]()
-t.Insert(1, "A")
-t.Insert(2, "B")
-t.Delete(2)
-t.Search(1)
-t.Get(1)
-// checkout docs for more .
-```
-
 ### Maps
 Map based data structures.
 ```go
@@ -192,47 +162,22 @@ type Map[K types.Hashable[K], V any] interface {
 	Empty() bool                      // Checks if the map is empty.
 }
 ```
-- #### Iterating
+
+- `HashMap` : a map implementation that uses a hash table (slice) and red black tree for individual containers in buckets.
+- `LinkedHashMap` : a map implementation similar to HashMap but preserves insertion order of entries.
+- `TreeMap` : a map implementation in which entries are stored according to the natural sorting order of their keys. 
+
+### Sets
+Set data structures.
 ```go
-it := m.Iterator()
-for it.HasNext() {
-	entry := it.Next()
-	fmt.Printf("Key:%d Value:%s\n", entry.Key, entry.Value)
+type Set[T types.Equitable[T]] interface {
+	collections.Collection[T]
+	RetainAll(collection collections.Collection[T]) bool // Removes all entries from the set that do not appear in the other collection. Return true if the set was modified.
+	RemoveIf(f func(element T) bool) bool                // Removes elements from the set that satisfy the predicate function f
 }
-// see detailed example with HashMap.
 ```
-- `HashMap` : a map that uses a hash table (slice) and red black tree for individual containers in buckets.
-```go
-m := hashmap.New[types.Int, string]()
-m.Put(1, "A")
-m.Put(2, "B")
-
-it := m.Iterator()
-for it.HasNext() {
- entry := it.Next()
- fmt.Printf("Key:%d Value:%s\n", entry.Key, entry.Value)
-} 
-
-
-m := hashmap.New[types.Int, string]()
-m.Put(1, "A") // {(1,"A")}
-m.Put(2, "B") // {(2,"B") , (1,"A")} order not gueranted
-m.Put(3, "C") // {(2,"B") , (1,"A") , {3,"C"}}
-
-value, _ := m.Get(1)
-
-otherM := m.Map(func(e maps.MapEntry[types.Int, string]) maps.MapEntry[types.Int, string] {
-	return maps.MapEntry[types.Int,string]{e.Key + 2, e.Value + "A"}
-}) // {(4,"BA") , (3,"AA") , {5,"CA"}}
-
-otherM.Filter(func(e maps.MapEntry[types.Int, string]) bool {
-	return e.Key%2 == 0
-}) // {(4,"BA") }
-// checkout docs for more .
-```
-
-
-
-
+- `HashSet` : a set implementation based on a HashMap.
+- `LinkedHashSet` : a set implementation in which insertion order of items is preserved, uses LinkedHashMap.
+- `TreeSet` : as set implementation in which elements are stored according to their defined ordering, uses TreeMap.
 
 

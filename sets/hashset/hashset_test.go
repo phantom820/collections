@@ -96,6 +96,25 @@ func TestRemove(t *testing.T) {
 
 }
 
+func TestRemoveIf(t *testing.T) {
+
+	s := New[types.Int]()
+
+	// Case 1 : RemoveIf on an empty set.
+	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
+
+	// Case 2 : RemoveIf on a set with elements but none satisfy predicates.
+	for i := 1; i <= 2000; i++ {
+		s.Add(types.Int(i))
+	}
+	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element > 2000 }))
+
+	// Case 3 : RemoveIf on a set with elements and some satisfy predicate.
+	assert.Equal(t, true, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
+	assert.Equal(t, 1000, s.Len())
+
+}
+
 func TestUnion(t *testing.T) {
 
 	a := New[types.Int]()

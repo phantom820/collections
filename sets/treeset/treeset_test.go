@@ -118,6 +118,25 @@ func TestRemove(t *testing.T) {
 
 }
 
+func TestRemoveIf(t *testing.T) {
+
+	s := New[types.Int]()
+
+	// Case 1 : RemoveIf on an empty set.
+	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
+
+	// Case 2 : RemoveIf on a set with elements but none satisfy predicates.
+	for i := 1; i <= 2000; i++ {
+		s.Add(types.Int(i))
+	}
+	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element > 2000 }))
+
+	// Case 3 : RemoveIf on a set with elements and some satisfy predicate.
+	assert.Equal(t, true, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
+	assert.Equal(t, 1000, s.Len())
+
+}
+
 // TestUnion covers tests for Union operation.
 func TestUnion(t *testing.T) {
 
@@ -164,8 +183,7 @@ func TestIntersection(t *testing.T) {
 
 }
 
-// TestMapFilter covers tests for Map and Filter
-func TestMapFilter(t *testing.T) {
+func TestMap(t *testing.T) {
 
 	s := New[types.Int]()
 	for i := 0; i < 6; i++ {
@@ -178,8 +196,18 @@ func TestMapFilter(t *testing.T) {
 
 	assert.ElementsMatch(t, a, b)
 
+}
+
+func TestFilter(t *testing.T) {
+
+	s := New[types.Int]()
+
+	for i := 0; i < 6; i++ {
+		s.Add(types.Int(i))
+	}
+
 	c := []types.Int{0, 2, 4}
-	other = s.Filter(func(e types.Int) bool { return e%2 == 0 })
+	other := s.Filter(func(e types.Int) bool { return e%2 == 0 })
 	d := other.Collect()
 
 	assert.ElementsMatch(t, c, d)

@@ -36,11 +36,11 @@ func (iterator *hashSetIterator[T]) HasNext() bool {
 }
 
 // Next returns the next element in the iterator it. Will panic if iterator has no next element.
-func (iter *hashSetIterator[T]) Next() T {
-	if !iter.HasNext() {
+func (it *hashSetIterator[T]) Next() T {
+	if !it.HasNext() {
 		panic(iterator.NoNextElementError)
 	}
-	entry := iter.mapIterator.Next()
+	entry := it.mapIterator.Next()
 	return entry.Key
 }
 
@@ -102,6 +102,19 @@ func (set *HashSet[T]) Remove(elements ...T) bool {
 		}
 	}
 	return (n != set.Len())
+}
+
+// RemoveIf removes all elements from the set that satisfy the predicate function f.
+func (set *HashSet[T]) RemoveIf(f func(element T) bool) bool {
+	n := set.Len()
+	it := set.Iterator()
+	for it.HasNext() {
+		element := it.Next()
+		if f(element) {
+			set.Remove(element)
+		}
+	}
+	return n != set.Len()
 }
 
 // RemoveAll removes all the elements in the set that appear in the iterable.

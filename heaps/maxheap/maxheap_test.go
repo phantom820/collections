@@ -95,12 +95,11 @@ func TestUpdate(t *testing.T) {
 
 }
 
-func TestStrin(t *testing.T) {
+func TestString(t *testing.T) {
 
 	heap := New[types.Int]()
 
 	heap.Insert(1)
-
 	assert.Equal(t, "[1]", fmt.Sprint(heap))
 
 }

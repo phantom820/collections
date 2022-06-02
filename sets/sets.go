@@ -12,10 +12,11 @@ var (
 	errInvalidDestinationSet = errors.New("invalid destination set for operation, detsination must be empty set")
 )
 
+// Set an interface that a set implementation should satisfy.
 type Set[T types.Equitable[T]] interface {
 	collections.Collection[T]
 	RetainAll(collection collections.Collection[T]) bool // Removes all entries from the set that do not appear in the other collection. Return true if the set was modified.
-	// RemoveIf(f func(element T) bool) bool                // Removes elements from the set that satisfy the predicate function f
+	RemoveIf(f func(element T) bool) bool                // Removes elements from the set that satisfy the predicate function f
 }
 
 // Union union of sets a and b, results of the operation are placed in the set c.

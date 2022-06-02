@@ -104,6 +104,19 @@ func (set *TreeSet[T]) Remove(elements ...T) bool {
 	return (n != set.Len())
 }
 
+// RemoveIf removes all elements from the set that satisfy the predicate function f.
+func (set *TreeSet[T]) RemoveIf(f func(element T) bool) bool {
+	n := set.Len()
+	it := set.Iterator()
+	for it.HasNext() {
+		element := it.Next()
+		if f(element) {
+			set.Remove(element)
+		}
+	}
+	return n != set.Len()
+}
+
 // RemoveAll removes all elements from an iterable from the set.
 func (set *TreeSet[T]) RemoveAll(iterable iterator.Iterable[T]) {
 	set.data.RemoveAll(iterable)

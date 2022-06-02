@@ -164,6 +164,6 @@ func TestIterator(t *testing.T) {
 func TestString(t *testing.T) {
 
 	minQ := New[types.Int](true, 1)
-
 	assert.Equal(t, "[1]", fmt.Sprint(minQ))
+
 }

@@ -76,7 +76,7 @@ func (queue *SliceDequeue[T]) Collect() []T {
 	return queue.data[queue.front:]
 }
 
-// Contains checks if the element  is in the queue.
+// Contains checks if the element is in the queue.
 func (queue *SliceDequeue[T]) Contains(e T) bool {
 	for i, _ := range queue.data {
 		if queue.data[i].Equals(e) {
@@ -96,7 +96,7 @@ func (queue *SliceDequeue[T]) isFull() bool {
 	return queue.buffer == 0
 }
 
-// expand doubles the size of the underlying slice.
+// expand doubles the size of the front buffer of the underlying slice. For internal use to amortize cost of AddFront.
 func (queue *SliceDequeue[T]) expand() {
 	// double the memory and copy across.
 	n := buffer * queue.scale
@@ -107,7 +107,7 @@ func (queue *SliceDequeue[T]) expand() {
 	queue.scale++
 }
 
-// addRear adds an element to the back of the queue. For internal use to support AddFront.
+// addRear adds an element to the back of the queue. For internal use to support AddBack.
 func (queue *SliceDequeue[T]) addFront(element T) {
 	if queue.isFull() {
 		queue.expand()
@@ -193,11 +193,12 @@ func (queue *SliceDequeue[T]) Iterator() iterator.Iterator[T] {
 	return &sliceQueueIterator[T]{slice: queue.data[queue.front:], i: 0}
 }
 
+// Len returns the size of the queue.
 func (queue *SliceDequeue[T]) Len() int {
 	return queue.len
 }
 
-// indexOf finds the index of an element in the queue. Gives -1 if the element is not present.
+// indexOf finds the index of an element in the queue. Returns -1 if the element is not present.
 func (queue *SliceDequeue[T]) indexOf(element T) int {
 	if queue.Empty() {
 		return -1
@@ -210,7 +211,7 @@ func (queue *SliceDequeue[T]) indexOf(element T) int {
 	return -1
 }
 
-// Remove removes elements from the list. Only the first occurence of each element is removed.
+// Remove removes elements from the queue. Only the first occurence of an element is removed.
 func (queue *SliceDequeue[T]) Remove(elements ...T) bool {
 	n := queue.Len()
 	for _, element := range elements {
@@ -222,7 +223,7 @@ func (queue *SliceDequeue[T]) Remove(elements ...T) bool {
 	return n != queue.Len()
 }
 
-// remove removes the element from the queue. For internal use to support Remove.
+// remove removes the element from the queue. For internal use to support Remove. Only the first occurence is removed.
 func (queue *SliceDequeue[T]) remove(element T) bool {
 	i := queue.indexOf(element)
 	if i == -1 || queue.Empty() {
@@ -286,6 +287,7 @@ func (queue *SliceDequeue[T]) RemoveFront() T {
 	return front
 }
 
+// shrinkBack reduces the capacity underlying slice to avoid wasting memory.
 func (queue *SliceDequeue[T]) shrinkBack() {
 	if cap(queue.data) > 0 {
 		loadFactor := float32(len(queue.data)) / float32(cap(queue.data))

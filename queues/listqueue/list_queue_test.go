@@ -82,6 +82,7 @@ func TestFront(t *testing.T) {
 }
 
 func TestIterator(t *testing.T) {
+
 	q := New[types.Int]()
 
 	// Case 1 : Next on empty queue should panic.
@@ -132,8 +133,8 @@ func TestRemove(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	q := New[types.Int](1, 2, 3)
 
+	q := New[types.Int](1, 2, 3)
 	assert.Equal(t, "[1 2 3]", fmt.Sprint(q))
 
 }

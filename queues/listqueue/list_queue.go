@@ -22,7 +22,7 @@ func New[T types.Equitable[T]](elements ...T) *ListQueue[T] {
 	return &queue
 }
 
-// Add adds elements to the back of the queue. Only first occurence of an element is removed
+// Add adds elements to the back of the queue.
 func (queue *ListQueue[T]) Add(elements ...T) bool {
 	if len(elements) == 0 {
 		return false
@@ -33,9 +33,9 @@ func (queue *ListQueue[T]) Add(elements ...T) bool {
 	return true
 }
 
-// AddAll adds the elements from some iterable elements to the back of the queue.
-func (queue *ListQueue[T]) AddAll(elements iterator.Iterable[T]) {
-	it := elements.Iterator()
+// AddAll adds the elements iterable to the back of the queue.
+func (queue *ListQueue[T]) AddAll(iterable iterator.Iterable[T]) {
+	it := iterable.Iterator()
 	for it.HasNext() {
 		queue.Add(it.Next())
 	}
@@ -51,7 +51,7 @@ func (queue *ListQueue[T]) Clear() {
 	queue.list.Clear()
 }
 
-// Collect converts queue into a slice.
+// Collect returns a slice containing all the elements in the queue.
 func (queue *ListQueue[T]) Collect() []T {
 	return queue.list.Collect()
 }

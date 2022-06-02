@@ -38,10 +38,8 @@ collections.SortBy[T](l,func(a, b T) bool { ..... }) // Sorting with custom comp
 // see detailed example with list.
 ```
 
-- List
-	- `ForwardList` : singly linked list.
-	- `List` : doubly linked list.
-
+- #### Lists
+ Doubly linked list and singly linked list implementation.
 ```go	
 type List[T types.Equitable[T]] interface {
 	collections.Collection[T]
@@ -56,32 +54,13 @@ type List[T types.Equitable[T]] interface {
 	AddAt(i int, e T) // Adds the element at the specified index. Will panic if index out of bounds.
 }
 
-l := forwardlist.New[types.Int](5, 3, 6, 7, 20)
-
-// iterating
-it := l1.Iterator()
-for it.HasNext() {
- fmt.Println(it.Next())
-}
-
-// sorting
-collections.Sort[types.Int](l)  
-
-l := forwardlist.New[types.Int](1, 2, 3)                        		 // [1,2,3]
-l.Add(4, 5, 6)                                                       // [1,2,3,4,5,6]
-l.Front()                                                            // 1
-l.Back()                                                             // 6
-l.Contains(1)                                                        // true
-l.Remove(2)                                                          // [1,3,4,5,6]
-l.RemoveAt(2)                                                        //  4 , [1,3,5,6]
-l.RemoveFront()                                                      // 1 , [3,5,6]
-other := l.Map(func(e types.Int) types.Int { return e + 3 }) 				 //  [6,8,9]
-_ = other.Filter(func(e types.Int) bool { return e%3 == 0 })         // [6,9]
-// checkout docs for more .
-
 ```
+- `ForwardList` : singly linked list.
+- `List` : doubly linked list.
 
-- Vector
+
+
+- #### Vector
 	- `Vector` : a vector (wrapper around Go slice)
 ```go
 v := vector.New[types.Int](1, 2, 3)                              // [1,2,3]

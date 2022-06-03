@@ -69,18 +69,18 @@ func (list *ForwardList[T]) Iterator() iterator.Iterator[T] {
 
 // Front returns the front of the list. Will panic if list has no front element.
 func (list *ForwardList[T]) Front() T {
-	if list.head != nil {
-		return list.head.value
+	if list.head == nil {
+		panic(lists.ErrEmptyList)
 	}
-	panic(lists.ErrEmptyList)
+	return list.head.value
 }
 
 // Back returns the back element of the list.  Will panic if list has no back element.
 func (list *ForwardList[T]) Back() T {
-	if list.tail != nil {
-		return list.tail.value
+	if list.tail == nil {
+		panic(lists.ErrEmptyList)
 	}
-	panic(lists.ErrEmptyList)
+	return list.tail.value
 }
 
 // Swap swaps the element at index i and the element at index j. This is done using links. Will panic if one/both of the specified indices is
@@ -159,9 +159,9 @@ func (list *ForwardList[T]) At(i int) T {
 	return v
 }
 
-// AddFront adds element to the front of the list.
-func (list *ForwardList[T]) AddFront(e T) {
-	n := newNode(e)
+// addFront adds element to the front of the list. For internal use to support AddFront.
+func (list *ForwardList[T]) addFront(element T) {
+	n := newNode(element)
 	if list.head != nil {
 		n.next = list.head
 		list.head = n
@@ -173,41 +173,53 @@ func (list *ForwardList[T]) AddFront(e T) {
 	list.len++
 }
 
-// AddBack adds element to the back of the list.
-func (list *ForwardList[T]) AddBack(e T) {
+// AddFront adds elements to the front of the list.
+func (list *ForwardList[T]) AddFront(elements ...T) {
+	for _, element := range elements {
+		list.addFront(element)
+	}
+}
+
+// addBack adds element to the back of the list.
+func (list *ForwardList[T]) addBack(element T) {
 	if list.head == nil {
-		list.AddFront(e)
+		list.AddFront(element)
 		return
 	}
-	n := newNode(e)
+	n := newNode(element)
 	list.tail.next = n
 	list.tail = n
 	list.len++
 }
 
-// AddAt adds an element to the list at specified index. Will panic if index is out of bounds.
+// AddBack adds element to the back of the list.
+func (list *ForwardList[T]) AddBack(elements ...T) {
+	for _, element := range elements {
+		list.addBack(element)
+	}
+}
+
+// AddAt adds an element to the list at specified index, all subsequent elements will be shifted right. Will panic if index is out of bounds.
 func (list *ForwardList[T]) AddAt(i int, e T) {
 	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	} else if i == 0 {
 		list.AddFront(e)
 		return
-	} else if i == list.len-1 {
-		list.AddBack(e)
-	} else {
-		j := 0
-		n := newNode(e)
-		for x := list.head; x != nil; x = x.next {
-			if j == i-1 {
-				n.next = x.next
-				x.next = n
-				list.len++
-				break
-			}
-			j = j + 1
-		}
-		return
 	}
+	j := 0
+	n := newNode(e)
+	for x := list.head; x != nil; x = x.next {
+		if j == i-1 {
+			n.next = x.next
+			x.next = n
+			list.len++
+			break
+		}
+		j = j + 1
+	}
+	return
+
 }
 
 // Add adds elements to the back of the list.
@@ -413,14 +425,13 @@ func (list *ForwardList[T]) Empty() bool {
 }
 
 // Reverse returns a new list that is the reverse of l. This uses extra memory since we inserting into a new list.
-func (list *ForwardList[T]) Reverse() *ForwardList[T] {
-	r := New[T]()
-	h := list.head
-	for h != nil {
-		r.AddFront(h.value)
-		h = h.next
+func (list *ForwardList[T]) Reverse() {
+	n := list.Len()
+	head := list.head
+	for i := 0; i < n/2; i++ {
+		list.Swap(i, n-i-1)
 	}
-	return r
+	list.tail = head
 }
 
 // Collect returns a slice containing all the elements in the list.

@@ -4,8 +4,8 @@ import (
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/lists/forwardlist"
 	"github.com/phantom820/collections/lists/list"
+	"github.com/phantom820/collections/lists/vector"
 	"github.com/phantom820/collections/types"
-	"github.com/phantom820/collections/vector"
 )
 
 // Sort sorts the given collection using the natural ordering of its elements. This should only be used with collections that can actually be sorted

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/phantom820/collections/heaps/maxheap"
+	"github.com/phantom820/collections/lists/forwardlist"
 	"github.com/phantom820/collections/types"
 )
 
@@ -22,5 +23,17 @@ func main() {
 	fmt.Println(heap)
 	heap.DeleteTop()
 	fmt.Println(heap)
+
+	l := forwardlist.New[types.Int](1, 2, 3)
+	fmt.Println(l)
+	l.Reverse()
+	l.Add(23)
+	fmt.Println(l)
+	l.AddFront(34)
+	fmt.Println(l)
+	l.Reverse()
+	fmt.Println(l)
+	l.AddAt(2, 45)
+	fmt.Println(l)
 
 }

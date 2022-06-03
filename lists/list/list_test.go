@@ -184,7 +184,7 @@ func TestAddAt(t *testing.T) {
 	l.AddAt(0, 22)
 	assert.Equal(t, types.Int(22), l.At(0))
 	l.AddAt(l.Len()-1, 25)
-	assert.Equal(t, types.Int(25), l.At(l.Len()-1))
+	assert.Equal(t, types.Int(25), l.At(l.Len()-2))
 	l.AddAt(2, -5)
 	assert.Equal(t, types.Int(-5), l.At(2))
 

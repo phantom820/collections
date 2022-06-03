@@ -167,8 +167,8 @@ func (list *List[T]) At(i int) T {
 	return v
 }
 
-// AddFront adds element to the front of the list.
-func (list *List[T]) AddFront(element T) {
+// addFront adds element to the front of the list. For internal use to support AddFront.
+func (list *List[T]) addFront(element T) {
 	n := newNode(element)
 	if list.head != nil {
 		n.next = list.head
@@ -182,8 +182,15 @@ func (list *List[T]) AddFront(element T) {
 	list.len++
 }
 
-// AddBack adds element to the back of the list.
-func (list *List[T]) AddBack(element T) {
+// AddFront adds elements to the front of the list.
+func (list *List[T]) AddFront(elements ...T) {
+	for _, element := range elements {
+		list.addFront(element)
+	}
+}
+
+// addBack add an element to the back of the list. For internal use to support AddBack.
+func (list *List[T]) addBack(element T) {
 	if list.head == nil {
 		list.AddFront(element)
 		return
@@ -195,30 +202,35 @@ func (list *List[T]) AddBack(element T) {
 	list.len++
 }
 
-// AddAt adds an element to the list at specified index. Will panic if index is out of bounds.
+// AddBack adds elements to the back of the list.
+func (list *List[T]) AddBack(elements ...T) {
+	for _, element := range elements {
+		list.addBack(element)
+	}
+}
+
+// AddAt adds an element to the list at specified index, all subsequent elements will be shifted right. Will panic if index is out of bounds.
 func (list *List[T]) AddAt(i int, element T) {
 	if i < 0 || i >= list.len {
 		panic(lists.ErrOutOfBounds)
 	} else if i == 0 {
 		list.AddFront(element)
 		return
-	} else if i == list.len-1 {
-		list.AddBack(element)
-	} else {
-		j := 0
-		n := newNode(element)
-		for x := list.head; x != nil; x = x.next {
-			if j == i-1 {
-				n.prev = x
-				n.next = x.next
-				x.next = n
-				list.len++
-				break
-			}
-			j = j + 1
-		}
-		return
 	}
+	j := 0
+	n := newNode(element)
+	for x := list.head; x != nil; x = x.next {
+		if j == i-1 {
+			n.prev = x
+			n.next = x.next
+			x.next = n
+			list.len++
+			break
+		}
+		j = j + 1
+	}
+	return
+
 }
 
 // Add adds elements to the back of the list.
@@ -288,33 +300,31 @@ func (list *List[T]) RemoveFront() T {
 		n = nil
 		list.len -= 1
 		return v
-	} else {
-		n := list.head
-		list.head = n.next
-		v := n.value
-		n.next = nil
-		n.prev = nil
-		n = nil
-		list.len -= 1
-		return v
 	}
+	n := list.head
+	list.head = n.next
+	v := n.value
+	n.next = nil
+	n.prev = nil
+	n = nil
+	list.len -= 1
+	return v
 }
 
 // RemoveBack removes and returns the back element of the list. Will panic if the list has no back element.
 func (list *List[T]) RemoveBack() T {
 	if list.len <= 1 {
 		return list.RemoveFront()
-	} else {
-		n := list.tail
-		list.tail = list.tail.prev
-		list.tail.next = nil
-		list.len -= 1
-		v := n.value
-		n.prev = nil
-		n.next = nil
-		n = nil
-		return v
 	}
+	n := list.tail
+	list.tail = list.tail.prev
+	list.tail.next = nil
+	list.len -= 1
+	v := n.value
+	n.prev = nil
+	n.next = nil
+	n = nil
+	return v
 }
 
 // RemoveAt removes the element at the specified index in the list. Will panic if index is out of bounds.

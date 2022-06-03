@@ -6,6 +6,7 @@ import (
 
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists"
+	"github.com/phantom820/collections/testutils"
 	"github.com/phantom820/collections/types"
 
 	"github.com/stretchr/testify/assert"
@@ -67,21 +68,21 @@ func TestAddBack(t *testing.T) {
 
 func TestReverse(t *testing.T) {
 
-	l := New[types.Int]()
+	l := New[types.Int](1, 2, 3)
 
-	assert.Equal(t, true, l.Equals(l.Reverse()))
+	// Case 1 : Reverse a list with odd number of elements.
+	l.Reverse()
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{3, 2, 1}, l.Collect()))
+	assert.Equal(t, types.Int(3), l.Front())
+	assert.Equal(t, types.Int(1), l.Back())
 
-	l.Add(1)
-	l.Add(2)
-	l.Add(3)
+	// Case 2 : Reverse a list with an even number of elements.
+	l.Add(4, 5, 6)
+	l.Reverse()
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{6, 5, 4, 1, 2, 3}, l.Collect()))
+	assert.Equal(t, types.Int(6), l.Front())
+	assert.Equal(t, types.Int(3), l.Back())
 
-	r := New[types.Int]()
-	r.Add(3)
-	r.Add(2)
-	r.Add(1)
-
-	assert.Equal(t, true, l.Reverse().Equals(r))
-	assert.Equal(t, true, l.Equals(r.Reverse()))
 }
 
 func TestAt(t *testing.T) {
@@ -182,7 +183,7 @@ func TestAddAt(t *testing.T) {
 	l.AddAt(0, 22)
 	assert.Equal(t, types.Int(22), l.At(0))
 	l.AddAt(l.Len()-1, 25)
-	assert.Equal(t, types.Int(25), l.At(l.Len()-1))
+	assert.Equal(t, types.Int(25), l.At(l.Len()-2))
 	l.AddAt(2, -5)
 	assert.Equal(t, types.Int(-5), l.At(2))
 

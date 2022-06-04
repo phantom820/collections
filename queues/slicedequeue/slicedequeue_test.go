@@ -7,6 +7,7 @@ import (
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/forwardlist"
 	"github.com/phantom820/collections/queues"
+	"github.com/phantom820/collections/testutils"
 	"github.com/phantom820/collections/types"
 
 	"github.com/stretchr/testify/assert"
@@ -39,7 +40,7 @@ func TestAdd(t *testing.T) {
 	q.Clear()
 	s := []types.Int{1, 2, 3, 4}
 	q.Add(s...)
-	assert.ElementsMatch(t, s, q.Collect())
+	assert.Equal(t, true, testutils.EqualSlices(s, q.Collect()))
 
 }
 
@@ -223,7 +224,7 @@ func TestIterator(t *testing.T) {
 	for it.HasNext() {
 		b = append(b, it.Next())
 	}
-	assert.ElementsMatch(t, a, b)
+	assert.Equal(t, true, testutils.EqualSlices(a, b))
 	it.Cycle()
 	assert.Equal(t, types.Int(1), it.Next())
 

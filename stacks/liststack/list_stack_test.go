@@ -5,6 +5,7 @@ import (
 
 	"github.com/phantom820/collections/lists/forwardlist"
 	"github.com/phantom820/collections/stacks"
+	"github.com/phantom820/collections/testutils"
 	"github.com/phantom820/collections/types"
 
 	"github.com/stretchr/testify/assert"
@@ -106,7 +107,7 @@ func TestCollect(t *testing.T) {
 	s.Add(1, 2)
 
 	sl := []types.Int{2, 1}
-	assert.ElementsMatch(t, sl, s.Collect())
+	assert.Equal(t, true, testutils.EqualSlices(sl, s.Collect()))
 
 }
 

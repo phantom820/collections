@@ -6,6 +6,7 @@ import (
 
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/list"
+	"github.com/phantom820/collections/testutils"
 	"github.com/phantom820/collections/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -51,7 +52,7 @@ func TestAdd(t *testing.T) {
 	s.Add(sl...)
 
 	sm := []types.Int{1, 2, 3, 4, 5}
-	assert.ElementsMatch(t, sm, s.Collect())
+	assert.Equal(t, true, testutils.EqualSlices(sm, s.Collect()))
 
 	// Case 5 : Clear and add a vast colelction of values
 	s.Clear()
@@ -60,16 +61,16 @@ func TestAdd(t *testing.T) {
 		s.Add(types.Int(i))
 		slice = append(slice, types.Int(50-i))
 	}
-	assert.ElementsMatch(t, slice, s.Collect())
+	assert.Equal(t, true, testutils.EqualSlices(slice, s.Collect()))
 
 }
 
 func TestIterator(t *testing.T) {
 
 	s := New[types.Int]()
+
+	// Case 1 : Next on iterator for an empty set should panic.
 	t.Run("panics", func(t *testing.T) {
-		// If the function panics, recover() will
-		// return a non nil value.
 		defer func() {
 			if r := recover(); r != nil {
 				assert.Equal(t, iterator.NoNextElementError, r.(error))
@@ -78,17 +79,16 @@ func TestIterator(t *testing.T) {
 		it := s.Iterator()
 		it.Next()
 	})
+	s.Add(1, 2, 3, 4, 5)
 
-	for i := 1; i < 6; i++ {
-		s.Add(types.Int(i))
-	}
 	a := s.Collect()
 	b := make([]types.Int, 0)
 	it := s.Iterator()
 	for it.HasNext() {
 		b = append(b, it.Next())
 	}
-	assert.ElementsMatch(t, a, b)
+
+	assert.Equal(t, true, testutils.EqualSlices(a, b))
 	it.Cycle()
 	assert.Equal(t, types.Int(1), it.Next())
 
@@ -194,7 +194,7 @@ func TestMap(t *testing.T) {
 	a := []types.Int{10, 11, 12, 13, 14, 15}
 	b := other.Collect()
 
-	assert.ElementsMatch(t, a, b)
+	assert.Equal(t, true, testutils.EqualSlices(a, b))
 
 }
 
@@ -210,7 +210,7 @@ func TestFilter(t *testing.T) {
 	other := s.Filter(func(e types.Int) bool { return e%2 == 0 })
 	d := other.Collect()
 
-	assert.ElementsMatch(t, c, d)
+	assert.Equal(t, true, testutils.EqualSlices(c, d))
 
 }
 

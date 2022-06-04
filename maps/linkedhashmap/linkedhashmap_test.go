@@ -7,6 +7,7 @@ import (
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/list"
 	"github.com/phantom820/collections/maps"
+	"github.com/phantom820/collections/testutils"
 	"github.com/phantom820/collections/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -106,22 +107,22 @@ func TestIterator(t *testing.T) {
 	}
 
 	orderedKeys := []types.String{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"}
-	orderedValues := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}
+	orderedValues := []types.String{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}
 
 	it := m.Iterator()
 	keys := []types.String{}
-	values := []string{}
+	values := []types.String{}
 
 	for it.HasNext() {
 		entry := it.Next()
 		keys = append(keys, entry.Key)
-		values = append(values, entry.Value)
+		values = append(values, types.String(entry.Value))
 	}
 
-	assert.ElementsMatch(t, orderedKeys, keys)
-	assert.ElementsMatch(t, orderedValues, values)
-	assert.ElementsMatch(t, orderedKeys, m.Keys())
-	assert.ElementsMatch(t, orderedValues, m.Values())
+	assert.Equal(t, true, testutils.EqualSlices(orderedKeys, keys))
+	assert.Equal(t, true, testutils.EqualSlices(orderedValues, values))
+	assert.Equal(t, true, testutils.EqualSlices(orderedKeys, m.Keys()))
+	assert.ElementsMatch(t, []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}, m.Values())
 
 	// Case 2 : Next on exhausted iterator should panic.
 	t.Run("panics", func(t *testing.T) {

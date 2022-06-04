@@ -6,6 +6,7 @@ import (
 
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/list"
+	"github.com/phantom820/collections/testutils"
 	"github.com/phantom820/collections/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,6 +38,8 @@ func TestAdd(t *testing.T) {
 func TestIterator(t *testing.T) {
 
 	s := New[types.Int]()
+
+	// Case 1 : Next on a iterator for an empty list should panic.
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -47,19 +50,18 @@ func TestIterator(t *testing.T) {
 		it.Next()
 	})
 
-	for i := 1; i < 6; i++ {
-		s.Add(types.Int(i))
-	}
+	// Case 2 : Iterator on a set with elements.
+	s.Add(1, 2, 3, 4, 5)
 	a := s.Collect()
 	b := make([]types.Int, 0)
 	it := s.Iterator()
 	for it.HasNext() {
 		b = append(b, it.Next())
 	}
-	assert.ElementsMatch(t, a, b)
+
+	assert.Equal(t, true, testutils.EqualSlices(a, b))
 	it.Cycle()
 	assert.Equal(t, types.Int(1), it.Next())
-
 	s.Clear()
 	assert.Equal(t, true, s.Empty())
 
@@ -98,14 +100,14 @@ func TestRemoveIf(t *testing.T) {
 	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
 
 	// Case 2 : RemoveIf on a set with elements but none satisfy predicates.
-	for i := 1; i <= 2000; i++ {
+	for i := 1; i <= 200; i++ {
 		s.Add(types.Int(i))
 	}
 	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element > 2000 }))
 
 	// Case 3 : RemoveIf on a set with elements and some satisfy predicate.
 	assert.Equal(t, true, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
-	assert.Equal(t, 1000, s.Len())
+	assert.Equal(t, 100, s.Len())
 
 }
 
@@ -164,7 +166,7 @@ func TestMap(t *testing.T) {
 	a := []types.Int{10, 11, 12, 13, 14, 15}
 	b := other.Collect()
 
-	assert.ElementsMatch(t, a, b)
+	assert.Equal(t, true, testutils.EqualSlices(a, b))
 
 }
 
@@ -180,7 +182,7 @@ func TestFilter(t *testing.T) {
 	other := s.Filter(func(e types.Int) bool { return e%2 == 0 })
 	d := other.Collect()
 
-	assert.ElementsMatch(t, c, d)
+	assert.Equal(t, true, testutils.EqualSlices(c, d))
 
 }
 

@@ -146,6 +146,35 @@ func TestRemove(t *testing.T) {
 
 }
 
+func TestSwap(t *testing.T) {
+
+	l := New[types.Int]()
+
+	// Case 1 : Swapping out of bounds should panic.
+	t.Run("panics", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				assert.Equal(t, lists.ErrOutOfBounds, r.(error))
+			}
+		}()
+		l.Swap(-1, 0)
+	})
+
+	// Case 2 : Swapping at legal index.
+	l.Add(2, 3, 4, 5, 10)
+
+	l.Swap(0, 1)
+	assert.Equal(t, types.Int(3), l.Front())
+	l.Swap(2, 3)
+	l.Swap(1, 0)
+	assert.Equal(t, types.Int(5), l.At(2))
+	l.Swap(0, l.Len()-1)
+	assert.Equal(t, types.Int(10), l.At(0))
+	l.Swap(l.Len()-1, 0)
+	assert.Equal(t, types.Int(10), l.At(l.Len()-1))
+
+}
+
 func TestReverse(t *testing.T) {
 
 	l := New[types.Int](1, 2, 3)

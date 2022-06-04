@@ -27,4 +27,5 @@ type List[T types.Equitable[T]] interface {
 	At(i int) T              // Retrieves the element at the specified index. Will panic if index is out of bounds.
 	RemoveAt(i int) T        // Removes the element ath the specified index andreturns it. Will panic if index out of bounds.
 	AddAt(i int, element T)  // Adds the element at the specified index. Will panic if index out of bounds.
+	Reverse()                // Reverses the list in place.
 }

@@ -250,4 +250,51 @@ func TestRetainAll(t *testing.T) {
 
 	a.RetainAll(b)
 	assert.Equal(t, 2, a.Len())
+
+}
+
+func TestLeftSubset(t *testing.T) {
+
+	s := New[types.Int](1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+	// Case 1 : LeftSubset non inclusive.
+	subset := s.LeftSubset(4, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3}, subset.Collect()))
+
+	// Case 2 : LeftSubset inclusive.
+	subset = s.LeftSubset(4, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3, 4}, subset.Collect()))
+
+}
+
+func TestRightSubset(t *testing.T) {
+
+	s := New[types.Int](1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+	// Case 1 : RightSubset non inclusive.
+	subset := s.RightSubset(4, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{5, 6, 7, 8, 9, 10}, subset.Collect()))
+
+	// Case 2 : RightSubset inclusive.
+	subset = s.RightSubset(4, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{4, 5, 6, 7, 8, 9, 10}, subset.Collect()))
+
+}
+
+func TestSubset(t *testing.T) {
+
+	s := New[types.Int](1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+	// Case 1 : Subset with open ends.
+	subset := s.Subset(2, false, 6, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{3, 4, 5}, subset.Collect()))
+
+	// Case 2 : Subset with left closed end and right open.
+	subset = s.Subset(2, true, 6, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2, 3, 4, 5}, subset.Collect()))
+
+	// Case 3 : Subset with left open end and right closed.
+	subset = s.Subset(2, false, 6, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{3, 4, 5, 6}, subset.Collect()))
+
 }

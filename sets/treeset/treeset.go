@@ -158,6 +158,30 @@ func (set *TreeSet[T]) Collect() []T {
 	return data
 }
 
+// LeftSubset returns a new set which only consist of elements from the original set less than or equals the given element. If inclusive is true
+// then an equal element is included.
+func (set *TreeSet[T]) LeftSubset(element T, inclusive bool) *TreeSet[T] {
+	leftSubMap := set.data.LeftSubMap(element, inclusive)
+	leftSubset := TreeSet[T]{data: leftSubMap}
+	return &leftSubset
+}
+
+// Rightsubset returns a new set which only consist of elements from the original set greater than or equals the given element. If inclusive is true
+// then an equal element is included.
+func (set *TreeSet[T]) RightSubset(element T, inclusive bool) *TreeSet[T] {
+	rightSubMap := set.data.RightSubMap(element, inclusive)
+	rightSubset := TreeSet[T]{data: rightSubMap}
+	return &rightSubset
+}
+
+// Subset returns a new set which is a subset of the original set consisting of elements in the range [fromElement,toElement]. If froInclusive
+// the left end is included similarily for toInclusive.
+func (set *TreeSet[T]) Subset(fromElement T, fromInclusive bool, toElement T, toInclusive bool) *TreeSet[T] {
+	subMap := set.data.SubMap(fromElement, fromInclusive, toElement, toInclusive)
+	subSet := TreeSet[T]{data: subMap}
+	return &subSet
+}
+
 // Map applies a transformation on an elements of the set , using the function f and returns a new set with the
 // transformed elements.
 func (set *TreeSet[T]) Map(f func(element T) T) *TreeSet[T] {

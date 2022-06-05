@@ -298,3 +298,44 @@ func TestRightSubMap(t *testing.T) {
 	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3, 4, 5, 6, 7, 8}, rightSubMap.Keys()))
 
 }
+
+func TestSubMap(t *testing.T) {
+
+	m := New[types.Int, string]()
+
+	m.Put(1, "A")
+	m.Put(2, "B")
+	m.Put(3, "C")
+	m.Put(4, "D")
+	m.Put(5, "E")
+	m.Put(6, "F")
+	m.Put(7, "G")
+	m.Put(8, "H")
+
+	// Case 1 : SubMap without inclusion on both ends.
+	subMap := m.SubMap(1, false, 6, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2, 3, 4, 5}, subMap.Keys()))
+
+	// Case 2 : SubMap with left inclusion only.
+	subMap = m.SubMap(1, true, 6, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3, 4, 5}, subMap.Keys()))
+
+	// Case 3 : SubMap with right inclusion only.
+	subMap = m.SubMap(1, false, 6, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2, 3, 4, 5, 6}, subMap.Keys()))
+
+	// Case 4 : SubMap inclusive both sides.
+	subMap = m.SubMap(2, true, 6, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2, 3, 4, 5, 6}, subMap.Keys()))
+
+	// Case 5 : SubMap with ill formed range should panic.
+	t.Run("panics", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				assert.Equal(t, errKeyRange, r.(error))
+			}
+		}()
+		subMap = m.SubMap(2, true, 1, true)
+	})
+
+}

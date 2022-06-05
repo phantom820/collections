@@ -31,15 +31,16 @@ for it.HasNext() {
 }
 ```
 - #### Sorting
+Only supported by Lists.
 ```go
 collections.Sort[T](collection[T]) // Sorting using natural ordering of elements in the collection.
-	
+// with custom comparator.	
 collections.SortBy[T](l,func(a, b T) bool { ..... }) // Sorting with custom comparator function. Needs to define ordering for 2 elemetns.
-// see detailed example with list.
+
 ```
 
 - #### Lists
- Doubly linked list and singly linked list implementation.
+ Linked lists and  vector implementations.
 ```go	
 type List[T types.Equitable[T]] interface {
 	collections.Collection[T]
@@ -57,26 +58,11 @@ type List[T types.Equitable[T]] interface {
 ```
 - `ForwardList` : singly linked list.
 - `List` : doubly linked list.
+- `Vector` : a vector by wrapping around a slice.
 
 
-
-- #### Vector
-	- `Vector` : a vector (wrapper around Go slice)
-```go
-v := vector.New[types.Int](1, 2, 3)                              // [1,2,3]
-v.Add(4, 5, 6)                                                       // [1,2,3,4,5,6]
-v.Contains(1)                                                        // true
-v.Remove(2)                                                          // [1,3,4,5,6]
-v.RemoveAt(2)                                                        //  4 , [1,3,5,6]
-v.At(0)                                                              // 1
-other := v.Map(func(e types.Int) types.Int { return e + 3 }) //  [4,6,8,9]
-_ = other.Filter(func(e types.Int) bool { return e%2 == 0 }) 		 // [4,6,8]
-// checkout docs for more .
-```
-- Queue
-	- `ListQueue` : `ForwardList` based implementation of a queue.
-	- `SliceQueue` : slice based implementation of a queue.
-
+- #### Queues
+	Various queue implementations.
 ```go
 type Queue[T types.Equitable[T]] interface {
 	collections.Collection[T]
@@ -84,17 +70,25 @@ type Queue[T types.Equitable[T]] interface {
 	RemoveFront() T // Returns and removes the front element of the queue. Will panic if no front element.
 }
 
-q := listqueue.New[types.Int]()
-q.Add(1, 2, 3, 4)
-q.Front()       // 1
-q.RemoveFront() // 1
-q.Front()       // 2
-// checkout docs for more .
+type DeqQueue[T types.Equitable[T]] interface {
+	collections.Collection[T]
+	AddFront(elements ...T) // Adds elements to the front of the queue.
+	Front() T               //  Returns the front element of the queue. Will panic if no front element.
+	RemoveFront() T         // Returns and removes the front element of the queue. Will panic if no front element.
+	Back() T                //  Returns the back element of the queue. Will panic if no back element.
+	RemoveBack() T          //  Returns and removes the item at the back of the queue
+}
 ```
+- `ListQueue` : `ForwardList` based implementation of a queue.
+- `SliceQueue` : slice based implementation of a queue.
+- `ListDequeue` : slice based implementation of a dequeue.
+- `PriorityQueue` : binary heap based implementation of a priority queue (min and max queue).
+- `SliceDequeue` : slice based implementation of a dequeue. 
 
-- Stack 
-	- `ListStack` : `ForwardList` based implementation of a stack.
-	- `SliceStack` : slice based implementation of a stack.
+
+
+- Stack
+Various stack implementaions. 
 ```go
 type Stack[T types.Equitable[T]] interface {
 	collections.Collection[T]
@@ -102,6 +96,8 @@ type Stack[T types.Equitable[T]] interface {
 	Pop() T  // Returns and  removes the top element in the stack. Will panic if no top element.
 }
 ```
+- `ListStack` : a singly linked list based implementation of a stack.
+- `SliceStack` : slice based implementation of a stack.
 
 ### Trees
 Tree based data structures.

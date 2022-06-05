@@ -238,3 +238,63 @@ func TestFilter(t *testing.T) {
 	assert.Equal(t, "B", value)
 
 }
+
+func TestLeftSubMap(t *testing.T) {
+
+	m := New[types.Int, string]()
+
+	m.Put(1, "A")
+	m.Put(2, "B")
+	m.Put(3, "C")
+	m.Put(4, "D")
+	m.Put(5, "E")
+	m.Put(6, "F")
+	m.Put(7, "G")
+	m.Put(8, "H")
+
+	// Case 1 : leftSubMap on a present key without inclusion.
+	leftSubMap := m.LeftSubMap(4, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3}, leftSubMap.Keys()))
+
+	// Case 2 : leftSubMap on a present key with inclusion.
+	leftSubMap = m.LeftSubMap(4, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3, 4}, leftSubMap.Keys()))
+
+	// Case 3 : leftSubMap on an absent key.
+	leftSubMap = m.LeftSubMap(0, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{}, leftSubMap.Keys()))
+
+	leftSubMap = m.LeftSubMap(10, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3, 4, 5, 6, 7, 8}, leftSubMap.Keys()))
+
+}
+
+func TestRightSubMap(t *testing.T) {
+
+	m := New[types.Int, string]()
+
+	m.Put(1, "A")
+	m.Put(2, "B")
+	m.Put(3, "C")
+	m.Put(4, "D")
+	m.Put(5, "E")
+	m.Put(6, "F")
+	m.Put(7, "G")
+	m.Put(8, "H")
+
+	// Case 1 : rightSubMap on a present key without inclusion.
+	rightSubMap := m.RightSubMap(4, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{5, 6, 7, 8}, rightSubMap.Keys()))
+
+	// Case 2 : rightSubMap on a present key with inclusion.
+	rightSubMap = m.RightSubMap(4, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{4, 5, 6, 7, 8}, rightSubMap.Keys()))
+
+	// Case 3 : rightSubMap on an absent key.
+	rightSubMap = m.RightSubMap(10, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{}, rightSubMap.Keys()))
+
+	rightSubMap = m.RightSubMap(0, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3, 4, 5, 6, 7, 8}, rightSubMap.Keys()))
+
+}

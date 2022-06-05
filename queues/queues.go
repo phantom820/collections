@@ -14,12 +14,14 @@ var (
 	ErrNoBackElement  = errors.New("dequeue has no back element")
 )
 
+// Queue an interface that a queue implementation should satisfy.
 type Queue[T types.Equitable[T]] interface {
 	collections.Collection[T]
 	Front() T       //  Returns the front element of the queue. Will panic if no front element.
 	RemoveFront() T // Returns and removes the front element of the queue. Will panic if no front element.
 }
 
+// Dequeue an interface that a dequeue implementation should satisfy.
 type DeqQueue[T types.Equitable[T]] interface {
 	collections.Collection[T]
 	AddFront(elements ...T) // Adds elements to the front of the queue.

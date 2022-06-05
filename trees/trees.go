@@ -16,6 +16,7 @@ type Tree[K any, V any] interface {
 	Len() int                        // Returns the size of the tree.
 }
 
+// Node a type for representing node of a tree.
 type Node[K any, V any] struct {
 	Key   K
 	Value V

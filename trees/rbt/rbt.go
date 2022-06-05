@@ -2,6 +2,7 @@
 package rbt
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -13,6 +14,10 @@ import (
 const (
 	black bool = true
 	red   bool = false
+)
+
+var (
+	errKeyRange = errors.New("undefined range lower key cannot be greater than upper key bound")
 )
 
 // RedBlackTree an implementation of a red black tree in which nodes have a key and a value.
@@ -217,6 +222,106 @@ func (tree *RedBlackTree[K, V]) search(key K) *redBlackNode[K, V] {
 		}
 	}
 	return x
+}
+
+// inRange checks if a given key lies withing the range [fromKey,toKey]. For internal use to support Subtree.
+func (tree *RedBlackTree[K, V]) inRange(node *redBlackNode[K, V], fromKey K, toKey K) bool {
+	if fromKey.Less(node.key) && node.key.Less(toKey) {
+		return true
+	}
+	return false
+}
+
+// SubTree returns a new tree that consists of nodes with keys that are in the specified key range [fromKey,toKey]. If fromInclusive is
+// true then range includes fromKey otherwise it is left out and if toInclusive is true toKey is included in the range.
+func (tree *RedBlackTree[K, V]) SubTree(fromKey K, fromInclusive bool, toKey K, toInclusive bool) *RedBlackTree[K, V] {
+	subTree := New[K, V]()
+
+	if toKey.Less(fromKey) && !toKey.Equals(fromKey) {
+		panic(errKeyRange)
+	}
+
+	var traverse func(node *redBlackNode[K, V])
+	traverse = func(node *redBlackNode[K, V]) {
+		if node == tree.Nil {
+			return
+		}
+
+		if node.left != tree.Nil {
+			traverse(node.left)
+		}
+
+		if node.key.Equals(fromKey) && fromInclusive {
+			subTree.Insert(node.key, node.value)
+		} else if node.key.Equals(toKey) && toInclusive {
+			subTree.Insert(node.key, node.value)
+		} else if tree.inRange(node, fromKey, toKey) {
+			subTree.Insert(node.key, node.value)
+		}
+
+		if node.right != tree.Nil {
+			traverse(node.right)
+		}
+
+	}
+	traverse(tree.root)
+	return subTree
+}
+
+// LeftSubTree returns a new tree that consists of nodes with keys that are less than or equals than the specified key. If inclusive is
+// true then the node with an equal key is included otherwise its left out.
+func (tree *RedBlackTree[K, V]) LeftSubTree(key K, inclusive bool) *RedBlackTree[K, V] {
+	subTree := New[K, V]()
+	var traverse func(node *redBlackNode[K, V])
+	traverse = func(node *redBlackNode[K, V]) {
+		if node == tree.Nil {
+			return
+		}
+
+		if node.left != tree.Nil {
+			traverse(node.left)
+		}
+		if node.key.Equals(key) && inclusive {
+			subTree.Insert(node.key, node.value)
+		} else if node.key.Less(key) {
+			subTree.Insert(node.key, node.value)
+		}
+
+		if node.right != tree.Nil {
+			traverse(node.right)
+		}
+
+	}
+	traverse(tree.root)
+	return subTree
+}
+
+// RightSubTree returns a new tree that consists of nodes with keys that are greater than or equals than the specified key. If inclusive is
+// true then the node with an equal key is included otherwise its left out.
+func (tree *RedBlackTree[K, V]) RightSubTree(key K, inclusive bool) *RedBlackTree[K, V] {
+	subTree := New[K, V]()
+	var traverse func(node *redBlackNode[K, V])
+	traverse = func(node *redBlackNode[K, V]) {
+		if node == tree.Nil {
+			return
+		}
+
+		if node.left != tree.Nil {
+			traverse(node.left)
+		}
+		if node.key.Equals(key) && inclusive {
+			subTree.Insert(node.key, node.value)
+		} else if key.Less(node.key) {
+			subTree.Insert(node.key, node.value)
+		}
+
+		if node.right != tree.Nil {
+			traverse(node.right)
+		}
+
+	}
+	traverse(tree.root)
+	return subTree
 }
 
 // Search checks if the tree contains a node with the specified key.

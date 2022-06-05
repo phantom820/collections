@@ -19,7 +19,7 @@ type Hashable[T any] interface {
 // The Less method must be transitive.
 type Comparable[T any] interface {
 	Equitable[T]
-	Less(other T) bool // Defines a relation on the memebers of type T (what it means for member a < b). This results in what sequence members appear in once sorted.
+	Less(other T) bool // Defines a relation on the memebers of type T (what it means for member a <= b). This results in what sequence members appear in once sorted.
 }
 
 // Int wrapper around int to make it compatible with collections.

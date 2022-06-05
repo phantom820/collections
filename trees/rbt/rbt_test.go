@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/phantom820/collections/testutils"
 	"github.com/phantom820/collections/trees"
 	"github.com/phantom820/collections/types"
 
@@ -196,4 +197,98 @@ func TestValues(t *testing.T) {
 
 	values = []int{1, 2, 3}
 	assert.ElementsMatch(t, values, tree.Values())
+}
+
+func TestLeftSubTree(t *testing.T) {
+
+	tree := New[types.Int, int]()
+	tree.Insert(1, 1)
+	tree.Insert(2, 2)
+	tree.Insert(3, 3)
+	tree.Insert(4, 4)
+	tree.Insert(5, 5)
+	tree.Insert(6, 6)
+
+	// Case 1 : LeftSubTree non inclusive.
+	leftSubTree := tree.LeftSubTree(4, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3}, leftSubTree.Keys()))
+
+	// Case 2 : LeftSubTree inclusive.
+	leftSubTree = tree.LeftSubTree(4, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3, 4}, leftSubTree.Keys()))
+
+}
+
+func TestRightSubTree(t *testing.T) {
+
+	tree := New[types.Int, int]()
+	tree.Insert(1, 1)
+	tree.Insert(2, 2)
+	tree.Insert(3, 3)
+	tree.Insert(4, 4)
+	tree.Insert(5, 5)
+	tree.Insert(6, 6)
+
+	// Case 1 : RightSubTree non inclusive.
+	rightSubTree := tree.RightSubTree(3, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{4, 5, 6}, rightSubTree.Keys()))
+	fmt.Println(rightSubTree.Keys())
+
+	// Case 2 : RightSubTree inclusive.
+	rightSubTree = tree.RightSubTree(3, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{3, 4, 5, 6}, rightSubTree.Keys()))
+}
+
+func TestSubTree(t *testing.T) {
+
+	tree := New[types.Int, int]()
+	tree.Insert(1, 1)
+	tree.Insert(2, 2)
+	tree.Insert(3, 3)
+	tree.Insert(4, 4)
+	tree.Insert(5, 5)
+	tree.Insert(6, 6)
+	tree.Insert(7, 7)
+	tree.Insert(8, 8)
+	tree.Insert(9, 9)
+
+	// Case 1 : SubTree with open ends.
+	subtree := tree.SubTree(1, false, 9, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2, 3, 4, 5, 6, 7, 8}, subtree.Keys()))
+
+	// Case 2 : SubTree with left closed end and right open end.
+	subtree = tree.SubTree(1, true, 9, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3, 4, 5, 6, 7, 8}, subtree.Keys()))
+
+	// Case 3 : SubTree with left open end and right closed end.
+	subtree = tree.SubTree(1, false, 9, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2, 3, 4, 5, 6, 7, 8, 9}, subtree.Keys()))
+
+	// Case 4 : SubTree with closed ends.
+	subtree = tree.SubTree(2, true, 6, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2, 3, 4, 5, 6}, subtree.Keys()))
+
+	// Case 5 : SubTree with equal keys.
+	subtree = tree.SubTree(2, false, 2, false)
+	assert.Equal(t, false, testutils.EqualSlices([]types.Int{2}, subtree.Keys()))
+
+	subtree = tree.SubTree(2, true, 2, false)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2}, subtree.Keys()))
+
+	subtree = tree.SubTree(2, false, 2, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2}, subtree.Keys()))
+
+	subtree = tree.SubTree(2, true, 2, true)
+	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2}, subtree.Keys()))
+
+	// Case 6 : SubTree with fromKey > toKey should panic.
+
+	t.Run("panics", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				assert.Equal(t, errKeyRange, r.(error))
+			}
+		}()
+		subtree = tree.SubTree(2, true, 1, true)
+	})
 }

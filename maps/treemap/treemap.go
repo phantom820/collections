@@ -2,11 +2,17 @@
 package treemap
 
 import (
+	"errors"
+
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/trees"
 	"github.com/phantom820/collections/trees/rbt"
 	"github.com/phantom820/collections/types"
+)
+
+var (
+	errKeyRange = errors.New("undefined range lower key cannot be greater than upper key bound")
 )
 
 // TreeMap an implementation of a map in which entries are stored according to their defined ordering.
@@ -169,6 +175,31 @@ func (treeMap *TreeMap[K, V]) Equals(other *TreeMap[K, V], equals func(a V, b V)
 		}
 		return true
 	}
+}
+
+// LeftSubMap returns a new map which is a subset of the original map containing keys less than or equals the specified key. If inclusive is true
+// a key equals to the specified key will be included otherwise excluded.
+func (treeMap *TreeMap[K, V]) LeftSubMap(key K, inclusive bool) *TreeMap[K, V] {
+	leftSubTree := treeMap.tree.LeftSubTree(key, inclusive)
+	leftSubMap := TreeMap[K, V]{tree: leftSubTree}
+	return &leftSubMap
+}
+
+// RightSubMap returns a new map which is a subset of the original map containing keys greater than or equals the specified key. If inclusive is true
+// a key equals to the specified key will be included otherwise excluded.
+func (treeMap *TreeMap[K, V]) RightSubMap(key K, inclusive bool) *TreeMap[K, V] {
+	rightSubTree := treeMap.tree.RightSubTree(key, inclusive)
+	rightSubMap := TreeMap[K, V]{tree: rightSubTree}
+	return &rightSubMap
+}
+
+func (treeMap *TreeMap[K, V]) SubMap(fromKey K, fromInclusive bool, toKey K, toInclusive bool) *TreeMap[K, V] {
+	if toKey.Less(fromKey) && !toKey.Equals(fromKey) {
+		panic(errKeyRange)
+	}
+	subTree := treeMap.tree.SubTree(fromKey, fromInclusive, toKey, toInclusive)
+	subMap := TreeMap[K, V]{tree: subTree}
+	return &subMap
 }
 
 // Map applies a transformation on an entry of the map i.e f((k,v)) -> (k*,v*) , using the function f and returns a new map with the

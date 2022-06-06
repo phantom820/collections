@@ -19,39 +19,3 @@ type Collection[T types.Equitable[T]] interface {
 	Empty() bool                      // Checks if the collection contains any elements.
 	Clear()                           // Removes all elements in the collection.
 }
-
-// slice type used for allowing sort using defined ordering.
-type slice[T types.Comparable[T]] []T
-
-// Len returns size of underlying slice.
-func (slice slice[T]) Len() int {
-	return len(slice)
-}
-
-// Swap swaps elements in the slice.
-func (slice slice[T]) Swap(i, j int) {
-	slice[i], slice[j] = slice[j], slice[i]
-}
-
-// Less defines the relation slice[i] < slice[j] by using the natural ordering of the stored types.
-func (slice slice[T]) Less(i, j int) bool { return slice[i].Less(slice[j]) }
-
-func Sort[T types.Comparable[T]](collection Collection[T]) {
-
-	// sort.Sort[T](collection)
-	// var slice slice[T] = collection.Collect() // linear time to collect all members into a slice O(n).
-	// sort.Sort(slice)                          // log linear time to sort O(nlogn)
-	// collection.Clear()                        // constant time O(1)
-	// collection.AddSlice(slice)                // linear time O(n) resulting in overall time complexity O(nlogn)
-}
-
-// SortBy sorts a collection given the custom less function which defines the ralation a < b i.e if a < b then less should return true
-// otherwise should return false.
-func SortBy[T types.Equitable[T]](collection Collection[T], less func(a, b T) bool) {
-	// var slice = collection.Collect()
-	// sort.Slice(slice, func(i, j int) bool {
-	// 	return less(slice[i], slice[j])
-	// })
-	// collection.Clear()
-	// collection.AddSlice(slice)
-}

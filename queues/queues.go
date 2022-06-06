@@ -22,7 +22,7 @@ type Queue[T types.Equitable[T]] interface {
 }
 
 // Dequeue an interface that a dequeue implementation should satisfy.
-type DeqQueue[T types.Equitable[T]] interface {
+type Dequeue[T types.Equitable[T]] interface {
 	collections.Collection[T]
 	AddFront(elements ...T) // Adds elements to the front of the queue.
 	Front() T               //  Returns the front element of the queue. Will panic if no front element.

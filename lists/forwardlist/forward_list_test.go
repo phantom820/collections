@@ -82,6 +82,8 @@ func TestReverse(t *testing.T) {
 	assert.Equal(t, true, testutils.EqualSlices([]types.Int{6, 5, 4, 1, 2, 3}, l.Collect()))
 	assert.Equal(t, types.Int(6), l.Front())
 	assert.Equal(t, types.Int(3), l.Back())
+	l.Add(22)
+	assert.Equal(t, types.Int(22), l.Back())
 
 }
 

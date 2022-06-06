@@ -426,12 +426,23 @@ func (list *ForwardList[T]) Empty() bool {
 
 // Reverse returns a new list that is the reverse of l. This uses extra memory since we inserting into a new list.
 func (list *ForwardList[T]) Reverse() {
-	n := list.Len()
-	head := list.head
-	for i := 0; i < n/2; i++ {
-		list.Swap(i, n-i-1)
+	// Initialize current, previous and next pointers
+	tail := list.head
+	current := list.head
+	var prev *node[T]
+	var next *node[T]
+
+	for current != nil {
+		// Store next
+		next = current.next
+		// Reverse current node's pointer
+		current.next = prev
+		// Move pointers one position ahead.
+		prev = current
+		current = next
 	}
-	list.tail = head
+	list.head = prev
+	list.tail = tail
 }
 
 // Collect returns a slice containing all the elements in the list.

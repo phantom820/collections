@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/lists/forwardlist"
+	"github.com/phantom820/collections/lists/list"
 	"github.com/phantom820/collections/queues"
 
 	"github.com/phantom820/collections/types"
@@ -13,12 +13,12 @@ import (
 
 // ListDequeue a list based implementation of a queue.
 type ListDequeue[T types.Equitable[T]] struct {
-	list *forwardlist.ForwardList[T]
+	list *list.List[T]
 }
 
 // New creates a list based queue with the specified elements. If no specified elements an empty queue is returned.
 func New[T types.Equitable[T]](elements ...T) *ListDequeue[T] {
-	queue := ListDequeue[T]{list: forwardlist.New[T]()}
+	queue := ListDequeue[T]{list: list.New[T]()}
 	queue.Add(elements...)
 	return &queue
 }

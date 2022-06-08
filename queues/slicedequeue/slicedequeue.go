@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	buffer = 4
+	buffer = 8
 	scale  = 2
 )
 

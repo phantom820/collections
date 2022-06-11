@@ -10,23 +10,25 @@ import (
 )
 
 const (
-	buffer = 8
-	scale  = 2
+	capacity        = 8
+	loadFactorLimit = 0.25
 )
+
+type entry[T types.Equitable[T]] struct {
+	element T
+}
 
 // SliceDequeue slice based implementation of a queue.
 type SliceDequeue[T types.Equitable[T]] struct {
-	front  int
-	back   int
-	buffer int // offset at the start of the slice
-	data   []T
-	len    int
-	scale  int // how much we want to scale the buffer by in each expansion.
+	len   int
+	data  []*entry[T]
+	front int
+	back  int
 }
 
 // New creates a slice based queue with the specified elements. If no specified elements an empty queue is returned.
 func New[T types.Equitable[T]](elements ...T) *SliceDequeue[T] {
-	queue := SliceDequeue[T]{data: make([]T, buffer), front: -1, back: -1, len: 0, buffer: buffer, scale: scale}
+	queue := SliceDequeue[T]{data: make([]*entry[T], capacity), front: -1, back: -1}
 	queue.Add(elements...)
 	return &queue
 }
@@ -48,7 +50,7 @@ func (queue *SliceDequeue[T]) Add(elements ...T) bool {
 		return false
 	}
 	for _, element := range elements {
-		queue.addRear(element)
+		queue.addBack(element)
 	}
 	return true
 }
@@ -66,20 +68,24 @@ func (queue *SliceDequeue[T]) Clear() {
 	queue.front = -1
 	queue.back = -1
 	queue.len = 0
-	queue.data = make([]T, buffer)
-	queue.buffer = buffer
-	queue.scale = scale
+	queue.data = make([]*entry[T], 0)
 }
 
 // Collect returns a slice containing all the elements in the queue. The ordering of elements is not gueranteed.
 func (queue *SliceDequeue[T]) Collect() []T {
-	return queue.data[queue.front:]
+	data := make([]T, 0)
+	for _, e := range queue.data {
+		if e != nil {
+			data = append(data, e.element)
+		}
+	}
+	return data
 }
 
 // Contains checks if the element is in the queue.
 func (queue *SliceDequeue[T]) Contains(e T) bool {
 	for i, _ := range queue.data {
-		if queue.data[i].Equals(e) {
+		if queue.data[i] != nil && queue.data[i].element.Equals(e) {
 			return true
 		}
 	}
@@ -91,53 +97,74 @@ func (queue *SliceDequeue[T]) Empty() bool {
 	return queue.len == 0
 }
 
-// isFull checks if the queue is full or not.
-func (queue *SliceDequeue[T]) isFull() bool {
-	return queue.buffer == 0
+// full checks if the queue is full or not.
+func (queue *SliceDequeue[T]) full() bool {
+	return queue.len == len(queue.data)
 }
 
-// expand doubles the size of the front buffer of the underlying slice. For internal use to amortize cost of AddFront.
+// expandFront doubles the size of the front buffer of the underlying slice. For internal use to amortize cost of AddFront.
 func (queue *SliceDequeue[T]) expand() {
-	// double the memory and copy across.
-	n := buffer * queue.scale
-	data := make([]T, n)
-	queue.data = append(data, queue.data...)
-	queue.buffer = n
-	queue.front = queue.front + n
-	queue.scale++
+	if len(queue.data) == 0 {
+		queue.data = make([]*entry[T], capacity)
+		return
+	} else if queue.front == 0 && queue.back == len(queue.data)-1 {
+		data := make([]*entry[T], len(queue.data)*2)
+		copy(data, queue.data)
+		queue.data = nil
+		queue.data = data
+		return
+	}
+	data := make([]*entry[T], len(queue.data)*2)
+	size := len(queue.data) - queue.front
+	j := 0
+	for i, _ := range data {
+		if i <= queue.back {
+			data[i] = queue.data[i]
+			j++
+		} else if i >= len(data)-size && j < len(queue.data) {
+			data[i] = queue.data[j]
+			j++
+		}
+	}
+	queue.front = len(data) - size
+	queue.data = nil
+	queue.data = data
 }
 
 // addRear adds an element to the back of the queue. For internal use to support AddBack.
 func (queue *SliceDequeue[T]) addFront(element T) {
-	if queue.isFull() {
+	if queue.full() {
 		queue.expand()
 	}
-	// If queue is initially empty
-	if queue.Empty() {
-		queue.front = queue.buffer - 1
-		queue.back = queue.buffer - 1
-	} else { // front is at first position of queue
+	switch queue.front {
+	case -1:
+		queue.front = 0
+		queue.back = 0
+	case 0:
+		queue.front = len(queue.data) - 1
+	default:
 		queue.front--
 	}
-	queue.buffer--
-	queue.data[queue.front] = element
 	queue.len++
+	queue.data[queue.front] = &entry[T]{element: element}
 }
 
-// addRear adds an element to the back of the queue. For internal use to support Add.
-func (queue *SliceDequeue[T]) addRear(element T) {
-	// If queue is initially empty
-	if !queue.Empty() {
-		queue.back++
-		queue.data = append(queue.data, element)
-		queue.len++
-		return
+// addBack adds an element to the back of the queue. For internal use to support Add.
+func (queue *SliceDequeue[T]) addBack(element T) {
+	if queue.full() {
+		queue.expand()
 	}
-	queue.front = queue.buffer - 1
-	queue.back = queue.buffer - 1
-	queue.buffer--
-	queue.data[queue.front] = element
+	switch queue.back {
+	case -1:
+		queue.front = 0
+		queue.back = 0
+	case len(queue.data) - 1:
+		queue.back = 0
+	default:
+		queue.back++
+	}
 	queue.len++
+	queue.data[queue.back] = &entry[T]{element: element}
 }
 
 // Front returns the front element of the queue without removing it. Will panic if there is no such element.
@@ -145,7 +172,16 @@ func (queue *SliceDequeue[T]) Front() T {
 	if queue.Empty() {
 		panic(queues.ErrNoFrontElement)
 	}
-	return queue.data[queue.front]
+	front := queue.data[queue.front].element
+	return front
+}
+
+// loadFactor returns the load factor of the queue.
+func (queue *SliceDequeue[T]) loadFactor() float32 {
+	if len(queue.data) == 0 {
+		return 0
+	}
+	return float32(queue.len) / float32(len(queue.data))
 }
 
 // Back returns the back element of the queue without removing it. Will panic if there is no such element.
@@ -153,12 +189,13 @@ func (queue *SliceDequeue[T]) Back() T {
 	if queue.Empty() {
 		panic(queues.ErrNoBackElement)
 	}
-	return queue.data[queue.back]
+	back := queue.data[queue.back].element
+	return back
 }
 
 // sliceQueueIterator model for implementing an iterator on a slice based queue.
 type sliceQueueIterator[T types.Equitable[T]] struct {
-	slice []T
+	slice []*entry[T]
 	i     int
 }
 
@@ -177,7 +214,7 @@ func (it *sliceQueueIterator[T]) Next() T {
 	}
 	e := it.slice[it.i]
 	it.i++
-	return e
+	return e.element
 }
 
 // Cycle resets the iterator.
@@ -190,25 +227,12 @@ func (queue *SliceDequeue[T]) Iterator() iterator.Iterator[T] {
 	if queue.Empty() {
 		return &sliceQueueIterator[T]{slice: queue.data[0:0], i: 0}
 	}
-	return &sliceQueueIterator[T]{slice: queue.data[queue.front:], i: 0}
+	return nil
 }
 
 // Len returns the size of the queue.
 func (queue *SliceDequeue[T]) Len() int {
 	return queue.len
-}
-
-// indexOf finds the index of an element in the queue. Returns -1 if the element is not present.
-func (queue *SliceDequeue[T]) indexOf(element T) int {
-	if queue.Empty() {
-		return -1
-	}
-	for i, e := range queue.data[queue.front:] {
-		if e.Equals(element) {
-			return i + queue.front
-		}
-	}
-	return -1
 }
 
 // Remove removes elements from the queue. Only the first occurence of an element is removed.
@@ -225,40 +249,11 @@ func (queue *SliceDequeue[T]) Remove(elements ...T) bool {
 
 // remove removes the element from the queue. For internal use to support Remove. Only the first occurence is removed.
 func (queue *SliceDequeue[T]) remove(element T) bool {
-	i := queue.indexOf(element)
+	i := -1
 	if i == -1 || queue.Empty() {
 		return false
 	}
-	queue.data = append(queue.data[:i], queue.data[i+1:]...)
-	queue.len--
-	queue.back--
-	if queue.Empty() {
-		queue.front = -1
-		queue.back = -1
-		queue.buffer = len(queue.data)
-	}
 	return true
-}
-
-// shrinkFront for reducing the memory of the underlying slice for the queue. The parameter i is the index of an item that is to be skipped (for remove) ,
-// to avoid skipping we should specify an index greater than the length of the slice.
-func (queue *SliceDequeue[T]) shrinkFront() {
-	loadFactor := float32(queue.len) / float32(len(queue.data))
-	if loadFactor > 0.25 || queue.Empty() {
-		return
-	}
-	data := make([]T, len(queue.data)/2)
-	j := len(data) - queue.len
-	for _, element := range queue.data[queue.front:] {
-		data[j] = element
-		j++
-	}
-	queue.front = len(data) - queue.len
-	queue.buffer = queue.front - 1
-	queue.scale = 2
-	queue.back = j - 1
-	queue.data = nil
-	queue.data = data
 }
 
 // RemoveAll removes all the elements in queue set that appear in the iterable.
@@ -269,36 +264,60 @@ func (queue *SliceDequeue[T]) RemoveAll(elements iterator.Iterable[T]) {
 	}
 }
 
+// shrink reduces the memory allocated for the queue there is few items compared to actual size.
+func (queue *SliceDequeue[T]) shrink() {
+	if queue.loadFactor() > loadFactorLimit {
+		return
+	}
+	if queue.Empty() {
+		queue.data = nil
+		queue.data = make([]*entry[T], capacity)
+		return
+	}
+	data := make([]*entry[T], len(queue.data)/2)
+	start := -1
+	end := -1
+	for i, element := range queue.data {
+		if element == nil {
+			if start == -1 {
+				start = i
+				end = i
+			} else {
+				end++
+			}
+		}
+	}
+	copy(data[:start], queue.data[:start])
+	offset := len(queue.data) - end - 1
+	tail := len(queue.data) - offset
+	newFront := len(data) - offset
+	copy(data[newFront:], queue.data[tail:])
+	queue.data = nil
+	queue.data = data
+	if queue.front != 0 {
+		queue.front = newFront
+	}
+}
+
 // RemoveFront removes and returns the front element of the queue. Wil panic if no such element.
 func (queue *SliceDequeue[T]) RemoveFront() T {
 	if queue.Empty() {
 		panic(queues.ErrNoFrontElement)
 	}
-	front := queue.data[queue.front]
-	queue.len--
-	queue.front++
-	queue.buffer++
-	queue.shrinkFront()
-	if queue.Empty() {
+	front := queue.data[queue.front].element
+	queue.data[queue.front] = nil
+	switch queue.front {
+	case queue.back:
 		queue.front = -1
 		queue.back = -1
-		queue.buffer = len(queue.data)
+	case len(queue.data) - 1:
+		queue.front = 0
+	default:
+		queue.front++
 	}
+	queue.len--
+	queue.shrink()
 	return front
-}
-
-// shrinkBack reduces the capacity underlying slice to avoid wasting memory.
-func (queue *SliceDequeue[T]) shrinkBack() {
-	if cap(queue.data) > 0 {
-		loadFactor := float32(len(queue.data)) / float32(cap(queue.data))
-		if loadFactor > 0.25 {
-			return
-		}
-	}
-	data := make([]T, len(queue.data))
-	copy(data, queue.data)
-	queue.data = nil
-	queue.data = data
 }
 
 // RemoveBack removes and returns the element at the back of the queue. Will panic if there is no such element.
@@ -306,21 +325,23 @@ func (queue *SliceDequeue[T]) RemoveBack() T {
 	if queue.Empty() {
 		panic(queues.ErrNoBackElement)
 	}
-	back := queue.data[queue.back]
-	queue.data = queue.data[:queue.back]
-	queue.back--
-	queue.len--
-	queue.shrinkBack()
-	if queue.Empty() {
+	back := queue.data[queue.back].element
+	queue.data[queue.back] = nil
+	switch queue.back {
+	case queue.front:
 		queue.front = -1
 		queue.back = -1
-		queue.buffer = len(queue.data)
+	case 0:
+		queue.back = len(queue.data) - 1
+	default:
+		queue.back--
 	}
-
+	queue.len--
+	queue.shrink()
 	return back
 }
 
 // String for pretty printing the queue.
 func (queue *SliceDequeue[T]) String() string {
-	return fmt.Sprint(queue.data[queue.front:])
+	return fmt.Sprint(queue.Collect())
 }

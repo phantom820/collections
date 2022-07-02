@@ -2,16 +2,8 @@
 package queues
 
 import (
-	"errors"
-
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/types"
-)
-
-// Errors for operations that may be inapplicable on a queue.
-var (
-	ErrNoFrontElement = errors.New("queue has no front element")
-	ErrNoBackElement  = errors.New("dequeue has no back element")
 )
 
 // Queue an interface that a queue implementation should satisfy.

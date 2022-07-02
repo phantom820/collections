@@ -3,7 +3,7 @@ package treemap
 import (
 	"testing"
 
-	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/lists/list"
 	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/testutils"
@@ -173,7 +173,7 @@ func TestIterator(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, iterator.NoNextElementError, r.(error))
+				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
 			}
 		}()
 		it.Next()
@@ -332,7 +332,7 @@ func TestSubMap(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, errKeyRange, r.(error))
+				assert.Equal(t, errors.MapKeyRange, r.(errors.Error).Code())
 			}
 		}()
 		subMap = m.SubMap(2, true, 1, true)

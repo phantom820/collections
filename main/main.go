@@ -1,52 +1,57 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/phantom820/collections/heaps/maxheap"
-	"github.com/phantom820/collections/lists/forwardlist"
-	"github.com/phantom820/collections/trees/rbt"
+	"github.com/phantom820/collections/queues"
 	"github.com/phantom820/collections/types"
 )
 
+const (
+	size = 10000
+)
+
+func addFront(dequeue queues.Dequeue[types.Int]) {
+	for i := 0; i < size; i++ {
+		dequeue.AddFront(types.Int(i))
+	}
+}
+
+func addBack(dequeue queues.Dequeue[types.Int]) {
+	for i := 0; i < size; i++ {
+		dequeue.Add(types.Int(i))
+	}
+}
+
 func main() {
+	// err := errors.New(4, 5, 2)
+	// fmt.Println(err.Error())
+	// a := listdequeue.New[types.Int](1, 2, 3, 4, 5, 6)
+	// b := slicedequeue.New[types.Int](1, 2, 3, 4, 5, 6)
 
-	heap := maxheap.New[types.Int]()
+	// start := time.Now()
+	// addFront(a)
+	// end := time.Now()
+	// duration := float32(end.Sub(start).Nanoseconds()) / size
+	// fmt.Printf("list dequeue addFront : %v\n", duration)
 
-	heap.Insert(3)
-	heap.Insert(4)
-	heap.Insert(9)
-	heap.Insert(5)
-	heap.Insert(2)
+	// start = time.Now()
+	// addFront(b)
+	// end = time.Now()
+	// duration = float32(end.Sub(start).Nanoseconds()) / size
+	// fmt.Printf("Slice dequeue addFront : %v\n", duration)
 
-	// fmt.Println(heap)
-	heap.DeleteTop()
-	// fmt.Println(heap)
-	heap.DeleteTop()
-	// fmt.Println(heap)
+	// c := listdequeue.New[types.Int](1, 2, 3, 4, 5, 6)
+	// d := slicedequeue.New[types.Int](1, 2, 3, 4, 5, 6)
 
-	l := forwardlist.New[types.Int](1, 2, 3)
-	// fmt.Println(l)
-	l.Reverse()
-	l.Add(23)
-	fmt.Println(l)
-	l.AddFront(34)
-	// fmt.Println(l)
-	l.Reverse()
-	fmt.Println(l)
-	l.AddAt(2, 45)
-	// fmt.Println(l)
+	// start = time.Now()
+	// addBack(c)
+	// end = time.Now()
+	// duration = float32(end.Sub(start).Nanoseconds()) / size
+	// fmt.Printf("list dequeue addBack : %v\n", duration)
 
-	t := rbt.New[types.Int, types.Int]()
-	t.Insert(1, 1)
-	t.Insert(2, 2)
-	t.Insert(3, 3)
-	t.Insert(4, 4)
-	t.Insert(5, 5)
-
-	x := t.RightSubTree(3, true)
-	fmt.Println(x.Values())
-	z := t.SubTree(2, true, 4, false)
-	fmt.Println(z.Values())
+	// start = time.Now()
+	// addBack(d)
+	// end = time.Now()
+	// duration = float32(end.Sub(start).Nanoseconds()) / size
+	// fmt.Printf("Slice dequeue addBack : %v\n", duration)
 
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/maps/treemap"
@@ -38,7 +39,7 @@ func (iterator *treeSetIterator[T]) HasNext() bool {
 // Next returns the next element in the iterator it. Will panic if iterator has no next element.
 func (iter *treeSetIterator[T]) Next() T {
 	if !iter.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	entry := iter.mapIterator.Next()
 	return entry.Key

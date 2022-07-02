@@ -2,17 +2,13 @@
 package treemap
 
 import (
-	"errors"
-
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
+
 	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/trees"
 	"github.com/phantom820/collections/trees/rbt"
 	"github.com/phantom820/collections/types"
-)
-
-var (
-	errKeyRange = errors.New("undefined range lower key cannot be greater than upper key bound")
 )
 
 // TreeMap an implementation of a map in which entries are stored according to their defined ordering.
@@ -86,7 +82,7 @@ func (it *treeMapIterator[K, V]) HasNext() bool {
 // Next yields the next element in the iterator. Will panic if the iterator has no next element.
 func (it *treeMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 	if !it.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	node := it.nodes[it.index]
 	it.index++
@@ -195,7 +191,7 @@ func (treeMap *TreeMap[K, V]) RightSubMap(key K, inclusive bool) *TreeMap[K, V] 
 
 func (treeMap *TreeMap[K, V]) SubMap(fromKey K, fromInclusive bool, toKey K, toInclusive bool) *TreeMap[K, V] {
 	if toKey.Less(fromKey) && !toKey.Equals(fromKey) {
-		panic(errKeyRange)
+		panic(errors.ErrMapKeyRange(fromKey, toKey))
 	}
 	subTree := treeMap.tree.SubTree(fromKey, fromInclusive, toKey, toInclusive)
 	subMap := TreeMap[K, V]{tree: subTree}

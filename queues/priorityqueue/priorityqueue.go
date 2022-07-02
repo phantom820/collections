@@ -4,11 +4,11 @@ package priorityqueue
 import (
 	"fmt"
 
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/heaps"
 	"github.com/phantom820/collections/heaps/maxheap"
 	"github.com/phantom820/collections/heaps/minheap"
 	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/queues"
 	"github.com/phantom820/collections/types"
 )
 
@@ -84,7 +84,7 @@ func (queue *PriorityQueue[T]) Empty() bool {
 func (queue *PriorityQueue[T]) Front() T {
 	defer func() {
 		if r := recover(); r != nil {
-			panic(queues.ErrNoFrontElement)
+			panic(errors.ErrNoSuchElement(queue.Len()))
 		}
 	}()
 	return queue.heap.Top()
@@ -104,7 +104,7 @@ func (iterator *priorityQueueIterator[T]) HasNext() bool {
 // Next returns the next element in the iterator it. Will panic if iterator is exhausted.
 func (it *priorityQueueIterator[T]) Next() T {
 	if !it.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	n := it.data[it.i]
 	it.i++
@@ -142,7 +142,7 @@ func (queue *PriorityQueue[T]) RemoveAll(iterable iterator.Iterable[T]) {
 func (queue *PriorityQueue[T]) RemoveFront() T {
 	defer func() {
 		if r := recover(); r != nil {
-			panic(queues.ErrNoFrontElement)
+			panic(errors.ErrNoSuchElement(queue.Len()))
 		}
 	}()
 	return queue.heap.DeleteTop()

@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/lists/list"
 	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/types"
@@ -158,7 +158,7 @@ func TestIterator(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, iterator.NoNextElementError, r.(error))
+				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
 			}
 		}()
 		it.Next()

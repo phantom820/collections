@@ -2,15 +2,15 @@
 package list
 
 import (
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/lists"
 	"github.com/phantom820/collections/types"
 
 	"fmt"
 	"strings"
 )
 
-// List an  implementation of a doubly linked list.
+// List a doubly linked list.
 type List[T types.Equitable[T]] struct {
 	head *node[T]
 	tail *node[T]
@@ -50,7 +50,7 @@ func (iterator *listIterator[T]) HasNext() bool {
 // Next yields the next element in the iterator. Will panic if the iterator has no next element.
 func (iter *listIterator[T]) Next() T {
 	if !iter.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	n := iter.n
 	iter.n = iter.n.next
@@ -70,7 +70,7 @@ func (list *List[T]) Iterator() iterator.Iterator[T] {
 // Front returns the front of the list. Will panic if list has no front element.
 func (list *List[T]) Front() T {
 	if list.head == nil {
-		panic(lists.ErrEmptyList)
+		panic(errors.ErrNoSuchElement(list.len))
 	}
 	return list.head.value
 }
@@ -80,14 +80,17 @@ func (list *List[T]) Back() T {
 	if list.tail != nil {
 		return list.tail.value
 	}
-	panic(lists.ErrEmptyList)
+	panic(errors.ErrNoSuchElement(list.len))
 }
 
 // Swap swaps the element at index i and the element at index j. This is done using links. Will panic if one/both of the specified indices is
 //  out of bounds.
 func (list *List[T]) Swap(i, j int) {
 	if i < 0 || i >= list.len || j < 0 || j >= list.len {
-		panic(lists.ErrOutOfBounds)
+		if i < 0 || i >= list.len {
+			panic(errors.ErrIndexOutOfBounds(i, list.len))
+		}
+		panic(errors.ErrIndexOutOfBounds(j, list.len))
 	} else {
 		x := list.nodeAt(i)
 		y := list.nodeAt(j)
@@ -151,7 +154,7 @@ func (list *List[T]) nodeAt(i int) *node[T] {
 // At retrieves the element at index i in the list. Will panic If index is out of bounds.
 func (list *List[T]) At(i int) T {
 	if i < 0 || i >= list.len {
-		panic(lists.ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	}
 	iterator := list.Iterator()
 	j := 0
@@ -212,7 +215,7 @@ func (list *List[T]) AddBack(elements ...T) {
 // AddAt adds an element to the list at specified index, all subsequent elements will be shifted right. Will panic if index is out of bounds.
 func (list *List[T]) AddAt(i int, element T) {
 	if i < 0 || i >= list.len {
-		panic(lists.ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	} else if i == 0 {
 		list.AddFront(element)
 		return
@@ -248,7 +251,7 @@ func (list *List[T]) Add(elements ...T) bool {
 // if index is out of bounds.
 func (list *List[T]) Set(i int, element T) T {
 	if i < 0 || i >= list.len {
-		panic(lists.ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	}
 	n := list.nodeAt(i)
 	temp := n.value
@@ -289,7 +292,7 @@ func (list *List[T]) Contains(element T) bool {
 // RemoveFront removes and returns the front element of the list. Will panic if list has no front element.
 func (list *List[T]) RemoveFront() T {
 	if list.len == 0 {
-		panic(lists.ErrEmptyList)
+		panic(errors.ErrNoSuchElement(list.len))
 	} else if list.len == 1 {
 		n := list.head
 		list.head = n.next
@@ -329,10 +332,8 @@ func (list *List[T]) RemoveBack() T {
 
 // RemoveAt removes the element at the specified index in the list. Will panic if index is out of bounds.
 func (list *List[T]) RemoveAt(i int) T {
-	if list.Empty() {
-		panic(lists.ErrEmptyList)
-	} else if i < 0 || i >= list.len {
-		panic(lists.ErrOutOfBounds)
+	if i < 0 || i >= list.len {
+		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	} else if i == 0 {
 		return list.RemoveFront()
 	} else if i == list.len-1 {

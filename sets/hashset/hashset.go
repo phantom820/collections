@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/maps/hashmap"
@@ -38,7 +39,7 @@ func (iterator *hashSetIterator[T]) HasNext() bool {
 // Next returns the next element in the iterator it. Will panic if iterator has no next element.
 func (it *hashSetIterator[T]) Next() T {
 	if !it.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	entry := it.mapIterator.Next()
 	return entry.Key

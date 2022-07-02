@@ -4,9 +4,9 @@ package listdequeue
 import (
 	"fmt"
 
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/list"
-	"github.com/phantom820/collections/queues"
 
 	"github.com/phantom820/collections/types"
 )
@@ -80,7 +80,7 @@ func (queue *ListDequeue[T]) Empty() bool {
 func (queue *ListDequeue[T]) Front() T {
 	defer func() {
 		if r := recover(); r != nil {
-			panic(queues.ErrNoFrontElement)
+			panic(errors.ErrNoSuchElement(queue.Len()))
 		}
 	}()
 	return queue.list.Front()
@@ -90,7 +90,7 @@ func (queue *ListDequeue[T]) Front() T {
 func (queue *ListDequeue[T]) Back() T {
 	defer func() {
 		if r := recover(); r != nil {
-			panic(queues.ErrNoBackElement)
+			panic(errors.ErrNoSuchElement(queue.Len()))
 		}
 	}()
 	return queue.list.Back()
@@ -115,7 +115,7 @@ func (queue *ListDequeue[T]) RemoveAll(elements iterator.Iterable[T]) {
 func (queue *ListDequeue[T]) RemoveFront() T {
 	defer func() {
 		if r := recover(); r != nil {
-			panic(queues.ErrNoFrontElement)
+			panic(errors.ErrNoSuchElement(queue.Len()))
 		}
 	}()
 	return queue.list.RemoveFront()
@@ -125,7 +125,7 @@ func (queue *ListDequeue[T]) RemoveFront() T {
 func (queue *ListDequeue[T]) RemoveBack() T {
 	defer func() {
 		if r := recover(); r != nil {
-			panic(queues.ErrNoBackElement)
+			panic(errors.ErrNoSuchElement(queue.Len()))
 		}
 	}()
 	return queue.list.RemoveBack()

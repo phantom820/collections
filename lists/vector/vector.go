@@ -2,17 +2,13 @@
 package vector
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists"
 	"github.com/phantom820/collections/types"
-)
-
-var (
-	ErrOutOfBounds = errors.New("index out of bounds")
 )
 
 // Vector an implementation of a list by wrapping around a slice.
@@ -40,7 +36,7 @@ func (list *Vector[T]) AddBack(elements ...T) {
 // Set replaces the element at index i in the list with the new element. Returns the old element that was at index i.
 func (list *Vector[T]) Set(i int, e T) T {
 	if i < 0 || i >= list.Len() {
-		panic(ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.Len()))
 	}
 	temp := list.data[i]
 	list.data[i] = e
@@ -71,7 +67,7 @@ func (list *Vector[T]) Clear() {
 // At retrieves the element at the specified index.  Will panic if index is out of bounds.
 func (list *Vector[T]) At(i int) T {
 	if i < 0 || i >= list.Len() {
-		panic(ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.Len()))
 	}
 	return list.data[i]
 }
@@ -79,7 +75,7 @@ func (list *Vector[T]) At(i int) T {
 // AddAt adds an element to the list at specified index, all subsequent elements will be shifted right. Will panic if index is out of bounds.
 func (list *Vector[T]) AddAt(i int, e T) {
 	if i < 0 || i >= len(list.data) {
-		panic(ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.Len()))
 	}
 	if i == 0 {
 		list.data = append([]T{e}, list.data...)
@@ -133,7 +129,7 @@ func (it *listIterator[T]) HasNext() bool {
 // Next returns the next element in the iterator it. Will panic if iterator has no next element.
 func (it *listIterator[T]) Next() T {
 	if !it.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	e := it.slice[it.i]
 	it.i++
@@ -226,7 +222,7 @@ func (list *Vector[T]) remove(element T) bool {
 // RemoveAt deletes the element at the specified index in the list. Will panic if index is out of bounds.
 func (list *Vector[T]) RemoveAt(i int) T {
 	if i < 0 || i >= len(list.data) {
-		panic(ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.Len()))
 	}
 	temp := (list.data)[i]
 	list.data = append(list.data[0:i], list.data[i+1:]...)

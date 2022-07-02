@@ -7,14 +7,18 @@ var (
 	NoNextElementError = errors.New("iterator has no next element.")
 )
 
-// Iterator specifies methods a collection must implement to allow iterating through it.
+// Iterator interface for anything that is iterable must satisfy.
 type Iterator[T any] interface {
-	HasNext() bool // Checks if the iterator has not been exhausted.
-	Next() T       // Retrieves the next element from the iterator.
-	Cycle()
+	HasNext() bool // Checks if the iterator has a next element to produce.
+	Next() T       // Returns the next element.
+	Cycle()        // Resets the iterator back to its initial position.
 }
 
-// Iterable effectively anything that can be converted to a slice and can be iterated on.
+type PartitionedIterator[T any] struct {
+	iterators []Iterator[T]
+}
+
+// Iterable interface for anything that is iterable and can be collected into a slice..
 type Iterable[T any] interface {
 	Collect() []T
 	Iterator() Iterator[T]

@@ -3,9 +3,9 @@ package listqueue
 import (
 	"fmt"
 
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/forwardlist"
-	"github.com/phantom820/collections/queues"
 
 	"github.com/phantom820/collections/types"
 )
@@ -70,7 +70,7 @@ func (queue *ListQueue[T]) Empty() bool {
 func (queue *ListQueue[T]) Front() T {
 	defer func() {
 		if r := recover(); r != nil {
-			panic(queues.ErrNoFrontElement)
+			panic(errors.ErrNoSuchElement(queue.Len()))
 		}
 	}()
 	return queue.list.Front()
@@ -95,7 +95,7 @@ func (queue *ListQueue[T]) RemoveAll(iterable iterator.Iterable[T]) {
 func (queue *ListQueue[T]) RemoveFront() T {
 	defer func() {
 		if r := recover(); r != nil {
-			panic(queues.ErrNoFrontElement)
+			panic(errors.ErrNoSuchElement(queue.Len()))
 		}
 	}()
 	return queue.list.RemoveFront()

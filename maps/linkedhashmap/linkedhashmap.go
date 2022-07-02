@@ -2,6 +2,7 @@
 package linkedhashmap
 
 import (
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/maps/hashmap"
@@ -49,7 +50,7 @@ func (it *linkedHashMapIterator[K, V]) HasNext() bool {
 // Next yields the next element in the iterator. Will panic if the iterator has no next element.
 func (it *linkedHashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 	if !it.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	entry := maps.MapEntry[K, V]{Key: it.node.key, Value: it.node.value}
 	it.node = it.node.next

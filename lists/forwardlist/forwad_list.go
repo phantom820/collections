@@ -1,16 +1,16 @@
-// Package forwadlist provides an implementation of a singly linked list with a tail pointer.
+// Package forwadlist provides a singly linked list with a tail pointer.
 package forwardlist
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/lists"
 	"github.com/phantom820/collections/types"
 )
 
-// ForwardList an implementation of a singly linked list with a tail pointer.
+// ForwardList singly linked list with a tail pointer.
 type ForwardList[T types.Equitable[T]] struct {
 	head *node[T]
 	tail *node[T]
@@ -50,7 +50,7 @@ func (it *forwardListIterator[T]) HasNext() bool {
 // Next yields the next element in the iterator. Will panic if the iterator has no next element.
 func (it *forwardListIterator[T]) Next() T {
 	if !it.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	n := it.n
 	it.n = it.n.next
@@ -58,8 +58,8 @@ func (it *forwardListIterator[T]) Next() T {
 }
 
 // Cycle resets the iterator.
-func (iterator *forwardListIterator[T]) Cycle() {
-	iterator.n = iterator.start
+func (it *forwardListIterator[T]) Cycle() {
+	it.n = it.start
 }
 
 // Iterator returns an iterator for the list.
@@ -70,7 +70,7 @@ func (list *ForwardList[T]) Iterator() iterator.Iterator[T] {
 // Front returns the front of the list. Will panic if list has no front element.
 func (list *ForwardList[T]) Front() T {
 	if list.head == nil {
-		panic(lists.ErrEmptyList)
+		panic(errors.ErrNoSuchElement(list.len))
 	}
 	return list.head.value
 }
@@ -78,7 +78,7 @@ func (list *ForwardList[T]) Front() T {
 // Back returns the back element of the list.  Will panic if list has no back element.
 func (list *ForwardList[T]) Back() T {
 	if list.tail == nil {
-		panic(lists.ErrEmptyList)
+		panic(errors.ErrNoSuchElement(list.len))
 	}
 	return list.tail.value
 }
@@ -87,7 +87,10 @@ func (list *ForwardList[T]) Back() T {
 //  out of bounds.
 func (list *ForwardList[T]) Swap(i, j int) {
 	if i < 0 || i >= list.len || j < 0 || j >= list.len {
-		panic(lists.ErrOutOfBounds)
+		if i < 0 || i >= list.len {
+			panic(errors.ErrIndexOutOfBounds(i, list.len))
+		}
+		panic(errors.ErrIndexOutOfBounds(j, list.len))
 	} else {
 		prevX, currX := list.nodePair(i)
 		prevY, currY := list.nodePair(j)
@@ -143,7 +146,7 @@ func (list *ForwardList[T]) nodeAt(i int) *node[T] {
 // At retrieves the element at index i in the list. Will panic If index is out of bounds.
 func (list *ForwardList[T]) At(i int) T {
 	if i < 0 || i >= list.len {
-		panic(lists.ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	}
 	iter := list.Iterator()
 	j := 0
@@ -192,17 +195,10 @@ func (list *ForwardList[T]) addBack(element T) {
 	list.len++
 }
 
-// AddBack adds element to the back of the list.
-func (list *ForwardList[T]) AddBack(elements ...T) {
-	for _, element := range elements {
-		list.addBack(element)
-	}
-}
-
 // AddAt adds an element to the list at specified index, all subsequent elements will be shifted right. Will panic if index is out of bounds.
 func (list *ForwardList[T]) AddAt(i int, e T) {
 	if i < 0 || i >= list.len {
-		panic(lists.ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	} else if i == 0 {
 		list.AddFront(e)
 		return
@@ -228,7 +224,7 @@ func (list *ForwardList[T]) Add(elements ...T) bool {
 		return false
 	}
 	for _, element := range elements {
-		list.AddBack(element)
+		list.addBack(element)
 	}
 	return true
 }
@@ -237,7 +233,7 @@ func (list *ForwardList[T]) Add(elements ...T) bool {
 // if index is out of bounds.
 func (list *ForwardList[T]) Set(i int, element T) T {
 	if i < 0 || i >= list.len {
-		panic(lists.ErrOutOfBounds)
+		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	}
 	n := list.nodeAt(i)
 	temp := n.value
@@ -278,7 +274,7 @@ func (list *ForwardList[T]) Contains(element T) bool {
 // RemoveFront removes and returns the front element of the list. Will panic if list has no front element.
 func (list *ForwardList[T]) RemoveFront() T {
 	if list.len == 0 {
-		panic(lists.ErrEmptyList)
+		panic(errors.ErrNoSuchElement(list.len))
 	} else if list.len == 1 {
 		n := list.head
 		list.head = n.next
@@ -317,10 +313,8 @@ func (list *ForwardList[T]) RemoveBack() T {
 
 // RemoveAt removes the element at the specified index in the list. Will panic if index is out of bounds.
 func (list *ForwardList[T]) RemoveAt(i int) T {
-	if list.Empty() {
-		panic(lists.ErrEmptyList)
-	} else if i < 0 || i >= list.len {
-		panic(lists.ErrOutOfBounds)
+	if i < 0 || i >= list.len {
+		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	} else if i == 0 {
 		return list.RemoveFront()
 	} else if i == list.len-1 {
@@ -334,7 +328,7 @@ func (list *ForwardList[T]) RemoveAt(i int) T {
 // removeNode removes the specified node curr where prev is the node before it. For internal use to support operations such as RemoveAt.
 func (list *ForwardList[T]) removeNode(prev *node[T], curr *node[T]) T {
 	prev.next = curr.next
-	list.len -= 1
+	list.len--
 	v := curr.value
 	curr.next = nil
 	curr = nil

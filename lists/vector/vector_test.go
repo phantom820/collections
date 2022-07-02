@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/lists"
 	"github.com/phantom820/collections/lists/forwardlist"
 	"github.com/phantom820/collections/testutils"
@@ -103,7 +103,7 @@ func TestIterator(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, iterator.NoNextElementError, r.(error))
+				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
 			}
 		}()
 		it := v.Iterator()
@@ -202,7 +202,7 @@ func TestAddAt(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, ErrOutOfBounds, r.(error))
+				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
 			}
 		}()
 		v.AddAt(0, 0)
@@ -227,7 +227,7 @@ func TestRemoveAt(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, ErrOutOfBounds, r.(error))
+				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
 			}
 		}()
 		v.RemoveAt(0)
@@ -274,7 +274,7 @@ func TestAt(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, ErrOutOfBounds, r.(error))
+				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
 			}
 		}()
 		v.At(0)
@@ -295,7 +295,7 @@ func TestSet(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, ErrOutOfBounds, r.(error))
+				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
 			}
 		}()
 		v.Set(0, 0)

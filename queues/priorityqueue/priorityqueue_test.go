@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/lists/forwardlist"
-	"github.com/phantom820/collections/queues"
 	"github.com/phantom820/collections/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -49,7 +48,7 @@ func TestFront(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, queues.ErrNoFrontElement, r.(error))
+				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
 			}
 		}()
 		minQ.Front()
@@ -70,7 +69,7 @@ func TestFront(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, queues.ErrNoFrontElement, r.(error))
+				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
 			}
 		}()
 		maxQ.Front()
@@ -95,7 +94,7 @@ func TestRemoveFront(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, queues.ErrNoFrontElement, r.(error))
+				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
 			}
 		}()
 		minQ.RemoveFront()
@@ -141,7 +140,7 @@ func TestIterator(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, iterator.NoNextElementError, r.(error))
+				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
 			}
 		}()
 		it := minQ.Iterator()

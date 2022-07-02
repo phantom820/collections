@@ -4,6 +4,7 @@ package slicestack
 import (
 	"fmt"
 
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/stacks"
 	"github.com/phantom820/collections/types"
@@ -98,7 +99,7 @@ func (it *sliceStackIterator[T]) HasNext() bool {
 // Next yields the next element in the iterator. Will panic if the iterator has no next element.
 func (it *sliceStackIterator[T]) Next() T {
 	if !it.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	e := it.slice[it.i]
 	it.i--

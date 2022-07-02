@@ -2,6 +2,7 @@
 package hashmap
 
 import (
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/trees/rbt"
@@ -82,7 +83,7 @@ func (it *hashMapIterator[K, V]) HasNext() bool {
 // Next yields the next element in the iterator. Will panic if the iterator has no next element.
 func (it *hashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 	if !it.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	next := func() maps.MapEntry[K, V] {
 		if it.bucket != nil && len(it.bucket) > 0 {

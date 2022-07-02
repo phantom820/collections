@@ -3,8 +3,8 @@ package slicequeue
 import (
 	"fmt"
 
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/queues"
 	"github.com/phantom820/collections/types"
 )
 
@@ -65,7 +65,7 @@ func (queue *SliceQueue[T]) Empty() bool {
 // Front returns the front element of the queue without removing it.
 func (queue *SliceQueue[T]) Front() T {
 	if queue.Empty() {
-		panic(queues.ErrNoFrontElement)
+		panic(errors.ErrNoSuchElement(queue.Len()))
 	}
 	return queue.data[0]
 }
@@ -87,7 +87,7 @@ func (it *sliceQueueIterator[T]) HasNext() bool {
 // Next yields the next element from the iterator.
 func (iter *sliceQueueIterator[T]) Next() T {
 	if !iter.HasNext() {
-		panic(iterator.NoNextElementError)
+		panic(errors.ErrNoNextElement())
 	}
 	e := iter.slice[iter.i]
 	iter.i++
@@ -151,7 +151,7 @@ func (queue *SliceQueue[T]) RemoveAll(iterable iterator.Iterable[T]) {
 // RemoveFront removes and returns the front element of the queue. Wil panic if no such element.
 func (queue *SliceQueue[T]) RemoveFront() T {
 	if queue.Empty() {
-		panic(queues.ErrNoFrontElement)
+		panic(errors.ErrNoSuchElement(queue.Len()))
 	}
 	f := queue.data[0]
 	queue.data = queue.data[1:]

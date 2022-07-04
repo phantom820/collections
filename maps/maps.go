@@ -9,7 +9,6 @@ import (
 type MapIterator[K any, V any] interface {
 	HasNext() bool
 	Next() MapEntry[K, V]
-	Cycle()
 }
 
 // MapIterable provides an interface for specifying a map iterable.

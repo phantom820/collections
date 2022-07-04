@@ -13,7 +13,8 @@ import (
 
 // TreeMap an implementation of a map in which entries are stored according to their defined ordering.
 type TreeMap[K types.Comparable[K], V any] struct {
-	tree *rbt.RedBlackTree[K, V]
+	tree          *rbt.RedBlackTree[K, V]
+	modifications int
 }
 
 // New creates and returns an empty TreeMap.
@@ -22,9 +23,15 @@ func New[K types.Comparable[K], V any]() *TreeMap[K, V] {
 	return &treeMap
 }
 
+// modify increments the modification value.
+func (treeMap *TreeMap[K, V]) modify() {
+	treeMap.modifications++
+}
+
 // Put inserts the entry <key,value> into the map. If an entry with the given key already exists then its value is updated. Returns the previous value
 // associated with the key or zero value if there is no previous value.
 func (treeMap *TreeMap[K, V]) Put(k K, v V) V {
+	treeMap.modify()
 	if val, ok := treeMap.tree.Get(k); ok {
 		treeMap.tree.Update(k, v)
 		return val
@@ -36,6 +43,7 @@ func (treeMap *TreeMap[K, V]) Put(k K, v V) V {
 
 // PutIfAbsent inserts the entry <key,value> into the map if the key does not already exist in the map. Returns true if the new entry was made.
 func (treeMap *TreeMap[K, V]) PutIfAbsent(k K, v V) bool {
+	treeMap.modify()
 	if _, ok := treeMap.tree.Get(k); ok {
 		return false
 	}
@@ -65,17 +73,23 @@ func (treeMap *TreeMap[K, V]) Get(k K) (V, bool) {
 
 // treeMapIterator a type to implement an iterator for the map.
 type treeMapIterator[K types.Comparable[K], V any] struct {
-	index int
-	nodes []trees.Node[K, V]
-}
-
-// Cycle resets the iterator.
-func (it *treeMapIterator[K, V]) Cycle() {
-	it.index = 0
+	initialized      bool
+	index            int
+	nodes            []trees.Node[K, V]
+	getNodes         func() []trees.Node[K, V]
+	modifications    int
+	getModifications func() int
 }
 
 // HasNext checks if the iterator has a next element to yield.
 func (it *treeMapIterator[K, V]) HasNext() bool {
+	if !it.initialized {
+		it.initialized = true
+		it.nodes = it.getNodes()
+		it.modifications = it.getModifications()
+	} else if it.modifications != it.getModifications() {
+		panic(errors.ErrConcurrenModification())
+	}
 	return it.index < len(it.nodes)
 }
 
@@ -91,8 +105,8 @@ func (it *treeMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 
 // Iterator returns an iterator for the map.
 func (treeMap *TreeMap[K, V]) Iterator() maps.MapIterator[K, V] {
-	nodes := treeMap.tree.Nodes()
-	it := treeMapIterator[K, V]{nodes: nodes, index: 0}
+	it := treeMapIterator[K, V]{nodes: []trees.Node[K, V]{}, index: 0, getNodes: func() []trees.Node[K, V] { return treeMap.tree.Nodes() },
+		getModifications: func() int { return treeMap.modifications }}
 	return &it
 }
 
@@ -116,6 +130,7 @@ func (treeMap *TreeMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool 
 // Remove removes the map entry <key,value> from the map if it exists. Returns the previous value associated with the key and a boolean indicating if the returned
 // values is valid or invalid. An invalid value results when there is no entry in the map associated with the given key.
 func (treeMap *TreeMap[K, V]) Remove(k K) (V, bool) {
+	treeMap.modify()
 	return treeMap.tree.Delete(k)
 }
 
@@ -144,6 +159,7 @@ func (treeMap *TreeMap[K, V]) Empty() bool {
 
 // Clear removes all entries from the map.
 func (treeMap *TreeMap[K, V]) Clear() {
+	treeMap.modify()
 	treeMap.tree.Clear()
 }
 

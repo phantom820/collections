@@ -15,7 +15,8 @@ import (
 
 // LinkedHashSet an implementation of a set based on a LinkedHashMap.
 type LinkedHashSet[T types.Hashable[T]] struct {
-	data *linkedhashmap.LinkedHashMap[T, bool]
+	data          *linkedhashmap.LinkedHashMap[T, bool]
+	modifications int
 }
 
 // New creates a LinkedHashSet with the specified elements, if there none an empty set is returned.
@@ -26,33 +27,44 @@ func New[T types.Hashable[T]](elements ...T) *LinkedHashSet[T] {
 	return &set
 }
 
+// modify increments the modification value
+func (set *LinkedHashSet[T]) modify() {
+	set.modifications++
+}
+
 // linkedHashSetIterator type to implement an iterator for a LinkedHashSet.
 type linkedHashSetIterator[T types.Hashable[T]] struct {
-	mapIterator maps.MapIterator[T, bool]
+	initialized      bool
+	mapIterator      maps.MapIterator[T, bool]
+	getMapIterator   func() maps.MapIterator[T, bool]
+	modifications    int
+	getModifications func() int
 }
 
 // HasNext checks if the iterator has a next element to yield.
-func (iterator *linkedHashSetIterator[T]) HasNext() bool {
-	return iterator.mapIterator.HasNext()
+func (it *linkedHashSetIterator[T]) HasNext() bool {
+	if !it.initialized {
+		it.initialized = true
+		it.modifications = it.getModifications()
+		it.mapIterator = it.getMapIterator()
+	}
+	return it.mapIterator.HasNext()
 }
 
 // Next returns the next element in the iterator it. Will panic if iterator has no next element.
-func (iter *linkedHashSetIterator[T]) Next() T {
-	if !iter.HasNext() {
+func (it *linkedHashSetIterator[T]) Next() T {
+	if !it.HasNext() {
 		panic(errors.ErrNoNextElement())
+	} else if it.modifications != it.getModifications() {
+		panic(errors.ErrConcurrenModification())
 	}
-	entry := iter.mapIterator.Next()
+	entry := it.mapIterator.Next()
 	return entry.Key
-}
-
-// Cycle resets the iterator.
-func (iterator *linkedHashSetIterator[T]) Cycle() {
-	iterator.mapIterator.Cycle()
 }
 
 // Iterator returns an iterator for the set.
 func (set *LinkedHashSet[T]) Iterator() iterator.Iterator[T] {
-	return &linkedHashSetIterator[T]{set.data.Iterator()}
+	return &linkedHashSetIterator[T]{getMapIterator: set.data.Iterator, getModifications: func() int { return set.modifications }}
 }
 
 // String formats the set for pretty printing.
@@ -78,6 +90,7 @@ func (set *LinkedHashSet[T]) Contains(element T) bool {
 
 // Add adds elements to the set. Only elements that are not already in the set are added.
 func (set *LinkedHashSet[T]) Add(elements ...T) bool {
+	set.modify()
 	n := set.Len()
 	for _, element := range elements {
 		set.data.PutIfAbsent(element, true)
@@ -95,6 +108,7 @@ func (set *LinkedHashSet[T]) AddAll(iterable iterator.Iterable[T]) {
 
 // Remove removes elements from the set.
 func (set *LinkedHashSet[T]) Remove(elements ...T) bool {
+	set.modify()
 	n := set.Len()
 	for _, element := range elements {
 		set.data.Remove(element)
@@ -107,10 +121,10 @@ func (set *LinkedHashSet[T]) Remove(elements ...T) bool {
 
 // RemoveIf removes all elements from the set that satisfy the predicate function f.
 func (set *LinkedHashSet[T]) RemoveIf(f func(element T) bool) bool {
+	set.modify()
 	n := set.Len()
-	it := set.Iterator()
-	for it.HasNext() {
-		element := it.Next()
+	elements := set.Collect()
+	for _, element := range elements {
 		if f(element) {
 			set.Remove(element)
 		}
@@ -125,22 +139,22 @@ func (set *LinkedHashSet[T]) RemoveAll(iterable iterator.Iterable[T]) {
 
 // RetainAll removes all entries from the set that do not appear in the other collection.
 func (set *LinkedHashSet[T]) RetainAll(collection collections.Collection[T]) bool {
-	iterator := set.Iterator()
-	changed := false
-	for iterator.HasNext() {
-		element := iterator.Next()
+	set.modify()
+	elements := set.Collect()
+	n := set.Len()
+	for _, element := range elements {
 		if collection.Contains(element) {
 			continue
 		} else {
 			set.Remove(element)
-			changed = true
 		}
 	}
-	return changed
+	return n != set.Len()
 }
 
 // Clear removes all elements from the set.
 func (set *LinkedHashSet[T]) Clear() {
+	set.modify()
 	set.data.Clear()
 }
 

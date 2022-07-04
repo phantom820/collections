@@ -108,8 +108,6 @@ func TestIterator(t *testing.T) {
 	}
 
 	assert.Equal(t, true, testutils.EqualSlices(a, b))
-	it.Cycle()
-	assert.Equal(t, types.Int(1), it.Next())
 
 }
 

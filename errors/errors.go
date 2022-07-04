@@ -8,18 +8,20 @@ import (
 
 // error codes.
 const (
-	IndexOutOfBounds = 1
-	NoSuchElement    = 2
-	NoNextElement    = 3
-	MapKeyRange      = 4
+	IndexOutOfBounds       = 1
+	NoSuchElement          = 2
+	NoNextElement          = 3
+	MapKeyRange            = 4
+	ConcurrentModification = 5
 )
 
 // error templates.
 var (
-	IndexOutOfBoundsTemplate, _ = template.New("IndexOutOfBounds").Parse("ErrIndexOutOfBounds: Index: {{.index}}, Size: {{.size}}")
-	NoSuchElementTemplate, _    = template.New("NoSuchElement").Parse("ErrNoSuchElement , Size: {{.size}}")
-	NoNextElementTemplate, _    = template.New("NoNextElement").Parse("ErrNoNextElement")
-	MapKeyRangeTemplate, _      = template.New("MapKeyRange").Parse("ErrMapKeyRange  lower key: {{.fromKey}} , upper Key: {{.toKey}}, lower key greater than upper key.")
+	IndexOutOfBoundsTemplate, _       = template.New("IndexOutOfBounds").Parse("ErrIndexOutOfBounds: Index: {{.index}}, Size: {{.size}}")
+	NoSuchElementTemplate, _          = template.New("NoSuchElement").Parse("ErrNoSuchElement , Size: {{.size}}")
+	NoNextElementTemplate, _          = template.New("NoNextElement").Parse("ErrNoNextElement")
+	MapKeyRangeTemplate, _            = template.New("MapKeyRange").Parse("ErrMapKeyRange  lower key: {{.fromKey}} , upper Key: {{.toKey}}, lower key greater than upper key.")
+	ConcurrentModificationTemplate, _ = template.New("NoNextElement").Parse("ErrConcurrentModification iterator source was modified while iterating.")
 )
 
 // Error a custom error type to be used.
@@ -61,4 +63,10 @@ func ErrMapKeyRange[T any](fromKey T, toKey T) Error {
 	var buffer bytes.Buffer
 	MapKeyRangeTemplate.Execute(&buffer, map[string]T{"fromKey": fromKey, "toKey": toKey})
 	return Error{code: MapKeyRange, msg: buffer.String()}
+}
+
+func ErrConcurrenModification() *Error {
+	var buffer bytes.Buffer
+	ConcurrentModificationTemplate.Execute(&buffer, map[string]string{})
+	return &Error{code: ConcurrentModification, msg: buffer.String()}
 }

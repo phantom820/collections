@@ -107,9 +107,58 @@ func TestIterator(t *testing.T) {
 	}
 
 	assert.Equal(t, true, testutils.EqualSlices(a, b))
-	it.Cycle()
-	assert.Equal(t, types.Int(1), it.Next())
 
+}
+
+func TestIteratorConcurrentModification(t *testing.T) {
+
+	q := New[types.String]()
+	for i := 1; i <= 20; i++ {
+		q.Add(types.String(fmt.Sprint(i)))
+	}
+
+	// Recovery for concurrent modifications.
+	recovery := func() {
+		if r := recover(); r != nil {
+			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
+		}
+	}
+	// Case 1 : Add.
+	it := q.Iterator()
+	t.Run("Add while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			q.Add(types.String("D"))
+			it.Next()
+		}
+	})
+	// Case 2 : RemoveFront.
+	it = q.Iterator()
+	t.Run("RemoveFront while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			q.RemoveFront()
+			it.Next()
+		}
+	})
+	// Case 3 : Remove.
+	it = q.Iterator()
+	t.Run("Remove while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			q.Remove()
+			it.Next()
+		}
+	})
+	// Case 4 : Clear.
+	it = q.Iterator()
+	t.Run("Clear while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			q.Clear()
+			it.Next()
+		}
+	})
 }
 
 func TestRemove(t *testing.T) {

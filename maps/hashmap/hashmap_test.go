@@ -1,6 +1,7 @@
 package hashmap
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -149,6 +150,7 @@ func TestIterator(t *testing.T) {
 		entry := it.Next()
 		keys = append(keys, entry.Key)
 		values = append(values, entry.Value)
+		fmt.Println(entry.Key)
 	}
 
 	assert.ElementsMatch(t, m.Keys(), keys)
@@ -164,11 +166,57 @@ func TestIterator(t *testing.T) {
 		it.Next()
 	})
 
-	// Case 3 : Cycling should reset iterator.
-	it.Cycle()
-	entry := it.Next()
-	assert.Equal(t, keys[0], entry.Key)
-	assert.Equal(t, values[0], entry.Value)
+}
+
+func TestIteratorConcurrentModification(t *testing.T) {
+
+	m := New[types.String, int]()
+	for i := 1; i <= 20; i++ {
+		m.Put(types.String(strconv.Itoa(i)), i)
+	}
+
+	// Recovery for concurrent modifications.
+	recovery := func() {
+		if r := recover(); r != nil {
+			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
+		}
+	}
+	// Case 1 : Put.
+	it := m.Iterator()
+	t.Run("Put while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			m.Put(types.String("D"), 22)
+			it.Next()
+		}
+	})
+	// Case 2 : PutIfAbsent.
+	it = m.Iterator()
+	t.Run("PutIfAbsent while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			m.PutIfAbsent(types.String("D"), 22)
+			it.Next()
+		}
+	})
+	// Case 3 : Remove.
+	it = m.Iterator()
+	t.Run("Remove while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			m.Remove(types.String("D"))
+			it.Next()
+		}
+	})
+	// Case 4 : Clear.
+	it = m.Iterator()
+	t.Run("Clear while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			m.Clear()
+			it.Next()
+		}
+	})
 
 }
 

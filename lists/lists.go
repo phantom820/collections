@@ -20,7 +20,6 @@ type List[T types.Equitable[T]] interface {
 	AddFront(elements ...T)  // Adds element(s) to the front of the list.
 	RemoveFront() T          // Returns and removes the front element in the list.
 	Back() T                 // Returns the element at the back of the list. Will panic if no back element.
-	AddBack(element ...T)    // Adds element(s) to the back of the list.
 	RemoveBack() T           // Returns and removes the element at the back of the list. Will panic if no back element.
 	Set(i int, elementt T) T // Replaces the element at the specified index with the new element and returns old element. Will panic if index out of bounds.
 	Swap(i, j int)           // Swaps the element at index i with the element at index j. Will panic if one or both indices out of bounds.

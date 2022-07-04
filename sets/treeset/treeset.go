@@ -15,7 +15,8 @@ import (
 
 // TreeSet an implementation of a set based on a TreeMap.
 type TreeSet[T types.Comparable[T]] struct {
-	data *treemap.TreeMap[T, bool]
+	data          *treemap.TreeMap[T, bool]
+	modifications int
 }
 
 // New creates a TreeSet with the specified elements.
@@ -26,33 +27,44 @@ func New[T types.Comparable[T]](elements ...T) *TreeSet[T] {
 	return &set
 }
 
+// modify increments the modification value
+func (set *TreeSet[T]) modify() {
+	set.modifications++
+}
+
 // treeSetIterator type to implement an iterator for a TreeSet.
 type treeSetIterator[T types.Comparable[T]] struct {
-	mapIterator maps.MapIterator[T, bool]
+	initialized      bool
+	mapIterator      maps.MapIterator[T, bool]
+	getMapIterator   func() maps.MapIterator[T, bool]
+	modifications    int
+	getModifications func() int
 }
 
 // HasNext checks if the iterator has a next element to yield.
-func (iterator *treeSetIterator[T]) HasNext() bool {
-	return iterator.mapIterator.HasNext()
+func (it *treeSetIterator[T]) HasNext() bool {
+	if !it.initialized {
+		it.initialized = true
+		it.modifications = it.getModifications()
+		it.mapIterator = it.getMapIterator()
+	}
+	return it.mapIterator.HasNext()
 }
 
 // Next returns the next element in the iterator it. Will panic if iterator has no next element.
-func (iter *treeSetIterator[T]) Next() T {
-	if !iter.HasNext() {
+func (it *treeSetIterator[T]) Next() T {
+	if !it.HasNext() {
 		panic(errors.ErrNoNextElement())
+	} else if it.modifications != it.getModifications() {
+		panic(errors.ErrConcurrenModification())
 	}
-	entry := iter.mapIterator.Next()
+	entry := it.mapIterator.Next()
 	return entry.Key
-}
-
-// Cycle resets the iterator.
-func (iterator *treeSetIterator[T]) Cycle() {
-	iterator.mapIterator.Cycle()
 }
 
 // Iterator returns an iterator for the set.
 func (set *TreeSet[T]) Iterator() iterator.Iterator[T] {
-	return &treeSetIterator[T]{set.data.Iterator()}
+	return &treeSetIterator[T]{getMapIterator: set.data.Iterator, getModifications: func() int { return set.modifications }}
 }
 
 // String formats the set for pretty printing.
@@ -78,6 +90,7 @@ func (set *TreeSet[T]) Contains(element T) bool {
 
 // Add adds elements to the set. Only elements that are not in the set are added.
 func (set *TreeSet[T]) Add(elements ...T) bool {
+	set.modify()
 	n := set.Len()
 	for _, element := range elements {
 		set.data.PutIfAbsent(element, true)
@@ -95,6 +108,7 @@ func (set *TreeSet[T]) AddAll(iterable iterator.Iterable[T]) {
 
 // Remove removes elements from the set.
 func (set *TreeSet[T]) Remove(elements ...T) bool {
+	set.modify()
 	n := set.Len()
 	for _, element := range elements {
 		set.data.Remove(element)
@@ -107,10 +121,10 @@ func (set *TreeSet[T]) Remove(elements ...T) bool {
 
 // RemoveIf removes all elements from the set that satisfy the predicate function f.
 func (set *TreeSet[T]) RemoveIf(f func(element T) bool) bool {
+	set.modify()
 	n := set.Len()
-	it := set.Iterator()
-	for it.HasNext() {
-		element := it.Next()
+	elements := set.Collect()
+	for _, element := range elements {
 		if f(element) {
 			set.Remove(element)
 		}
@@ -125,21 +139,22 @@ func (set *TreeSet[T]) RemoveAll(iterable iterator.Iterable[T]) {
 
 // RetainAll removes all entries from the set that do not appear in the other collection. Returns true if the set was modified.
 func (set *TreeSet[T]) RetainAll(collection collections.Collection[T]) bool {
-	it := set.Iterator()
+	set.modify()
+	elements := set.Collect()
 	n := set.Len()
-	for it.HasNext() {
-		element := it.Next()
+	for _, element := range elements {
 		if collection.Contains(element) {
 			continue
 		} else {
 			set.Remove(element)
 		}
 	}
-	return (n != set.Len())
+	return n != set.Len()
 }
 
 // Clear removes all elements in the set.
 func (set *TreeSet[T]) Clear() {
+	set.modify()
 	set.data.Clear()
 }
 

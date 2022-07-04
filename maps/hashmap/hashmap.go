@@ -5,6 +5,7 @@ import (
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps"
+	"github.com/phantom820/collections/trees"
 	"github.com/phantom820/collections/trees/rbt"
 	"github.com/phantom820/collections/types"
 )
@@ -21,20 +22,28 @@ type HashMap[K types.Hashable[K], V any] struct {
 	loadFactorLimit float32
 	buckets         []*rbt.RedBlackTree[mapKey[K], V]
 	len             int
+	modifications   int // keeps track of modifications made by mutating operations, so we can have panics with concurrent modifications.
 }
 
 // New creates and returns an empty HashMap with capacity of 16 and load factor limit of 0.75 .
 func New[K types.Hashable[K], V any]() *HashMap[K, V] {
 	buckets := make([]*rbt.RedBlackTree[mapKey[K], V], capacity)
-	hashMap := HashMap[K, V]{defaultCapacity: capacity, capacity: capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0}
+	hashMap := HashMap[K, V]{defaultCapacity: capacity, capacity: capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0,
+		modifications: 0}
 	return &hashMap
 }
 
 // NewWith creates and returns an empty HashMap with the specified capacity and load factor limit.
 func NewWith[K types.Hashable[K], V any](capacity int, loadFactorLimit float32) *HashMap[K, V] {
 	buckets := make([]*rbt.RedBlackTree[mapKey[K], V], capacity)
-	hashMap := HashMap[K, V]{defaultCapacity: capacity, capacity: capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0}
+	hashMap := HashMap[K, V]{defaultCapacity: capacity, capacity: capacity, loadFactorLimit: loadFactorLimit, buckets: buckets, len: 0,
+		modifications: 0}
 	return &hashMap
+}
+
+// modify increments the modification value.
+func (hashMap *HashMap[K, V]) modify() {
+	hashMap.modifications++
 }
 
 // mapKey a type to be used to represent an underlying key for a HashMap. The key and its hash value are stored to avoid recomputing the
@@ -56,25 +65,26 @@ func (mapKey mapKey[K]) Equals(other mapKey[K]) bool {
 
 // hashMapIterator a type to implement an iterator for the map.
 type hashMapIterator[K types.Hashable[K], V any] struct {
-	index      int
-	maxIndex   int
-	bucket     []mapKey[K]
-	values     []V
-	keys       int
-	maxkeys    int
-	nextBucket func(i int) *rbt.RedBlackTree[mapKey[K], V]
-}
-
-// Cycle resets the iterator.
-func (it *hashMapIterator[K, V]) Cycle() {
-	it.index = 0
-	it.bucket = nil
-	it.keys = 0
+	modifications    int
+	getModifications func() int                                                                    // keep track of any modifications to the source if we out of parity then concurrent modification occured.
+	initialized      bool                                                                          // keeps track if we have initialized the iterator or not.
+	index            int                                                                           // index of the bucket we are currently in.
+	maxIndex         int                                                                           // max number of buckets.
+	entries          []trees.Node[mapKey[K], V]                                                    // entries in the current bucket's red black tree.
+	keys             int                                                                           // a count of how many keys the iterator has seen.
+	maxKeys          int                                                                           // maximum number of keys (size of the map).
+	getMaxKeys       func() int                                                                    // returns the maximum number of keys we need to set.
+	bucket           func(index int, maxKeys int) (*rbt.RedBlackTree[mapKey[K], V], *errors.Error) // returns a bucket at the specified index and checks for concurrent modification.
 }
 
 // HasNext checks if the iterator has a next element to yield.
 func (it *hashMapIterator[K, V]) HasNext() bool {
-	if it.index < it.maxIndex && it.keys < it.maxkeys {
+	if !it.initialized {
+		it.initialized = true
+		it.modifications = it.getModifications()
+		it.maxKeys = it.getMaxKeys()
+	}
+	if it.index < it.maxIndex && it.keys < it.maxKeys {
 		return true
 	}
 	return false
@@ -86,12 +96,12 @@ func (it *hashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 		panic(errors.ErrNoNextElement())
 	}
 	next := func() maps.MapEntry[K, V] {
-		if it.bucket != nil && len(it.bucket) > 0 {
-			key := it.bucket[0].key
-			value := it.values[0]
+		if it.entries != nil && len(it.entries) > 0 {
+			node := it.entries[0]
+			key := node.Key.key
+			value := node.Value
 			it.keys++
-			it.bucket = it.bucket[1:len(it.bucket)]
-			it.values = it.values[1:len(it.values)]
+			it.entries = it.entries[1:len(it.entries)]
 			entry := maps.MapEntry[K, V]{Key: key, Value: value}
 			return entry
 		} else {
@@ -100,16 +110,17 @@ func (it *hashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 			var key K
 			var value V
 			for i := it.index; i < it.maxIndex; i++ {
-				bucket := it.nextBucket(i)
-				if bucket != nil {
-					it.bucket = bucket.Keys()
-					it.values = bucket.Values()
+				tree, err := it.bucket(i, it.modifications)
+				if err != nil {
+					panic(err)
+				} else if tree != nil {
+					it.entries = tree.Nodes()
 					it.index = i + 1
-					key = it.bucket[0].key
-					value = it.values[0]
+					node := it.entries[0]
+					key = node.Key.key
+					value = node.Value
 					it.keys++
-					it.bucket = it.bucket[1:len(it.bucket)]
-					it.values = it.values[1:len(it.values)]
+					it.entries = it.entries[1:len(it.entries)]
 					break
 				}
 			}
@@ -122,14 +133,16 @@ func (it *hashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 
 // Iterator returns an iterator for the map.
 func (hashMap *HashMap[K, V]) Iterator() maps.MapIterator[K, V] {
-	nextBucket := func(i int) *rbt.RedBlackTree[mapKey[K], V] {
-		if i < len(hashMap.buckets) {
-			return hashMap.buckets[i]
+	bucket := func(i int, modifications int) (*rbt.RedBlackTree[mapKey[K], V], *errors.Error) {
+		if modifications != hashMap.modifications {
+			return nil, errors.ErrConcurrenModification()
+		} else if i < len(hashMap.buckets) {
+			return hashMap.buckets[i], nil
 		}
-		return nil
+		return nil, nil
 	}
-	it := hashMapIterator[K, V]{index: 0, nextBucket: nextBucket,
-		maxIndex: len(hashMap.buckets), maxkeys: hashMap.len, keys: 0}
+	it := hashMapIterator[K, V]{index: 0, bucket: bucket,
+		maxIndex: len(hashMap.buckets), keys: 0, getMaxKeys: func() int { return hashMap.len }, getModifications: func() int { return hashMap.modifications }}
 	return &it
 }
 
@@ -151,6 +164,7 @@ func (hashMap *HashMap[K, V]) Capacity() int {
 // Put inserts the entry <key,value> into the map. If an entry with the given key already exists then its value is updated. Returns the previous value
 // associated with the key or zero value if there is no previous value.
 func (hashMap *HashMap[K, V]) Put(key K, value V) V {
+	hashMap.modify()
 	if hashMap.LoadFactor() >= hashMap.loadFactorLimit { // If we have crossed the load factor limit resize.
 		hashMap.resize()
 	}
@@ -175,6 +189,7 @@ func (hashMap *HashMap[K, V]) Put(key K, value V) V {
 
 // PutIfAbsent inserts the entry <key,value> into the map if the key does not already exist in the map. Returns true if the new entry was made.
 func (hashMap *HashMap[K, V]) PutIfAbsent(key K, value V) bool {
+	hashMap.modify()
 	_key := mapKey[K]{key: key, hash: key.HashCode()}
 	index := _key.hash % hashMap.capacity
 	if hashMap.buckets[index] == nil {
@@ -240,6 +255,7 @@ func (hashMap *HashMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool 
 // Remove removes the map entry <key,value> from the map if it exists. Returns the previous value associated with the key and a boolean indicating if the returned
 // values is valid or invalid. An invalid value results when there is no entry in the map associated with the given key.
 func (hashMap *HashMap[K, V]) Remove(key K) (V, bool) {
+	hashMap.modify()
 	_key := mapKey[K]{key: key, hash: key.HashCode()}
 	index := _key.hash % hashMap.capacity
 	if hashMap.buckets[index] == nil {
@@ -308,6 +324,7 @@ func (hashMap *HashMap[K, V]) Empty() bool {
 
 // Clear removes all entries from the map.
 func (hashMap *HashMap[K, V]) Clear() {
+	hashMap.modify()
 	hashMap.len = 0
 	hashMap.buckets = nil
 	hashMap.capacity = hashMap.defaultCapacity

@@ -11,9 +11,10 @@ import (
 
 // LinkedHashMap an implementation of a map that keeps track of insertion order of entries.
 type LinkedHashMap[K types.Hashable[K], V any] struct {
-	data *hashmap.HashMap[K, *linkedMapEntry[K, V]]
-	head *linkedMapEntry[K, V]
-	tail *linkedMapEntry[K, V]
+	data          *hashmap.HashMap[K, *linkedMapEntry[K, V]]
+	head          *linkedMapEntry[K, V]
+	tail          *linkedMapEntry[K, V]
+	modifications int
 }
 
 // linkedMapEntry a type for entries of a LinkedHashMap.
@@ -31,19 +32,27 @@ func New[K types.Hashable[K], V any]() *LinkedHashMap[K, V] {
 	return &linkedMap
 }
 
-// linkedHashMapIterator  a type to implement an iterator for the map.
-type linkedHashMapIterator[K types.Hashable[K], V any] struct {
-	head *linkedMapEntry[K, V]
-	node *linkedMapEntry[K, V]
+// modify increments the modification value.
+func (linkedHashMap *LinkedHashMap[K, V]) modify() {
+	linkedHashMap.modifications++
 }
 
-// Cycle resets the iterator.
-func (it *linkedHashMapIterator[K, V]) Cycle() {
-	it.node = it.head
+// linkedHashMapIterator  a type to implement an iterator for the map.
+type linkedHashMapIterator[K types.Hashable[K], V any] struct {
+	initialized      bool
+	node             *linkedMapEntry[K, V]
+	source           func() *linkedMapEntry[K, V] // Used to initialize/cycle an iterator.
+	modifications    int
+	getModifications func() int
 }
 
 // HasNext checks if the iterator has a next element to yield.
 func (it *linkedHashMapIterator[K, V]) HasNext() bool {
+	if !it.initialized {
+		it.initialized = true
+		it.modifications = it.getModifications()
+		it.node = it.source()
+	}
 	return it.node != nil
 }
 
@@ -51,6 +60,8 @@ func (it *linkedHashMapIterator[K, V]) HasNext() bool {
 func (it *linkedHashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 	if !it.HasNext() {
 		panic(errors.ErrNoNextElement())
+	} else if it.modifications != it.getModifications() {
+		panic(errors.ErrConcurrenModification())
 	}
 	entry := maps.MapEntry[K, V]{Key: it.node.key, Value: it.node.value}
 	it.node = it.node.next
@@ -58,14 +69,16 @@ func (it *linkedHashMapIterator[K, V]) Next() maps.MapEntry[K, V] {
 }
 
 // Iterator returns an iterator for the map.
-func (m *LinkedHashMap[K, V]) Iterator() maps.MapIterator[K, V] {
-	it := linkedHashMapIterator[K, V]{head: m.head, node: m.head}
+func (linkedHashMap *LinkedHashMap[K, V]) Iterator() maps.MapIterator[K, V] {
+	it := linkedHashMapIterator[K, V]{initialized: false, node: nil, source: func() *linkedMapEntry[K, V] { return linkedHashMap.head },
+		getModifications: func() int { return linkedHashMap.modifications }}
 	return &it
 }
 
 // Put inserts the entry <key,value> into the map. If an entry with the given key already exists then its value is updated. Returns the previous value
 // associated with the key or zero value if there is no previous value.
 func (linkedHashMap *LinkedHashMap[K, V]) Put(key K, value V) V {
+	linkedHashMap.modify()
 	if linkedHashMap.Empty() {
 		entry := linkedMapEntry[K, V]{key: key, value: value, prev: nil, next: nil}
 		linkedHashMap.head = &entry
@@ -91,6 +104,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) Put(key K, value V) V {
 
 // PutIfAbsent inserts the entry <key,value> into the map if the key does not already exist in the map. Returns true if the new entry was made.
 func (linkedHashMap *LinkedHashMap[K, V]) PutIfAbsent(key K, value V) bool {
+	linkedHashMap.modify()
 	if linkedHashMap.data.ContainsKey(key) {
 		return false
 	}
@@ -143,6 +157,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) ContainsValue(value V, equals func(a, 
 // Remove removes the map entry <key,value> from the map if it exists. Returns the previous value associated with the key and a boolean indicating if the returned
 // values is valid or invalid. An invalid value results when there is no entry in the map associated with the given key.
 func (linkedHashMap *LinkedHashMap[K, V]) Remove(key K) (V, bool) {
+	linkedHashMap.modify()
 	entry, ok := linkedHashMap.data.Get(key)
 	if !ok {
 		var e V
@@ -206,6 +221,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) Empty() bool {
 
 // Clear removes all entries from the map.
 func (linkedHashMap *LinkedHashMap[K, V]) Clear() {
+	linkedHashMap.modify()
 	linkedHashMap.head = nil
 	linkedHashMap.tail = nil
 	linkedHashMap.data.Clear()

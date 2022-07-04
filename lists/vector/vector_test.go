@@ -40,33 +40,6 @@ func TestAddFront(t *testing.T) {
 
 }
 
-func TestAddBack(t *testing.T) {
-
-	l := New[types.Int]()
-
-	// Case 1 : Back of an empty list should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, lists.ErrEmptyList, r.(error))
-			}
-		}()
-		l.Back()
-	})
-
-	// Case 2 : Add back to an empty list.
-	assert.Equal(t, true, l.Empty())
-	l.AddBack(1)
-	assert.Equal(t, 1, l.Len())
-	assert.Equal(t, types.Int(1), l.Back())
-
-	// Case 3 : Add back to a populated list.
-	l.AddFront(2)
-	assert.Equal(t, 2, l.Len())
-	assert.Equal(t, types.Int(2), l.Front())
-
-}
-
 func TestAdd(t *testing.T) {
 
 	v := New[types.Int]()
@@ -121,9 +94,121 @@ func TestIterator(t *testing.T) {
 		b = append(b, it.Next())
 	}
 	assert.ElementsMatch(t, a, b)
-	it.Cycle()
-	assert.Equal(t, types.Int(1), it.Next())
 
+}
+
+func TestIteratorConcurrentModification(t *testing.T) {
+
+	v := New[types.String]()
+	for i := 1; i <= 20; i++ {
+		v.Add(types.String(fmt.Sprint(i)))
+	}
+
+	// Recovery for concurrent modifications.
+	recovery := func() {
+		if r := recover(); r != nil {
+			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
+		}
+	}
+	// Case 1 : Add.
+	it := v.Iterator()
+	t.Run("Add while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			v.Add(types.String("D"))
+			it.Next()
+		}
+	})
+	// Case 2 : AddFront.
+	it = v.Iterator()
+	t.Run("AddFront while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			v.AddFront(types.String("D"))
+			it.Next()
+		}
+	})
+	// Case 3 : RemoveFront.
+	it = v.Iterator()
+	t.Run("RemoveFront while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			v.RemoveFront()
+			it.Next()
+		}
+	})
+	// Case 4 : RemoveBack.
+	it = v.Iterator()
+	t.Run("RemoveBack while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			v.RemoveBack()
+			it.Next()
+		}
+	})
+	// Case 5 : Remove.
+	it = v.Iterator()
+	t.Run("Remove while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			v.Remove()
+			it.Next()
+		}
+	})
+	// Case 6 : RemoveAt.
+	it = v.Iterator()
+	t.Run("RemoveAt while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			v.RemoveAt(0)
+			it.Next()
+		}
+	})
+	// Case 7 : Swap.
+	it = v.Iterator()
+	t.Run("Swap while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			v.Swap(0, 1)
+			it.Next()
+		}
+	})
+	// Case 8 : Reverse.
+	it = v.Iterator()
+	t.Run("Reverse while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			v.Reverse()
+			it.Next()
+		}
+	})
+	// Case 9 : Clear.
+	it = v.Iterator()
+	t.Run("Clear while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			v.Clear()
+			it.Next()
+		}
+	})
+	// Case 10 : Sort.
+	it = v.Iterator()
+	t.Run("Sort while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			Sort(v)
+			it.Next()
+		}
+	})
+	// Case 11 : SortBy.
+	it = v.Iterator()
+	t.Run("SortBy while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			SortBy(v, func(a, b types.String) bool { return a < b })
+			it.Next()
+		}
+	})
 }
 
 func TestRemove(t *testing.T) {

@@ -10,18 +10,20 @@ import (
 
 // SliceQueue slice based implementation of a queue.
 type SliceQueue[T types.Equitable[T]] struct {
-	data []T
+	data          []T
+	modifications int
 }
 
 // New creates a slice based queue with the specified elements. If no specified elements an empty queue is returned.
 func New[T types.Equitable[T]](elements ...T) *SliceQueue[T] {
-	queue := SliceQueue[T]{data: make([]T, len(elements))}
+	queue := SliceQueue[T]{data: make([]T, 0)}
 	queue.Add(elements...)
 	return &queue
 }
 
 // Add adds elements to the back of the queue.
 func (queue *SliceQueue[T]) Add(elements ...T) bool {
+	queue.modify()
 	if len(elements) == 0 {
 		return false
 	}
@@ -39,6 +41,7 @@ func (queue *SliceQueue[T]) AddAll(elements iterator.Iterable[T]) {
 
 // Clear removes all elements in the queue.
 func (queue *SliceQueue[T]) Clear() {
+	queue.modify()
 	queue.data = make([]T, 0)
 }
 
@@ -70,38 +73,54 @@ func (queue *SliceQueue[T]) Front() T {
 	return queue.data[0]
 }
 
+// modify increments the modification value
+func (queue *SliceQueue[T]) modify() {
+	queue.modifications++
+}
+
 // sliceQueueIterator model for implementing an iterator on a slice based queue.
 type sliceQueueIterator[T types.Equitable[T]] struct {
-	slice []T
-	i     int
+	initialized      bool
+	slice            []T
+	getSlice         func() []T
+	index            int
+	modifications    int
+	getModifications func() int
 }
 
 // HasNext check if the iterator has next element to produce.
 func (it *sliceQueueIterator[T]) HasNext() bool {
-	if it.slice == nil || it.i >= len(it.slice) {
+	if !it.initialized {
+		it.initialized = true
+		it.modifications = it.getModifications()
+		it.slice = it.getSlice()
+	}
+	if it.slice == nil || it.index >= len(it.slice) {
 		return false
 	}
 	return true
 }
 
 // Next yields the next element from the iterator.
-func (iter *sliceQueueIterator[T]) Next() T {
-	if !iter.HasNext() {
+func (it *sliceQueueIterator[T]) Next() T {
+	if !it.HasNext() {
 		panic(errors.ErrNoNextElement())
+	} else if it.modifications != it.getModifications() {
+		panic(errors.ErrConcurrenModification())
 	}
-	e := iter.slice[iter.i]
-	iter.i++
+	e := it.slice[it.index]
+	it.index++
 	return e
 }
 
 // Cycle resets the iterator.
 func (it *sliceQueueIterator[T]) Cycle() {
-	it.i = 0
+	it.index = 0
 }
 
 // Iterator returns an iterator for the queue.
 func (queue *SliceQueue[T]) Iterator() iterator.Iterator[T] {
-	return &sliceQueueIterator[T]{slice: queue.data, i: 0}
+	return &sliceQueueIterator[T]{slice: queue.data, index: 0, getSlice: func() []T { return queue.data }, getModifications: func() int { return queue.modifications }}
 }
 
 func (queue *SliceQueue[T]) Len() int {
@@ -120,6 +139,7 @@ func (queue *SliceQueue[T]) indexOf(e T) int {
 
 // Remove removes elements from the list. Only the first occurence of each element is removed.
 func (queue *SliceQueue[T]) Remove(elements ...T) bool {
+	queue.modify()
 	n := queue.Len()
 	for _, element := range elements {
 		queue.remove(element)
@@ -150,6 +170,7 @@ func (queue *SliceQueue[T]) RemoveAll(iterable iterator.Iterable[T]) {
 
 // RemoveFront removes and returns the front element of the queue. Wil panic if no such element.
 func (queue *SliceQueue[T]) RemoveFront() T {
+	queue.modify()
 	if queue.Empty() {
 		panic(errors.ErrNoSuchElement(queue.Len()))
 	}

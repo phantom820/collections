@@ -2,6 +2,7 @@ package linkedhashmap
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/phantom820/collections/errors"
@@ -133,12 +134,57 @@ func TestIterator(t *testing.T) {
 		}()
 		it.Next()
 	})
+}
 
-	// Case 3 : Recycle iterator.
-	it.Cycle()
+func TestIteratorConcurrentModification(t *testing.T) {
 
-	value := it.Next().Value
-	assert.Equal(t, "A", value)
+	m := New[types.String, int]()
+	for i := 1; i <= 20; i++ {
+		m.Put(types.String(strconv.Itoa(i)), i)
+	}
+
+	// Recovery for concurrent modifications.
+	recovery := func() {
+		if r := recover(); r != nil {
+			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
+		}
+	}
+	// Case 1 : Put.
+	it := m.Iterator()
+	t.Run("Put while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			m.Put(types.String("D"), 22)
+			it.Next()
+		}
+	})
+	// Case 2 : PutIfAbsent.
+	it = m.Iterator()
+	t.Run("PutIfAbsent while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			m.PutIfAbsent(types.String("D"), 22)
+			it.Next()
+		}
+	})
+	// Case 3 : Remove.
+	it = m.Iterator()
+	t.Run("Remove while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			m.Remove(types.String("D"))
+			it.Next()
+		}
+	})
+	// Case 4 : Clear.
+	it = m.Iterator()
+	t.Run("Clear while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			m.Clear()
+			it.Next()
+		}
+	})
 
 }
 

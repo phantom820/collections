@@ -12,9 +12,10 @@ import (
 
 // List a doubly linked list.
 type List[T types.Equitable[T]] struct {
-	head *node[T]
-	tail *node[T]
-	len  int
+	head          *node[T]
+	tail          *node[T]
+	len           int
+	modifications int // keeps track of modifications made by mutating operations, so we can have panics with concurrent modifications.
 }
 
 // New creates a list with the specified elements. If no elements are specified an empty list is created.
@@ -36,35 +37,45 @@ func newNode[T types.Equitable[T]](value T) *node[T] {
 	return &node[T]{value: value, prev: nil, next: nil}
 }
 
+// modify increments the modification value
+func (list *List[T]) modify() {
+	list.modifications++
+}
+
 // listIterator type to implement an iterator for a list.
 type listIterator[T types.Equitable[T]] struct {
-	n     *node[T] // Used for Next() and HasNext().
-	start *node[T] // Used to cycle an iterator.
+	n                *node[T]        // Used for Next() and HasNext().
+	source           func() *node[T] // Used to initialize an iterator.
+	initialized      bool            // Used to check if the iterator has been initialized.
+	modifications    int             // keeps track of modifications made by mutating operations, so we can have panics with concurrent modifications.
+	getModifications func() int      // keep track of any modifications to the source if we out of parity then concurrent modification occured.
 }
 
 // HasNext checks if the iterator has a next element to yield.
-func (iterator *listIterator[T]) HasNext() bool {
-	return iterator.n != nil
+func (it *listIterator[T]) HasNext() bool {
+	if !it.initialized {
+		it.n = it.source()
+		it.initialized = true
+		it.modifications = it.getModifications()
+	}
+	return it.n != nil
 }
 
 // Next yields the next element in the iterator. Will panic if the iterator has no next element.
-func (iter *listIterator[T]) Next() T {
-	if !iter.HasNext() {
+func (it *listIterator[T]) Next() T {
+	if !it.HasNext() {
 		panic(errors.ErrNoNextElement())
+	} else if it.modifications != it.getModifications() {
+		panic(errors.ErrConcurrenModification())
 	}
-	n := iter.n
-	iter.n = iter.n.next
+	n := it.n
+	it.n = it.n.next
 	return n.value
-}
-
-// Cycle resets the iterator.
-func (it *listIterator[T]) Cycle() {
-	it.n = it.start
 }
 
 // Iterator returns an iterator for the list.
 func (list *List[T]) Iterator() iterator.Iterator[T] {
-	return &listIterator[T]{n: list.head, start: list.head}
+	return &listIterator[T]{n: nil, source: func() *node[T] { return list.head }, getModifications: func() int { return list.modifications }}
 }
 
 // Front returns the front of the list. Will panic if list has no front element.
@@ -86,6 +97,7 @@ func (list *List[T]) Back() T {
 // Swap swaps the element at index i and the element at index j. This is done using links. Will panic if one/both of the specified indices is
 //  out of bounds.
 func (list *List[T]) Swap(i, j int) {
+	list.modify()
 	if i < 0 || i >= list.len || j < 0 || j >= list.len {
 		if i < 0 || i >= list.len {
 			panic(errors.ErrIndexOutOfBounds(i, list.len))
@@ -187,6 +199,7 @@ func (list *List[T]) addFront(element T) {
 
 // AddFront adds elements to the front of the list.
 func (list *List[T]) AddFront(elements ...T) {
+	list.modify()
 	for _, element := range elements {
 		list.addFront(element)
 	}
@@ -207,6 +220,7 @@ func (list *List[T]) addBack(element T) {
 
 // AddBack adds elements to the back of the list.
 func (list *List[T]) AddBack(elements ...T) {
+	list.modify()
 	for _, element := range elements {
 		list.addBack(element)
 	}
@@ -214,6 +228,7 @@ func (list *List[T]) AddBack(elements ...T) {
 
 // AddAt adds an element to the list at specified index, all subsequent elements will be shifted right. Will panic if index is out of bounds.
 func (list *List[T]) AddAt(i int, element T) {
+	list.modify()
 	if i < 0 || i >= list.len {
 		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	} else if i == 0 {
@@ -238,6 +253,7 @@ func (list *List[T]) AddAt(i int, element T) {
 
 // Add adds elements to the back of the list.
 func (list *List[T]) Add(elements ...T) bool {
+	list.modify()
 	if len(elements) == 0 {
 		return false
 	}
@@ -250,6 +266,7 @@ func (list *List[T]) Add(elements ...T) bool {
 // Set replaces the element at the specified index in the list with the new element. Returns the old element that was at the index. Will panic
 // if index is out of bounds.
 func (list *List[T]) Set(i int, element T) T {
+	list.modify()
 	if i < 0 || i >= list.len {
 		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	}
@@ -291,6 +308,7 @@ func (list *List[T]) Contains(element T) bool {
 
 // RemoveFront removes and returns the front element of the list. Will panic if list has no front element.
 func (list *List[T]) RemoveFront() T {
+	list.modify()
 	if list.len == 0 {
 		panic(errors.ErrNoSuchElement(list.len))
 	} else if list.len == 1 {
@@ -316,6 +334,7 @@ func (list *List[T]) RemoveFront() T {
 
 // RemoveBack removes and returns the back element of the list. Will panic if the list has no back element.
 func (list *List[T]) RemoveBack() T {
+	list.modify()
 	if list.len <= 1 {
 		return list.RemoveFront()
 	}
@@ -332,6 +351,7 @@ func (list *List[T]) RemoveBack() T {
 
 // RemoveAt removes the element at the specified index in the list. Will panic if index is out of bounds.
 func (list *List[T]) RemoveAt(i int) T {
+	list.modify()
 	if i < 0 || i >= list.len {
 		panic(errors.ErrIndexOutOfBounds(i, list.len))
 	} else if i == 0 {
@@ -358,6 +378,7 @@ func (list *List[T]) removeNode(curr *node[T]) T {
 
 // Remove removes elements from the list. Only the first occurence of an element is removed.
 func (list *List[T]) Remove(elements ...T) bool {
+	list.modify()
 	n := list.Len()
 	for _, element := range elements {
 		list.remove(element)
@@ -400,7 +421,7 @@ func (list *List[T]) RemoveAll(iterable iterator.Iterable[T]) {
 
 // Reverse reverses the list in place.
 func (list *List[T]) Reverse() {
-
+	list.modify()
 	var temp *node[T] = nil
 	current := list.head
 
@@ -426,6 +447,7 @@ func (list *List[T]) Reverse() {
 
 // Clear removes all elements from the list.
 func (list *List[T]) Clear() {
+	list.modify()
 	list.head = nil
 	list.tail = nil
 	list.len = 0
@@ -571,6 +593,7 @@ func sort[T types.Comparable[T]](head *node[T]) (*node[T], *node[T]) {
 
 // Sort sorts the list using natural ordering of elements.
 func Sort[T types.Comparable[T]](list *List[T]) {
+	list.modify()
 	if list.Empty() || list.len == 1 {
 		return
 	}
@@ -629,6 +652,7 @@ func sortBy[T types.Equitable[T]](head *node[T], less func(a, b T) bool) (*node[
 
 // SortBy sorts the list using the function less for comparison of two element . If less(a,b) = true then a comes before b in the sorted list.
 func SortBy[T types.Equitable[T]](list *List[T], less func(a, b T) bool) {
+	list.modify()
 	if list.Empty() || list.len == 1 {
 		return
 	}

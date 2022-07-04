@@ -2,6 +2,7 @@ package linkedhashset
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/phantom820/collections/errors"
@@ -60,10 +61,69 @@ func TestIterator(t *testing.T) {
 	}
 
 	assert.Equal(t, true, testutils.EqualSlices(a, b))
-	it.Cycle()
-	assert.Equal(t, types.Int(1), it.Next())
 	s.Clear()
 	assert.Equal(t, true, s.Empty())
+
+}
+
+func TestIteratorConcurrentModification(t *testing.T) {
+
+	s := New[types.String]()
+	for i := 1; i <= 20; i++ {
+		s.Add(types.String(strconv.Itoa(i)))
+	}
+
+	// Recovery for concurrent modifications.
+	recovery := func() {
+		if r := recover(); r != nil {
+			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
+		}
+	}
+	// Case 1 : Put.
+	it := s.Iterator()
+	t.Run("Add while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			s.Add(types.String("D"))
+			it.Next()
+		}
+	})
+	// Case 2 : Remove.
+	it = s.Iterator()
+	t.Run("Remove while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			s.Remove(types.String("D"))
+			it.Next()
+		}
+	})
+	// Case 3 : RemoveIf.
+	it = s.Iterator()
+	t.Run("RemoveIf while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			s.RemoveIf(func(element types.String) bool { return element == "" })
+			it.Next()
+		}
+	})
+	// Case 3 : RetainAll.
+	it = s.Iterator()
+	t.Run("RetainAll while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			s.RetainAll(New[types.String]())
+			it.Next()
+		}
+	})
+	// Case 4 : Clear.
+	it = s.Iterator()
+	t.Run("Clear while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			s.Clear()
+			it.Next()
+		}
+	})
 
 }
 

@@ -6,7 +6,6 @@ import (
 
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/lists/forwardlist"
-	"github.com/phantom820/collections/stacks"
 	"github.com/phantom820/collections/types"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +19,7 @@ func TestPeek(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, stacks.ErrNoTopElement, r.(error))
+				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
 			}
 		}()
 		s.Peek()
@@ -41,7 +40,7 @@ func TestPop(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, stacks.ErrNoTopElement, r.(error))
+				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
 			}
 		}()
 		s.Pop()
@@ -141,8 +140,6 @@ func TestIterator(t *testing.T) {
 		b = append(b, it.Next())
 	}
 	assert.ElementsMatch(t, a, b)
-	it.Cycle()
-	assert.Equal(t, types.Int(5), it.Next())
 
 }
 

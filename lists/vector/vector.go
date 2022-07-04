@@ -13,7 +13,8 @@ import (
 
 // Vector an implementation of a list by wrapping around a slice.
 type Vector[T types.Equitable[T]] struct {
-	data []T
+	data          []T
+	modifications int
 }
 
 // New creates a list with the specified elements. If no elements are specified an empty list is created.
@@ -25,16 +26,13 @@ func New[T types.Equitable[T]](elements ...T) *Vector[T] {
 
 // AddFront adds elements to the front of the list.
 func (list *Vector[T]) AddFront(elements ...T) {
+	list.modify()
 	list.data = append(elements, list.data...)
-}
-
-// AddBack adds elements to the back of the list.
-func (list *Vector[T]) AddBack(elements ...T) {
-	list.data = append(list.data, elements...)
 }
 
 // Set replaces the element at index i in the list with the new element. Returns the old element that was at index i.
 func (list *Vector[T]) Set(i int, e T) T {
+	list.modify()
 	if i < 0 || i >= list.Len() {
 		panic(errors.ErrIndexOutOfBounds(i, list.Len()))
 	}
@@ -45,6 +43,7 @@ func (list *Vector[T]) Set(i int, e T) T {
 
 // Add adds elements to the list.
 func (list *Vector[T]) Add(elements ...T) bool {
+	list.modify()
 	n := list.Len()
 	list.data = append(list.data, elements...)
 	return (n != list.Len())
@@ -60,6 +59,7 @@ func (list *Vector[T]) AddAll(iterable iterator.Iterable[T]) {
 
 // Clear removes all elements in the list.
 func (list *Vector[T]) Clear() {
+	list.modify()
 	list.data = nil
 	list.data = make([]T, 0)
 }
@@ -74,6 +74,7 @@ func (list *Vector[T]) At(i int) T {
 
 // AddAt adds an element to the list at specified index, all subsequent elements will be shifted right. Will panic if index is out of bounds.
 func (list *Vector[T]) AddAt(i int, e T) {
+	list.modify()
 	if i < 0 || i >= len(list.data) {
 		panic(errors.ErrIndexOutOfBounds(i, list.Len()))
 	}
@@ -112,15 +113,29 @@ func (list *Vector[T]) Empty() bool {
 	return len(list.data) == 0
 }
 
+// modify increments the modification value
+func (list *Vector[T]) modify() {
+	list.modifications++
+}
+
 // listIterator type for implementing an iterator on a list.
 type listIterator[T types.Equitable[T]] struct {
-	slice []T
-	i     int
+	initialized      bool
+	slice            []T
+	getSlice         func() []T
+	index            int
+	modifications    int
+	getModifications func() int
 }
 
 // HasNext checks if the iterator has a next element to yield.
 func (it *listIterator[T]) HasNext() bool {
-	if it.slice == nil || it.i >= len(it.slice) {
+	if !it.initialized {
+		it.initialized = true
+		it.modifications = it.getModifications()
+		it.slice = it.getSlice()
+	}
+	if it.slice == nil || it.index >= len(it.slice) {
 		return false
 	}
 	return true
@@ -130,15 +145,12 @@ func (it *listIterator[T]) HasNext() bool {
 func (it *listIterator[T]) Next() T {
 	if !it.HasNext() {
 		panic(errors.ErrNoNextElement())
+	} else if it.modifications != it.getModifications() {
+		panic(errors.ErrConcurrenModification())
 	}
-	e := it.slice[it.i]
-	it.i++
+	e := (it.slice)[it.index]
+	it.index++
 	return e
-}
-
-// Cycle resets the iterator.
-func (it *listIterator[T]) Cycle() {
-	it.i = 0
 }
 
 // Equals checks if the list is equals to other. This only true if they are the same reference or have the same size and their elements match.
@@ -159,7 +171,8 @@ func (list *Vector[T]) Equals(other *Vector[T]) bool {
 
 // Iterator returns an iterator for the list.
 func (list *Vector[T]) Iterator() iterator.Iterator[T] {
-	return &listIterator[T]{slice: list.data, i: 0}
+	return &listIterator[T]{slice: list.data, index: 0, getModifications: func() int { return list.modifications },
+		getSlice: func() []T { return list.data }}
 }
 
 // Len return the size of the list.
@@ -177,8 +190,23 @@ func (list *Vector[T]) indexOf(e T) int {
 	return -1
 }
 
+// shrink reduces the memory of the vector to prevent memory wasting.
+func (list *Vector[T]) shrink() {
+	if cap(list.data) > 0 {
+		loadFactor := float32(len(list.data)) / float32(cap(list.data))
+		if loadFactor >= 0.25 {
+			return
+		}
+	}
+	data := make([]T, cap(list.data)/2)
+	copy(data, list.data)
+	list.data = nil
+	list.data = data
+}
+
 // Remove removes elements from the list. Only the first occurence of an element is removed.
 func (list *Vector[T]) Remove(elements ...T) bool {
+	list.modify()
 	n := list.Len()
 	for _, element := range elements {
 		list.remove(element)
@@ -191,21 +219,25 @@ func (list *Vector[T]) Remove(elements ...T) bool {
 
 // RemoveFront removes and returns the front element of the list. Will panic if list has no front element.
 func (list *Vector[T]) RemoveFront() T {
+	list.modify()
 	if list.Empty() {
 		panic(lists.ErrEmptyList)
 	}
 	front := list.data[0]
 	list.data = list.data[1:]
+	list.shrink()
 	return front
 }
 
 // RemoveBack removes and returns the back element of the list. Will panic if the list has no back element.
 func (list *Vector[T]) RemoveBack() T {
+	list.modify()
 	if list.Empty() {
 		panic(lists.ErrEmptyList)
 	}
 	back := list.data[list.Len()-1]
 	list.data = list.data[:list.Len()-1]
+	list.shrink()
 	return back
 }
 
@@ -221,6 +253,7 @@ func (list *Vector[T]) remove(element T) bool {
 
 // RemoveAt deletes the element at the specified index in the list. Will panic if index is out of bounds.
 func (list *Vector[T]) RemoveAt(i int) T {
+	list.modify()
 	if i < 0 || i >= len(list.data) {
 		panic(errors.ErrIndexOutOfBounds(i, list.Len()))
 	}
@@ -276,6 +309,7 @@ func (list *Vector[T]) Filter(f func(element T) bool) *Vector[T] {
 // Swap swaps the element at index i and the element at index j. This is done using links. Will panic if one/both of the specified indices is
 //  out of bounds.
 func (list *Vector[T]) Swap(i, j int) {
+	list.modify()
 	if i < 0 || i >= list.Len() || j < 0 || j >= list.Len() {
 		panic(lists.ErrOutOfBounds)
 	}
@@ -286,6 +320,7 @@ func (list *Vector[T]) Swap(i, j int) {
 
 // Reverse reverses the list in place.
 func (list *Vector[T]) Reverse() {
+	list.modify()
 	n := list.Len()
 	for i := 0; i < n/2; i++ {
 		list.Swap(i, n-i-1)
@@ -293,12 +328,13 @@ func (list *Vector[T]) Reverse() {
 }
 
 // String for pretty printing the list.
-func (s *Vector[T]) String() string {
-	return fmt.Sprint(s.data)
+func (v *Vector[T]) String() string {
+	return fmt.Sprint(v.data)
 }
 
 // Sort the list using the natural ordering of its elements.
 func Sort[T types.Comparable[T]](list *Vector[T]) {
+	list.modify()
 	sort.Slice(list.data, func(i, j int) bool {
 		return list.data[i].Less(list.data[j])
 	})
@@ -306,6 +342,7 @@ func Sort[T types.Comparable[T]](list *Vector[T]) {
 
 // SortBy sorts the list using the function less for comparison of two element . if less(a,b) = true then it means a comes before b in the sorted list.
 func SortBy[T types.Equitable[T]](list *Vector[T], less func(a, b T) bool) {
+	list.modify()
 	sort.Slice(list.data, func(i, j int) bool {
 		return less(list.data[i], list.data[j])
 	})

@@ -113,11 +113,6 @@ func (it *sliceQueueIterator[T]) Next() T {
 	return e
 }
 
-// Cycle resets the iterator.
-func (it *sliceQueueIterator[T]) Cycle() {
-	it.index = 0
-}
-
 // Iterator returns an iterator for the queue.
 func (queue *SliceQueue[T]) Iterator() iterator.Iterator[T] {
 	return &sliceQueueIterator[T]{slice: queue.data, index: 0, getSlice: func() []T { return queue.data }, getModifications: func() int { return queue.modifications }}

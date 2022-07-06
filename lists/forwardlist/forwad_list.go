@@ -47,7 +47,6 @@ type forwardListIterator[T types.Equitable[T]] struct {
 	n                *node[T]        // Used for Next() and HasNext().
 	source           func() *node[T] // Used to initialize/cycle an iterator.
 	initialized      bool            // used to check if we have initialized the iterator.
-	len              int             // used to check for concurrent modification.
 	modifications    int             // keeps track of modifications made by mutating operations, so we can have panics with concurrent modifications.
 	getModifications func() int      // keep track of any modifications to the source if we out of parity then concurrent modification occured.
 }
@@ -158,6 +157,18 @@ func (list *ForwardList[T]) nodeAt(i int) *node[T] {
 		j++
 	}
 	return n
+}
+
+// IndexOf finds the index of the first occurence of the element. Will return -1 if the element is not found.
+func (list *ForwardList[T]) IndexOf(element T) int {
+	i := 0
+	for curr := list.head; curr != nil; curr = curr.next {
+		if curr.value.Equals(element) {
+			return i
+		}
+		i++
+	}
+	return -1
 }
 
 // At retrieves the element at index i in the list. Will panic If index is out of bounds.

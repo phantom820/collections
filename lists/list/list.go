@@ -150,6 +150,18 @@ func (list *List[T]) Swap(i, j int) {
 	}
 }
 
+// IndexOf finds the index of the first occurence of the element. Will return -1 if the element is not found.
+func (list *List[T]) IndexOf(element T) int {
+	i := 0
+	for curr := list.head; curr != nil; curr = curr.next {
+		if curr.value.Equals(element) {
+			return i
+		}
+		i++
+	}
+	return -1
+}
+
 // nodeAt retrieves the node at index i in list. This is for internal use for supporting operations like Swap.
 func (list *List[T]) nodeAt(i int) *node[T] {
 	j := 0

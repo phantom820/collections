@@ -351,6 +351,19 @@ func TestEquals(t *testing.T) {
 
 }
 
+func TestIndexOf(t *testing.T) {
+
+	l := New[types.Int](1, 4, 3, 4, 5, 6)
+
+	// Case 1 : Should return -1.
+	assert.Equal(t, -1, l.IndexOf(0))
+
+	// Case 2 : Should return the right index for present element.
+	assert.Equal(t, 1, l.IndexOf(4))
+	assert.Equal(t, 2, l.IndexOf(3))
+
+}
+
 func TestAt(t *testing.T) {
 
 	v := New[types.Int]()

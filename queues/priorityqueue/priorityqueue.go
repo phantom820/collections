@@ -131,11 +131,6 @@ func (it *priorityQueueIterator[T]) Next() T {
 	return n
 }
 
-// Cycle resets the iterator.
-func (it *priorityQueueIterator[T]) Cycle() {
-	it.index = 0
-}
-
 // Iterator returns an iterator for iterating through queue. The elements from the iterator are not ordered.
 func (queue *PriorityQueue[T]) Iterator() iterator.Iterator[T] {
 	it := priorityQueueIterator[T]{data: nil, index: 0, getData: func() []T { return queue.heap.Collect() },

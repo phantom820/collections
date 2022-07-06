@@ -126,11 +126,6 @@ func (it *sliceStackIterator[T]) Next() T {
 	return e
 }
 
-// Cycle resets the iterator.
-func (it *sliceStackIterator[T]) Cycle() {
-	it.index = len(it.slice) - 1
-}
-
 // Iterator returns an iterator for the stack.
 func (stack *SliceStack[T]) Iterator() iterator.Iterator[T] {
 	return &sliceStackIterator[T]{slice: []T{}, getSlice: func() []T { return stack.data }, getModifications: func() int { return stack.modifications }}

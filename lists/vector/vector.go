@@ -180,10 +180,10 @@ func (list *Vector[T]) Len() int {
 	return len(list.data)
 }
 
-// indexOf finds the index of an element e in the list. Gives -1 if the element is not present.
-func (list *Vector[T]) indexOf(e T) int {
+// IndexOf finds the index of the first occurence of the element. Will return -1 if the element is not found.
+func (list *Vector[T]) IndexOf(element T) int {
 	for i, _ := range list.data {
-		if (list.data)[i].Equals(e) {
+		if (list.data)[i].Equals(element) {
 			return i
 		}
 	}
@@ -243,7 +243,7 @@ func (list *Vector[T]) RemoveBack() T {
 
 // remove deletes the element from the list. For internal use to support Remove.
 func (list *Vector[T]) remove(element T) bool {
-	i := list.indexOf(element)
+	i := list.IndexOf(element)
 	if i == -1 {
 		return false
 	}

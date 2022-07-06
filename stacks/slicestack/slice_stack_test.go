@@ -143,6 +143,57 @@ func TestIterator(t *testing.T) {
 
 }
 
+func TestIteratorConcurrentModification(t *testing.T) {
+
+	s := New[types.String]()
+	for i := 1; i <= 20; i++ {
+		s.Add(types.String(fmt.Sprint(i)))
+	}
+
+	// Recovery for concurrent modifications.
+	recovery := func() {
+		if r := recover(); r != nil {
+			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
+		}
+	}
+	// Case 1 : Add.
+	it := s.Iterator()
+	t.Run("Add while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			s.Add(types.String("D"))
+			it.Next()
+		}
+	})
+	// Case 2 : RemoveFront.
+	it = s.Iterator()
+	t.Run("Remove while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			s.Remove()
+			it.Next()
+		}
+	})
+	// Case 3 : Pop.
+	it = s.Iterator()
+	t.Run("Pop while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			s.Pop()
+			it.Next()
+		}
+	})
+	// Case 4 : Clear.
+	it = s.Iterator()
+	t.Run("Clear while iterating", func(t *testing.T) {
+		defer recovery()
+		for it.HasNext() {
+			s.Clear()
+			it.Next()
+		}
+	})
+}
+
 func TestString(t *testing.T) {
 	s := New[types.Int](1, 2, 3, 4)
 	assert.Equal(t, "[1 2 3 4]", fmt.Sprint(s))

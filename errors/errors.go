@@ -24,7 +24,7 @@ var (
 	ConcurrentModificationTemplate, _ = template.New("NoNextElement").Parse("ErrConcurrentModification iterator source was modified while iterating.")
 )
 
-// Error a custom error type to be used.
+// Error a custom error type for collections.
 type Error struct {
 	code int
 	msg  string

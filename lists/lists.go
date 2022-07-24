@@ -1,16 +1,8 @@
 package lists
 
 import (
-	"errors"
-
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/types"
-)
-
-// Errors for  operations that may be invalid on a list.
-var (
-	ErrEmptyList   = errors.New("operation not allowed on an empty list")
-	ErrOutOfBounds = errors.New("index out of bounds")
 )
 
 // List interface which implementations of a list must satisfy.

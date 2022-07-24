@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/phantom820/collections/errors"
-	"github.com/phantom820/collections/lists"
 	"github.com/phantom820/collections/lists/forwardlist"
 	"github.com/phantom820/collections/testutils"
 	"github.com/phantom820/collections/types"
@@ -21,7 +20,7 @@ func TestAddFront(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, lists.ErrEmptyList, r.(error))
+				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
 			}
 		}()
 		l.Front()
@@ -239,7 +238,7 @@ func TestSwap(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, lists.ErrOutOfBounds, r.(error))
+				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
 			}
 		}()
 		l.Swap(-1, 0)
@@ -474,7 +473,7 @@ func TestRemoveFront(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, lists.ErrEmptyList, r.(error))
+				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
 			}
 		}()
 		l.RemoveFront()
@@ -497,7 +496,7 @@ func TestRemoveBack(t *testing.T) {
 	t.Run("panics", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
-				assert.Equal(t, lists.ErrEmptyList, r.(error))
+				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
 			}
 		}()
 		l.RemoveBack()

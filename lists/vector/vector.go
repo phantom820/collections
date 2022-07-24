@@ -7,7 +7,6 @@ import (
 
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/lists"
 	"github.com/phantom820/collections/types"
 )
 
@@ -221,7 +220,7 @@ func (list *Vector[T]) Remove(elements ...T) bool {
 func (list *Vector[T]) RemoveFront() T {
 	list.modify()
 	if list.Empty() {
-		panic(lists.ErrEmptyList)
+		panic(errors.ErrNoSuchElement(list.Len()))
 	}
 	front := list.data[0]
 	list.data = list.data[1:]
@@ -233,7 +232,7 @@ func (list *Vector[T]) RemoveFront() T {
 func (list *Vector[T]) RemoveBack() T {
 	list.modify()
 	if list.Empty() {
-		panic(lists.ErrEmptyList)
+		panic(errors.ErrNoSuchElement(list.Len()))
 	}
 	back := list.data[list.Len()-1]
 	list.data = list.data[:list.Len()-1]
@@ -273,7 +272,7 @@ func (list *Vector[T]) RemoveAll(elements iterator.Iterable[T]) {
 // Front returns the front of the list. Will panic if list has no front element.
 func (list *Vector[T]) Front() T {
 	if list.Empty() {
-		panic(lists.ErrEmptyList)
+		panic(errors.ErrNoSuchElement(list.Len()))
 	}
 	return list.data[0]
 }
@@ -281,7 +280,7 @@ func (list *Vector[T]) Front() T {
 // Back returns the back element of the list.  Will panic if list has no back element.
 func (list *Vector[T]) Back() T {
 	if list.Empty() {
-		panic(lists.ErrEmptyList)
+		panic(errors.ErrNoSuchElement(list.Len()))
 	}
 	return list.data[list.Len()-1]
 }
@@ -310,8 +309,11 @@ func (list *Vector[T]) Filter(f func(element T) bool) *Vector[T] {
 //  out of bounds.
 func (list *Vector[T]) Swap(i, j int) {
 	list.modify()
-	if i < 0 || i >= list.Len() || j < 0 || j >= list.Len() {
-		panic(lists.ErrOutOfBounds)
+	if i < 0 || i >= list.Len() {
+		if i < 0 || i >= list.Len() {
+			panic(errors.ErrIndexOutOfBounds(i, list.Len()))
+		}
+		panic(errors.ErrIndexOutOfBounds(j, list.Len()))
 	}
 	temp := list.data[i]
 	list.data[i] = list.data[j]

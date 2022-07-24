@@ -1,13 +1,13 @@
 # collections
 [![Build Status](https://app.travis-ci.com/phantom820/collections.svg?branch=main)](https://app.travis-ci.com/phantom820/collections) [![codecov](https://codecov.io/gh/phantom820/collections/branch/main/graph/badge.svg?token=TY4FD26RP0)](https://codecov.io/gh/phantom820/collections)
 
-collections is a library aiming to bring common data structures into Go. These collections can be used with user define types that satisfy an interface required by that collection i.e collections such as `List`, `Queue` and `Stack` require types to satisfy `Equitable` interface while a `Map` requires a type that satisfies the `Hashable` interface and so forth. See [types](https://github.com/phantom820/collections/blob/main/types/types.go), in which wrappers around primitives `string` and `int` have been implemented. 
+collections is a library aiming to bring common data structures into Go. These collections can be used with user defined types that satisfy an interface required by that collection i.e collections such as `List`, `Queue` and `Stack` require types to satisfy `Equitable` interface while a `Map` requires a type that satisfies the `Hashable` interface and so forth. See [types](https://github.com/phantom820/collections/blob/main/types/types.go), in which wrappers around primitives `string` and `int` have been implemented. 
 
 ### Install 
 ` go get github.com/phantom820/collections@v0.3.0-alpha`
 
 ### Collections
-An interface for "Linear" data structures.
+"Linear" data structures.
 ```go
 // Satisfied by List, Vector, Queue , Stack ,  HashSet.
 type Collection[T types.Equitable[T]] interface {

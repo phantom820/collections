@@ -2,6 +2,8 @@
 package hashmap
 
 import (
+	"math"
+
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps"
@@ -168,7 +170,7 @@ func (hashMap *HashMap[K, V]) Put(key K, value V) V {
 	if hashMap.LoadFactor() >= hashMap.loadFactorLimit { // If we have crossed the load factor limit resize.
 		hashMap.resize()
 	}
-	_key := mapKey[K]{key: key, hash: key.HashCode()} // Internal key for use by underlying red black tree.
+	_key := mapKey[K]{key: key, hash: int(math.Abs(float64(key.HashCode())))} // Internal key for use by underlying red black tree.
 	index := _key.hash % hashMap.capacity
 	if hashMap.buckets[index] == nil {
 		hashMap.buckets[index] = rbt.New[mapKey[K], V]()
@@ -190,7 +192,7 @@ func (hashMap *HashMap[K, V]) Put(key K, value V) V {
 // PutIfAbsent inserts the entry <key,value> into the map if the key does not already exist in the map. Returns true if the new entry was made.
 func (hashMap *HashMap[K, V]) PutIfAbsent(key K, value V) bool {
 	hashMap.modify()
-	_key := mapKey[K]{key: key, hash: key.HashCode()}
+	_key := mapKey[K]{key: key, hash: int(math.Abs(float64(key.HashCode())))}
 	index := _key.hash % hashMap.capacity
 	if hashMap.buckets[index] == nil {
 		hashMap.Put(key, value)
@@ -220,7 +222,7 @@ func (hashMap *HashMap[K, V]) Len() int {
 // Get retrieves the value associated with the key in the map. Returns a value and a boolean indicating if the value is valid or invalid.
 // An invalid value results when there is no entry for the given key and the zero value is returned.
 func (hashMap *HashMap[K, V]) Get(key K) (V, bool) {
-	_key := mapKey[K]{key: key, hash: key.HashCode()}
+	_key := mapKey[K]{key: key, hash: int(math.Abs(float64(key.HashCode())))}
 	index := _key.hash % hashMap.capacity
 	if hashMap.buckets[index] == nil {
 		var value V
@@ -231,7 +233,7 @@ func (hashMap *HashMap[K, V]) Get(key K) (V, bool) {
 
 // ContainsKey checks if the map contains an entry with the given key.
 func (hashMap *HashMap[K, V]) ContainsKey(key K) bool {
-	hash := key.HashCode()
+	hash := int(math.Abs(float64(key.HashCode())))
 	index := hash % hashMap.capacity
 	if hashMap.buckets[index] == nil {
 		return false
@@ -256,7 +258,7 @@ func (hashMap *HashMap[K, V]) ContainsValue(v V, equals func(a, b V) bool) bool 
 // values is valid or invalid. An invalid value results when there is no entry in the map associated with the given key.
 func (hashMap *HashMap[K, V]) Remove(key K) (V, bool) {
 	hashMap.modify()
-	_key := mapKey[K]{key: key, hash: key.HashCode()}
+	_key := mapKey[K]{key: key, hash: int(math.Abs(float64(key.HashCode())))}
 	index := _key.hash % hashMap.capacity
 	if hashMap.buckets[index] == nil {
 		var value V

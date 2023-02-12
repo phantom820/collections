@@ -1,284 +1,370 @@
 package linkedhashset
 
 import (
-	"fmt"
-	"strconv"
 	"testing"
 
-	"github.com/phantom820/collections/errors"
-	"github.com/phantom820/collections/lists/list"
-	"github.com/phantom820/collections/testutils"
-	"github.com/phantom820/collections/types"
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNew(t *testing.T) {
+
+	set := New[string]()
+	assert.NotNil(t, set)
+	assert.True(t, set.Empty())
+	assert.Equal(t, 0, set.Len())
+}
+
+func TestOf(t *testing.T) {
+
+	assert.Equal(t, []string{}, Of[string]().linkedHashMap.Keys())
+	assert.Equal(t, []string{"A"}, Of("A").linkedHashMap.Keys())
+
+}
+
 func TestAdd(t *testing.T) {
 
-	s := New[types.Int]()
-
-	// Case 1 : Add to an empty set.
-	assert.Equal(t, true, s.Empty())
-	assert.Equal(t, true, s.Add(1))
-	assert.Equal(t, 1, s.Len())
-
-	// Case 2 : Add to a set with elements.
-	assert.Equal(t, true, s.Add(2))
-
-	// Case 3 : Add multiple elements from another iterable.
-	s = New[types.Int]()
-	l := list.New[types.Int]()
-	for i := 0; i < 10; i++ {
-		l.Add(types.Int(i))
+	type addTest struct {
+		input    []string
+		expected LinkedHashSet[string]
 	}
 
-	s.AddAll(l)
-	assert.Equal(t, l.Len(), s.Len())
+	addTests := []addTest{
+		{
+			input:    []string{},
+			expected: Of[string](),
+		},
+		{
+			input:    []string{"A", "A", "B"},
+			expected: Of("A", "B"),
+		},
+	}
 
+	f := func(values []string) LinkedHashSet[string] {
+		set := New[string]()
+		for _, value := range values {
+			set.Add(value)
+		}
+		return *set
+	}
+
+	for _, test := range addTests {
+		assert.Equal(t, test.expected.linkedHashMap.Keys(), f(test.input).linkedHashMap.Keys())
+	}
 }
 
-func TestIterator(t *testing.T) {
+func TestAddSlice(t *testing.T) {
 
-	s := New[types.Int]()
-
-	// Case 1 : Next on a iterator for an empty list should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
-			}
-		}()
-		it := s.Iterator()
-		it.Next()
-	})
-
-	// Case 2 : Iterator on a set with elements.
-	s.Add(1, 2, 3, 4, 5)
-	a := s.Collect()
-	b := make([]types.Int, 0)
-	it := s.Iterator()
-	for it.HasNext() {
-		b = append(b, it.Next())
+	type addSliceTest struct {
+		input    []string
+		expected LinkedHashSet[string]
 	}
 
-	assert.Equal(t, true, testutils.EqualSlices(a, b))
-	s.Clear()
-	assert.Equal(t, true, s.Empty())
-
-}
-
-func TestIteratorConcurrentModification(t *testing.T) {
-
-	s := New[types.String]()
-	for i := 1; i <= 20; i++ {
-		s.Add(types.String(strconv.Itoa(i)))
+	addSliceTests := []addSliceTest{
+		{
+			input:    []string{},
+			expected: Of[string](),
+		},
+		{
+			input:    []string{"A", "A", "B"},
+			expected: Of("A", "B"),
+		},
 	}
 
-	// Recovery for concurrent modifications.
-	recovery := func() {
-		if r := recover(); r != nil {
-			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
-		}
+	for _, test := range addSliceTests {
+		set := New[string]()
+		set.AddSlice(test.input)
+		assert.Equal(t, test.expected.linkedHashMap.Keys(), set.linkedHashMap.Keys())
 	}
-	// Case 1 : Put.
-	it := s.Iterator()
-	t.Run("Add while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.Add(types.String("D"))
-			it.Next()
-		}
-	})
-	// Case 2 : Remove.
-	it = s.Iterator()
-	t.Run("Remove while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.Remove(types.String("D"))
-			it.Next()
-		}
-	})
-	// Case 3 : RemoveIf.
-	it = s.Iterator()
-	t.Run("RemoveIf while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.RemoveIf(func(element types.String) bool { return element == "" })
-			it.Next()
-		}
-	})
-	// Case 3 : RetainAll.
-	it = s.Iterator()
-	t.Run("RetainAll while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.RetainAll(New[types.String]())
-			it.Next()
-		}
-	})
-	// Case 4 : Clear.
-	it = s.Iterator()
-	t.Run("Clear while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.Clear()
-			it.Next()
-		}
-	})
 
 }
 
 func TestRemove(t *testing.T) {
 
-	s := New[types.Int]()
-
-	// Case 1 : Remove an absent element.
-	assert.Equal(t, false, s.Remove(1))
-
-	// Case 2 : Remove a present element.
-	s.Add(1)
-	assert.Equal(t, true, s.Remove(1))
-	assert.Equal(t, 0, s.Len())
-
-	// Case 3 : Remove items from an iterable that are in the set.
-	l := list.New[types.Int]()
-	for i := 1; i <= 10; i++ {
-		s.Add(types.Int(i))
-		l.Add(types.Int(i))
+	type removeTest struct {
+		input           string
+		expectedSet     LinkedHashSet[string]
+		expectedBoolean bool
 	}
 
-	assert.Equal(t, 10, s.Len())
-	s.RemoveAll(l)
-	assert.Equal(t, 0, s.Len())
+	removeTests := []removeTest{
+		{
+			input:           "",
+			expectedSet:     Of("A", "B", "C"),
+			expectedBoolean: false,
+		},
+		{
+			input:           "A",
+			expectedSet:     Of("B", "C"),
+			expectedBoolean: true,
+		},
+	}
+
+	for _, test := range removeTests {
+		set := Of("A", "B", "C")
+		assert.Equal(t, test.expectedBoolean, set.Remove(test.input))
+		assert.Equal(t, test.expectedSet.linkedHashMap.Keys(), set.linkedHashMap.Keys())
+	}
 
 }
 
 func TestRemoveIf(t *testing.T) {
 
-	s := New[types.Int]()
-
-	// Case 1 : RemoveIf on an empty set.
-	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
-
-	// Case 2 : RemoveIf on a set with elements but none satisfy predicates.
-	for i := 1; i <= 200; i++ {
-		s.Add(types.Int(i))
-	}
-	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element > 2000 }))
-
-	// Case 3 : RemoveIf on a set with elements and some satisfy predicate.
-	assert.Equal(t, true, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
-	assert.Equal(t, 100, s.Len())
-
-}
-
-func TestUnion(t *testing.T) {
-
-	a := New[types.Int]()
-	b := New[types.Int]()
-
-	// Case 1 : Union of empty sets should return empty.
-	c := a.Union(b)
-	assert.Equal(t, true, c.Empty())
-
-	// Case 2 : Union of populatet set and empty set should return popuilated set.
-	a.Add(1, 2, 3)
-	c = a.Union(b)
-	assert.Equal(t, true, c.Equals(a))
-
-	// Case 3 : Union of populated sets.
-	b.Add(1, 2, 4, 5, 6)
-	d := New[types.Int](1, 2, 3, 4, 5, 6)
-
-	assert.Equal(t, true, d.Equals(a.Union(b)))
-}
-
-func TestIntersection(t *testing.T) {
-
-	a := New[types.Int]()
-	b := New[types.Int]()
-
-	// Case 1 : Intersection of empty sets should return empty.
-	c := a.Intersection(b)
-	assert.Equal(t, true, c.Empty())
-
-	// Case 2 : Intersection of populated set and empty set should return empty set.
-	a.Add(1, 2, 3)
-	c = a.Intersection(b)
-	assert.Equal(t, true, c.Empty())
-
-	// Case 3 : Intersection of populated sets.
-	b.Add(1, 2, 4, 5, 6)
-	d := New[types.Int](1, 2)
-
-	assert.Equal(t, true, d.Equals(a.Intersection(b)))
-	assert.Equal(t, true, d.Equals(b.Intersection(a)))
-
-}
-
-func TestMap(t *testing.T) {
-
-	s := New[types.Int]()
-	for i := 0; i < 6; i++ {
-		s.Add(types.Int(i))
-	}
-	other := s.Map(func(e types.Int) types.Int { return e + 10 })
-
-	a := []types.Int{10, 11, 12, 13, 14, 15}
-	b := other.Collect()
-
-	assert.Equal(t, true, testutils.EqualSlices(a, b))
-
-}
-
-func TestFilter(t *testing.T) {
-
-	s := New[types.Int]()
-
-	for i := 0; i < 6; i++ {
-		s.Add(types.Int(i))
+	type removeIfTest struct {
+		input           LinkedHashSet[int]
+		expectedBoolean bool
+		expectedSet     LinkedHashSet[int]
 	}
 
-	c := []types.Int{0, 2, 4}
-	other := s.Filter(func(e types.Int) bool { return e%2 == 0 })
-	d := other.Collect()
+	removeIfTests := []removeIfTest{
+		{
+			input:           Of[int](),
+			expectedBoolean: false,
+			expectedSet:     Of[int](),
+		},
+		{
+			input:           Of(2),
+			expectedBoolean: false,
+			expectedSet:     Of(2),
+		},
+		{
+			input:           Of(1, 2, 3, 4, 5),
+			expectedBoolean: true,
+			expectedSet:     Of(2, 4),
+		},
+	}
 
-	assert.Equal(t, true, testutils.EqualSlices(c, d))
+	f := func(x int) bool {
+		return x%2 != 0
+	}
+
+	for _, test := range removeIfTests {
+		test.input.RemoveIf(f)
+		assert.Equal(t, test.expectedSet.linkedHashMap.Keys(), test.input.linkedHashMap.Keys())
+	}
+}
+
+func TestRemoveSlice(t *testing.T) {
+
+	type removeSliceTest struct {
+		input           LinkedHashSet[int]
+		slice           []int
+		expectedBoolean bool
+		expectedSet     LinkedHashSet[int]
+	}
+
+	removeSliceTests := []removeSliceTest{
+		{
+			input:           Of[int](),
+			slice:           []int{},
+			expectedBoolean: false,
+			expectedSet:     Of[int](),
+		},
+		{
+			input:           Of(2),
+			slice:           []int{3},
+			expectedBoolean: false,
+			expectedSet:     Of(2),
+		},
+		{
+			input:           Of(1, 2, 3, 4, 5),
+			slice:           []int{2, 3, 1, 4},
+			expectedBoolean: true,
+			expectedSet:     Of(5),
+		},
+	}
+
+	for _, test := range removeSliceTests[2:] {
+		test.input.RemoveSlice(test.slice)
+		assert.Equal(t, test.expectedSet.linkedHashMap.Keys(), test.input.linkedHashMap.Keys())
+	}
+}
+
+func TestClear(t *testing.T) {
+
+	set := Of(1, 2, 3, 4, 5)
+	set.Clear()
+
+	assert.NotNil(t, set)
+	assert.True(t, set.Empty())
 
 }
 
-func TestEquals(t *testing.T) {
+func TestContains(t *testing.T) {
 
-	s := New[types.Int]()
-	other := New[types.Int]()
-	assert.Equal(t, true, s.Equals(s))
-	assert.Equal(t, true, s.Equals(other)) // Two empty sets are equal.
+	type containsTest struct {
+		input    int
+		expected bool
+	}
 
-	s.Add(1)
-	assert.Equal(t, false, s.Equals(other))
-	other.Add(1)
-	assert.Equal(t, true, s.Equals(other))
-	s.Add(2)
-	other.Add(3)
-	assert.Equal(t, false, s.Equals(other))
+	set := Of(0, 4, 5)
+	containsTests := []containsTest{
+		{
+			input:    1,
+			expected: false,
+		},
+		{
+			input:    2,
+			expected: false,
+		},
+		{
+			input:    4,
+			expected: true,
+		},
+	}
+
+	for _, test := range containsTests {
+		assert.Equal(t, test.expected, set.Contains(test.input))
+	}
+}
+
+func TestAddAll(t *testing.T) {
+
+	type addAllTest struct {
+		setA     LinkedHashSet[int]
+		setB     LinkedHashSet[int]
+		expected LinkedHashSet[int]
+	}
+
+	addAllTests := []addAllTest{
+		{
+			setA:     Of[int](),
+			setB:     Of(1, 2, 3, 4, 5),
+			expected: Of(1, 2, 3, 4, 5),
+		},
+		{
+			setA:     Of(1, 2),
+			setB:     Of(9, 11, 12),
+			expected: Of(1, 2, 9, 11, 12),
+		},
+	}
+
+	for _, test := range addAllTests {
+		test.setA.AddAll(&test.setB)
+		assert.Equal(t, test.expected.linkedHashMap.Keys(), test.setA.linkedHashMap.Keys())
+	}
 
 }
 
-// TestString covers tests for String.
-func TestString(t *testing.T) {
+func TestRemoveAll(t *testing.T) {
 
-	s := New[types.Int]()
+	type removeAllTest struct {
+		setA     LinkedHashSet[int]
+		setB     LinkedHashSet[int]
+		expected LinkedHashSet[int]
+	}
 
-	assert.Equal(t, "{}", fmt.Sprint(s))
-	s.Add(1)
-	assert.Equal(t, "{1}", fmt.Sprint(s))
+	removeAllTests := []removeAllTest{
+		{
+			setA:     Of(1, 2, 3, 4, 5),
+			setB:     Of[int](),
+			expected: Of(1, 2, 3, 4, 5),
+		},
+		{
+			setA:     Of(1, 2, 3, 4, 5),
+			setB:     Of(9, 1, 2),
+			expected: Of(3, 4, 5),
+		},
+		{
+			setA:     Of(1, 2, 3, 4, 5),
+			setB:     Of(9, 1, 2, 3, 4, 5),
+			expected: Of[int](),
+		},
+	}
+
+	for _, test := range removeAllTests {
+		test.setA.RemoveAll(&test.setB)
+		assert.Equal(t, test.expected.linkedHashMap.Keys(), test.setA.linkedHashMap.Keys())
+	}
 
 }
 
 func TestRetainAll(t *testing.T) {
 
-	a := New[types.Int](1, 2, 3, 4)
-	b := New[types.Int](2, 4, 7, 8, 9)
+	type retainAllTest struct {
+		setA     LinkedHashSet[int]
+		setB     LinkedHashSet[int]
+		expected LinkedHashSet[int]
+	}
 
-	a.RetainAll(b)
-	assert.Equal(t, 2, a.Len())
+	retainAllTests := []retainAllTest{
+		{
+			setA:     Of(1, 2, 3, 4, 5),
+			setB:     Of[int](),
+			expected: Of[int](),
+		},
+		{
+			setA:     Of(1, 2, 3, 4, 5),
+			setB:     Of(9, 1, 2),
+			expected: Of(1, 2),
+		},
+		{
+			setA:     Of(1, 2, 3, 4, 5),
+			setB:     Of(9, 1, 2, 3, 4, 5),
+			expected: Of(1, 2, 3, 4, 5),
+		},
+	}
+
+	for _, test := range retainAllTests {
+		test.setA.RetainAll(&test.setB)
+		assert.Equal(t, test.expected.linkedHashMap.Keys(), test.setA.linkedHashMap.Keys())
+	}
+
+}
+
+func TestForEach(t *testing.T) {
+
+	set := Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	sum := 0
+
+	set.ForEach(func(i int) { sum = sum + i })
+
+	assert.Equal(t, 55, sum)
+}
+
+func TestEquals(t *testing.T) {
+
+	type equalsTest struct {
+		a        LinkedHashSet[int]
+		b        LinkedHashSet[int]
+		expected bool
+	}
+
+	equalsTests := []equalsTest{
+		{
+			a:        Of[int](),
+			b:        Of[int](),
+			expected: true,
+		},
+		{
+			a:        Of(1, 2),
+			b:        Of[int](),
+			expected: false,
+		},
+		{
+			a:        Of(1, 2),
+			b:        Of(2, 1),
+			expected: true,
+		},
+		{
+			a:        Of(1, 2, 3),
+			b:        Of(10, 12, 14),
+			expected: false,
+		},
+	}
+
+	for _, test := range equalsTests {
+		assert.Equal(t, test.expected, test.a.Equals(&test.b))
+		assert.Equal(t, test.expected, test.b.Equals(&test.a))
+
+	}
+
+	identity := Of[int]()
+	assert.True(t, identity.Equals(&identity))
+
+}
+
+func TestString(t *testing.T) {
+
+	assert.Equal(t, "{}", Of[int]().String())
+	assert.Equal(t, "{1, 2, 3}", Of(1, 2, 3).String())
 }

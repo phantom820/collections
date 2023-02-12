@@ -1,21 +1,34 @@
-// Package collections provides an interface that a data structure must implement to count as a collection/ a tree.
 package collections
 
-import (
-	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/types"
-)
+type Iterator[T any] interface {
+	Next() T
+	HasNext() bool
+}
 
-// Collection a blue print for which methods a collection must implement. A collection is a linear
-// data structures such a linked list, queue, stack and a set.
-type Collection[T types.Equitable[T]] interface {
-	iterator.Iterable[T]              // Returns an iterator for iterating through the collection.
-	Add(elements ...T) bool           // Adds elements to the collection.
-	AddAll(c iterator.Iterable[T])    // Adds all elements from another collection into the collection.
-	Len() int                         // Returns the size (number of items) stored in the collection.
-	Contains(e T) bool                // Checks if the element e is a member of the collection.
-	Remove(elements ...T) bool        // Tries to remove the specified element(s) from the collection. Only first occurence of an element is removed.
-	RemoveAll(c iterator.Iterable[T]) // Removes all elements from another collections that appear in the collection.
-	Empty() bool                      // Checks if the collection contains any elements.
-	Clear()                           // Removes all elements in the collection.
+type Iterable[T any] interface {
+	Iterator() Iterator[T]
+}
+
+type Collection[T comparable] interface {
+	Iterable[T]
+	Add(e T) bool
+	AddAll(iterable Iterable[T]) bool
+	AddSlice(s []T) bool
+	Clear()
+	Contains(e T) bool
+	Empty() bool
+	Remove(e T) bool
+	RemoveIf(func(T) bool) bool
+	RemoveAll(iterable Iterable[T]) bool
+	RetainAll(c Collection[T]) bool
+	ForEach(func(T))
+	Len() int
+}
+
+type ImmutableCollection[T comparable] interface {
+	Iterable[T]
+	Contains(e T) bool
+	Empty() bool
+	ForEach(func(T))
+	Len() int
 }

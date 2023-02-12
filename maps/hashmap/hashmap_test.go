@@ -1,320 +1,388 @@
 package hashmap
 
 import (
-	"fmt"
-	"strconv"
 	"testing"
 
-	"github.com/phantom820/collections/errors"
-	"github.com/phantom820/collections/lists/list"
 	"github.com/phantom820/collections/maps"
-	"github.com/phantom820/collections/types"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
-
-	m := New[types.String, string]()
-
-	assert.Equal(t, true, m.Empty())
-	assert.Equal(t, 16, m.Capacity())
-	assert.Equal(t, float32(0), m.LoadFactor())
-	assert.Equal(t, float32(0.75), m.loadFactorLimit)
-
+	hashMap := New[string, int]()
+	assert.NotNil(t, hashMap)
+	assert.True(t, hashMap.Empty())
+	assert.Equal(t, 0, hashMap.Len())
 }
 
 func TestPut(t *testing.T) {
 
-	m := New[types.String, string]()
+	type putTest struct {
+		input    HashMap[string, int]
+		action   func(HashMap[string, int])
+		expected HashMap[string, int]
+	}
 
-	// Case 1 : Put with a new key.
-	assert.Equal(t, 0, m.Len())
-	assert.Equal(t, false, m.ContainsKey("A"))
-	m.Put("A", "A")
-	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, true, m.ContainsKey("A"))
-	assert.Equal(t, true, m.ContainsValue("A", func(a, b string) bool { return a == b }))
+	putTests := []putTest{
+		{input: New[string, int](),
+			action: func(hm HashMap[string, int]) {
+				hm.Put("A", 1)
+			},
+			expected: map[string]int{"A": 1},
+		},
+		{input: New[string, int](),
+			action: func(hm HashMap[string, int]) {
+				hm.Put("A", 1)
+				hm.Put("A", 2)
+			},
+			expected: map[string]int{"A": 2},
+		},
+		{input: New[string, int](),
+			action: func(hm HashMap[string, int]) {
+				hm.Put("A", 1)
+				hm.Put("B", 2)
+				hm.Put("C", 3)
+			},
+			expected: map[string]int{"A": 1, "B": 2, "C": 3},
+		},
+	}
 
-	// Case 2 : Put with an existing key.
-	value := m.Put("A", "B")
-	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, "A", value)
-	assert.Equal(t, true, m.ContainsKey("A"))
-	assert.Equal(t, false, m.ContainsValue("A", func(a, b string) bool { return a == b }))
-	assert.Equal(t, true, m.ContainsValue("B", func(a, b string) bool { return a == b }))
-
-	// Case 3 : Put with a key that will map to an empty bucket.
-	m.Put("B", "B")
-	assert.Equal(t, 2, m.Len())
-	assert.Equal(t, true, m.ContainsKey("B"))
-
-	// Case 4 : PutAll for keys comming from another map.
-	otherMap := New[types.String, string]()
-	otherMap.Put("A", "D")
-	otherMap.Put("C", "C")
-	otherMap.Put("D", "D")
-	m.PutAll(otherMap)
-
-	assert.Equal(t, 4, m.Len())
-	value, _ = m.Get("A") // Value should have been updated with one in other map.
-	assert.Equal(t, "D", value)
-
+	for _, test := range putTests {
+		test.action(test.input)
+		assert.Equal(t, test.expected, test.input)
+	}
 }
 
 func TestPutIfAbsent(t *testing.T) {
 
-	m := New[types.String, string]()
+	type putIfAbsentTest struct {
+		input    HashMap[string, int]
+		action   func(HashMap[string, int])
+		expected HashMap[string, int]
+	}
 
-	// Case 1 : PutIfAbsent with a new key.
-	assert.Equal(t, true, m.PutIfAbsent("A", "A"))
+	putIfAbsentTests := []putIfAbsentTest{
+		{input: New[string, int](),
+			action: func(hm HashMap[string, int]) {
+				hm.PutIfAbsent("A", 1)
+			},
+			expected: map[string]int{"A": 1},
+		},
+		{input: New[string, int](),
+			action: func(hm HashMap[string, int]) {
+				hm.PutIfAbsent("A", 1)
+				hm.PutIfAbsent("A", 2)
+			},
+			expected: map[string]int{"A": 1},
+		},
+	}
 
-	// Case 2 : PutIfAbsent with an already mapped key.
-	assert.Equal(t, false, m.PutIfAbsent("A", "B"))
+	for _, test := range putIfAbsentTests {
+		test.action(test.input)
+		assert.Equal(t, test.expected, test.input)
+	}
+}
 
-	// Case 3 : PutIfAbsent with a key mapping to non empty bucket.
-	assert.Equal(t, true, m.PutIfAbsent("\x10AAAA", "\x10AAAA"))
-	assert.Equal(t, true, m.PutIfAbsent("\x00AAAA", "\x00AAAA")) // maps to non empty bucket.
+func TestGet(t *testing.T) {
 
+	type getTest struct {
+		input    HashMap[string, int]
+		key      string
+		expected int
+	}
+
+	getTests := []getTest{
+		{input: New[string, int](),
+			key:      "A",
+			expected: 0,
+		},
+		{input: map[string]int{"A": 1},
+			key:      "A",
+			expected: 1,
+		},
+		{input: map[string]int{"A": 1},
+			key:      "B",
+			expected: 0,
+		},
+	}
+
+	for _, test := range getTests {
+		assert.Equal(t, test.expected, test.input.Get(test.key))
+	}
+}
+
+func TestGetIf(t *testing.T) {
+
+	type getIfTest struct {
+		input    HashMap[string, int]
+		f        func(string) bool
+		expected []int
+	}
+
+	getIfTests := []getIfTest{
+		{input: New[string, int](),
+			f:        func(s string) bool { return s == "" },
+			expected: []int{},
+		},
+		{input: map[string]int{"A": 1, "B": 2, "C": 3},
+			f:        func(s string) bool { return s == "A" || s == "B" },
+			expected: []int{1, 2},
+		},
+		{input: map[string]int{"A": 1},
+			f:        func(s string) bool { return false },
+			expected: []int{},
+		},
+	}
+
+	for _, test := range getIfTests {
+		assert.ElementsMatch(t, test.expected, test.input.GetIf(test.f))
+	}
 }
 
 func TestRemove(t *testing.T) {
 
-	m := New[types.Int, string]()
+	type removeTest struct {
+		input    HashMap[string, int]
+		key      string
+		expected int
+	}
 
-	// Case 1 : Remove an absent key.
-	_, ok := m.Remove(1)
-	assert.Equal(t, false, ok)
+	removeTests := []removeTest{
+		{input: New[string, int](),
+			key:      "A",
+			expected: 0,
+		},
+		{input: map[string]int{"A": 1},
+			key:      "A",
+			expected: 1,
+		},
+		{input: map[string]int{"A": 1},
+			key:      "B",
+			expected: 0,
+		},
+	}
 
-	// Case 2 : Remove a mapped key
-	m.Put(1, "A")
-	value, ok := m.Remove(1)
-	assert.Equal(t, true, ok)
-	assert.Equal(t, "A", value)
-
-	// Case 3 : Remove a number of keys.
-	m.Put(1, "A")
-	m.Put(2, "B")
-	m.Put(3, "C")
-	m.Put(4, "D")
-	m.Put(5, "E")
-
-	l := list.New[types.Int](1, 3, 4, 5)
-	m.RemoveAll(l)
-
-	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, false, m.ContainsKey(1))
-	assert.Equal(t, false, m.ContainsKey(3))
-	assert.Equal(t, false, m.ContainsKey(4))
-	assert.Equal(t, false, m.ContainsKey(5))
-
+	for _, test := range removeTests {
+		assert.Equal(t, test.expected, test.input.Remove(test.key))
+	}
 }
 
-func TestResize(t *testing.T) {
+func TestRemoveIf(t *testing.T) {
 
-	m := New[types.Int, int]()
-
-	// Case default: Properties should be initial values.
-	assert.Equal(t, 16, m.Capacity())
-	assert.Equal(t, float32(0), m.LoadFactor())
-
-	// Case 1 : Put keys till we reach resize.
-	for i := 1; i <= 16; i++ {
-		m.Put(types.Int(i), i)
+	type removeIfTest struct {
+		input    HashMap[string, int]
+		f        func(string) bool
+		expected HashMap[string, int]
 	}
 
-	assert.Equal(t, 32, m.Capacity())             // should have doubled in capacity after crossing threshold.
-	assert.Equal(t, float32(0.5), m.LoadFactor()) // load factor should be half.
-
-	for i := 17; i <= 34; i++ {
-		m.Put(types.Int(i), i)
+	removeIfTests := []removeIfTest{
+		{input: New[string, int](),
+			f:        func(s string) bool { return s == "" },
+			expected: make(HashMap[string, int]),
+		},
+		{input: map[string]int{"A": 1, "B": 2, "C": 3},
+			f:        func(s string) bool { return s == "A" || s == "B" },
+			expected: map[string]int{"C": 3},
+		},
+		{input: map[string]int{"A": 1},
+			f:        func(s string) bool { return false },
+			expected: map[string]int{"A": 1},
+		},
 	}
 
-	assert.Equal(t, 64, m.Capacity()) // should have doubled in size once more.
-
+	for _, test := range removeIfTests {
+		test.input.RemoveIf(test.f)
+		assert.Equal(t, test.expected, test.input)
+	}
 }
 
-func TestIterator(t *testing.T) {
+func TestContainsKey(t *testing.T) {
 
-	m := New[types.String, int]()
-
-	// Case 1 : Iterator on map with elements.
-	for i := 1; i <= 20; i++ {
-		m.Put(types.String(strconv.Itoa(i)), i)
+	type containsKeyTest struct {
+		input    HashMap[string, int]
+		key      string
+		expected bool
 	}
 
-	keys := make([]types.String, 0)
-	values := make([]int, 0)
-
-	it := m.Iterator()
-	for it.HasNext() {
-		entry := it.Next()
-		keys = append(keys, entry.Key)
-		values = append(values, entry.Value)
-		fmt.Println(entry.Key)
+	containsKeyTests := []containsKeyTest{
+		{
+			input:    New[string, int](),
+			key:      "A",
+			expected: false,
+		},
+		{
+			input:    map[string]int{"C": 1, "D": 1},
+			key:      "A",
+			expected: false,
+		},
+		{
+			input:    map[string]int{"A": 1},
+			key:      "A",
+			expected: true,
+		},
 	}
 
-	assert.ElementsMatch(t, m.Keys(), keys)
-	assert.ElementsMatch(t, m.Values(), values)
-
-	// Case 2 : Next on exhausted iterator should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
-			}
-		}()
-		it.Next()
-	})
-
+	for _, test := range containsKeyTests {
+		assert.Equal(t, test.expected, test.input.ContainsKey(test.key))
+	}
 }
 
-func TestIteratorConcurrentModification(t *testing.T) {
+func TestContainsValue(t *testing.T) {
 
-	m := New[types.String, int]()
-	for i := 1; i <= 20; i++ {
-		m.Put(types.String(strconv.Itoa(i)), i)
+	type containsValueTest struct {
+		input    HashMap[string, int]
+		value    int
+		expected bool
 	}
 
-	// Recovery for concurrent modifications.
-	recovery := func() {
-		if r := recover(); r != nil {
-			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
-		}
+	containsValueTests := []containsValueTest{
+		{
+			input:    New[string, int](),
+			value:    0,
+			expected: false,
+		},
+		{
+			input:    map[string]int{"C": 1, "D": 1},
+			value:    2,
+			expected: false,
+		},
+		{
+			input:    map[string]int{"A": 1},
+			value:    1,
+			expected: true,
+		},
 	}
-	// Case 1 : Put.
-	it := m.Iterator()
-	t.Run("Put while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			m.Put(types.String("D"), 22)
-			it.Next()
-		}
-	})
-	// Case 2 : PutIfAbsent.
-	it = m.Iterator()
-	t.Run("PutIfAbsent while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			m.PutIfAbsent(types.String("D"), 22)
-			it.Next()
-		}
-	})
-	// Case 3 : Remove.
-	it = m.Iterator()
-	t.Run("Remove while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			m.Remove(types.String("D"))
-			it.Next()
-		}
-	})
-	// Case 4 : Clear.
-	it = m.Iterator()
-	t.Run("Clear while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			m.Clear()
-			it.Next()
-		}
-	})
-
-}
-
-func TestEquals(t *testing.T) {
-
-	m := New[types.Int, string]()
-	other := New[types.Int, string]()
-
-	// Case 1 : Self equivalence and empty maps are equal.
-	assert.Equal(t, true, m.Equals(other, func(a, b string) bool { return a == b }))
-	assert.Equal(t, true, m.Equals(m, func(a, b string) bool { return a == b }))
-
-	// Case 2 : Equals with different sizes should fail.
-	m.Put(1, "A")
-	m.Put(2, "B")
-
-	assert.Equal(t, false, m.Equals(other, func(a, b string) bool { return a == b }))
-
-	// Case 3 : Same sizes with different keys should fail.
-	other.Put(1, "A")
-	other.Put(3, "B")
-	assert.Equal(t, false, m.Equals(other, func(a, b string) bool { return a == b }))
-
-	// Case 4 : Same sizes with different values should fail.
-	other.Remove(3)
-	other.Put(2, "C")
-	assert.Equal(t, false, m.Equals(other, func(a, b string) bool { return a == b }))
-
-	// Case 5 : Same sizes and entries should pass.
-	other.Put(2, "B")
-	assert.Equal(t, true, m.Equals(other, func(a, b string) bool { return a == b }))
-
+	equals := func(v1, v2 int) bool { return v1 == v2 }
+	for _, test := range containsValueTests {
+		assert.Equal(t, test.expected, test.input.ContainsValue(test.value, equals))
+	}
 }
 
 func TestClear(t *testing.T) {
 
-	m := New[types.Int, int]()
-
-	for i := 0; i < 20; i++ {
-		m.Put(types.Int(i), i)
+	type clearTest struct {
+		input    HashMap[string, int]
+		expected HashMap[string, int]
 	}
 
-	assert.Equal(t, 20, m.Len())
-	m.Clear()
-	assert.Equal(t, true, m.Empty())
-	assert.Equal(t, 16, m.Capacity())
-	assert.Equal(t, float32(0), m.LoadFactor())
+	clearTests := []clearTest{
+		{
+			input:    New[string, int](),
+			expected: make(HashMap[string, int]),
+		},
+		{
+			input:    map[string]int{"A": 1, "B": 2},
+			expected: make(HashMap[string, int]),
+		},
+	}
+
+	for _, test := range clearTests {
+		test.input.Clear()
+		assert.Equal(t, test.expected, test.input)
+	}
+}
+
+func TestKeys(t *testing.T) {
+
+	type keyTest struct {
+		input    HashMap[string, int]
+		expected []string
+	}
+
+	keyTests := []keyTest{
+		{
+			input:    New[string, int](),
+			expected: []string{},
+		},
+		{
+			input:    map[string]int{"A": 1, "B": 2},
+			expected: []string{"A", "B"},
+		},
+	}
+
+	for _, test := range keyTests {
+		assert.ElementsMatch(t, test.expected, test.input.Keys())
+	}
+}
+
+func TestValues(t *testing.T) {
+
+	type valuesTest struct {
+		input    HashMap[string, int]
+		expected []int
+	}
+
+	valuesTests := []valuesTest{
+		{
+			input:    New[string, int](),
+			expected: []int{},
+		},
+		{
+			input:    map[string]int{"A": 1, "B": 2},
+			expected: []int{1, 2},
+		},
+	}
+
+	for _, test := range valuesTests {
+		assert.ElementsMatch(t, test.expected, test.input.Values())
+	}
+}
+
+func TestForEach(t *testing.T) {
+
+	type forEachTest struct {
+		input    HashMap[string, int]
+		expected map[string]int
+	}
+
+	forEachTests := []forEachTest{
+		{
+			input:    New[string, int](),
+			expected: map[string]int{},
+		},
+		{
+			input:    map[string]int{"A": 1, "B": 2},
+			expected: map[string]int{"A": 1, "B": 2},
+		},
+	}
+
+	for _, test := range forEachTests {
+		m := make(map[string]int)
+		f := func(s string, i int) {
+			m[s] = i
+		}
+		test.input.ForEach(f)
+		assert.Equal(t, test.expected, m)
+	}
+}
+
+func TestIterator(t *testing.T) {
+
+	iterate := func(it maps.MapIterator[string, int]) []maps.Entry[string, int] {
+		entries := make([]maps.Entry[string, int], 0)
+		for it.HasNext() {
+			entries = append(entries, it.Next())
+		}
+		return entries
+	}
+
+	h := HashMap[string, int](map[string]int{})
+	assert.ElementsMatch(t, []maps.Entry[string, int]{}, iterate(h.Iterator()))
+
+	h = HashMap[string, int](map[string]int{"A": 1, "B": 2, "C": 3})
+	assert.ElementsMatch(t, []maps.Entry[string, int]{
+		maps.NewEntry("A", 1), maps.NewEntry("B", 2), maps.NewEntry("C", 3)}, iterate(h.Iterator()))
+
+	h = HashMap[string, int](map[string]int{"A": 1, "B": 2, "C": 3})
+	it := h.Iterator()
+	h.Put("F", 23)
+
+	assert.ElementsMatch(t, []maps.Entry[string, int]{
+		maps.NewEntry("A", 1), maps.NewEntry("B", 2), maps.NewEntry("C", 3), maps.NewEntry("F", 23)}, iterate(it))
 
 }
 
-func TestMap(t *testing.T) {
+func TestString(t *testing.T) {
 
-	m := New[types.Int, string]()
-
-	// Case 1 : Mapping an empty map should give an empty map.
-	other := m.Map(func(entry maps.MapEntry[types.Int, string]) maps.MapEntry[types.Int, string] {
-		return maps.MapEntry[types.Int, string]{Key: entry.Key, Value: entry.Value}
-	})
-	assert.Equal(t, true, other.Empty())
-
-	// Case 2 : Mapping a map with entries.
-	m.Put(1, "A")
-	m.Put(2, "B")
-	m.Put(3, "C")
-
-	other = m.Map(func(entry maps.MapEntry[types.Int, string]) maps.MapEntry[types.Int, string] {
-		return maps.MapEntry[types.Int, string]{Key: entry.Key + 1, Value: entry.Value + "$"}
-	})
-
-	assert.Equal(t, 3, other.Len())
-	value, _ := other.Get(2)
-	assert.Equal(t, "A$", value)
-	value, _ = other.Get(3)
-	assert.Equal(t, "B$", value)
-	value, _ = other.Get(4)
-	assert.Equal(t, "C$", value)
-
-}
-
-func TestFilter(t *testing.T) {
-
-	m := New[types.Int, string]()
-
-	// Case 1 : Filtering an empty map should give an empty map.
-	other := m.Filter(func(entry maps.MapEntry[types.Int, string]) bool { return entry.Key%2 == 0 })
-	assert.Equal(t, true, other.Empty())
-
-	// Case 2 : Filtering a map with entries.
-	m.Put(1, "A")
-	m.Put(2, "B")
-	m.Put(3, "C")
-
-	other = m.Filter(func(entry maps.MapEntry[types.Int, string]) bool { return entry.Key%2 == 0 })
-
-	assert.Equal(t, 1, other.Len())
-	assert.Equal(t, false, other.ContainsKey(1))
-	assert.Equal(t, false, other.ContainsKey(3))
-	value, _ := other.Get(2)
-	assert.Equal(t, "B", value)
-
+	assert.Equal(t, "{}", (New[string, string]().String()))
+	assert.Equal(t, "{A=1}", (HashMap[string, int](map[string]int{"A": 1}).String()))
 }

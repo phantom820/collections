@@ -1,9 +1,8 @@
-package hashset
+package vector
 
 import (
 	"testing"
 
-	"github.com/phantom820/collections/maps/hashmap"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,8 +16,8 @@ func TestNew(t *testing.T) {
 
 func TestOf(t *testing.T) {
 
-	assert.Equal(t, hashmap.New[string, struct{}](), Of[string]().hashmap)
-	assert.Equal(t, hashmap.HashMap[string, struct{}](map[string]struct{}{"A": {}}), Of("A").hashmap)
+	assert.Equal(t, []string{}, Of[string]().data)
+	assert.Equal(t, []string{"A"}, Of("A").data)
 
 }
 
@@ -26,7 +25,7 @@ func TestAdd(t *testing.T) {
 
 	type addTest struct {
 		input    []string
-		expected HashSet[string]
+		expected Vector[string]
 	}
 
 	addTests := []addTest{
@@ -36,16 +35,16 @@ func TestAdd(t *testing.T) {
 		},
 		{
 			input:    []string{"A", "A", "B"},
-			expected: Of("A", "B"),
+			expected: Of("A", "A", "B"),
 		},
 	}
 
-	f := func(values []string) HashSet[string] {
-		set := New[string]()
+	f := func(values []string) Vector[string] {
+		list := New[string]()
 		for _, value := range values {
-			set.Add(value)
+			list.Add(value)
 		}
-		return *set
+		return *list
 	}
 
 	for _, test := range addTests {
@@ -57,7 +56,7 @@ func TestAddSlice(t *testing.T) {
 
 	type addSliceTest struct {
 		input    []string
-		expected HashSet[string]
+		expected Vector[string]
 	}
 
 	addSliceTests := []addSliceTest{
@@ -67,7 +66,7 @@ func TestAddSlice(t *testing.T) {
 		},
 		{
 			input:    []string{"A", "A", "B"},
-			expected: Of("A", "B"),
+			expected: Of("A", "A", "B"),
 		},
 	}
 
@@ -82,28 +81,55 @@ func TestAddSlice(t *testing.T) {
 func TestRemove(t *testing.T) {
 
 	type removeTest struct {
-		input           string
-		expectedSet     HashSet[string]
+		input           Vector[string]
+		element         string
+		expectedList    Vector[string]
 		expectedBoolean bool
+		expectedLen     int
 	}
 
 	removeTests := []removeTest{
 		{
-			input:           "",
-			expectedSet:     Of("A", "B", "C"),
+			input:           Of("A", "B", "C", "D"),
+			element:         "",
+			expectedList:    Of("A", "B", "C", "D"),
 			expectedBoolean: false,
+			expectedLen:     4,
 		},
 		{
-			input:           "A",
-			expectedSet:     Of("B", "C"),
+			input:           Of("A", "B", "C", "D"),
+			element:         "A",
+			expectedList:    Of("B", "C", "D"),
 			expectedBoolean: true,
+			expectedLen:     3,
+		},
+		{
+			input:           Of("A", "B", "C", "D"),
+			element:         "B",
+			expectedList:    Of("A", "C", "D"),
+			expectedBoolean: true,
+			expectedLen:     3,
+		},
+		{
+			input:           Of("A", "B", "C", "D"),
+			element:         "D",
+			expectedList:    Of("A", "B", "C"),
+			expectedBoolean: true,
+			expectedLen:     3,
+		},
+		{
+			input:           Of("A"),
+			element:         "A",
+			expectedList:    Of[string](),
+			expectedBoolean: true,
+			expectedLen:     0,
 		},
 	}
 
 	for _, test := range removeTests {
-		set := Of("A", "B", "C")
-		assert.Equal(t, test.expectedBoolean, set.Remove(test.input))
-		assert.Equal(t, test.expectedSet, set)
+		assert.Equal(t, test.expectedBoolean, test.input.Remove(test.element))
+		assert.Equal(t, test.expectedList, test.input)
+		assert.Equal(t, test.expectedLen, test.input.Len())
 	}
 
 }
@@ -111,31 +137,31 @@ func TestRemove(t *testing.T) {
 func TestRemoveIf(t *testing.T) {
 
 	type removeIfTest struct {
-		input           HashSet[int]
+		input           Vector[int]
 		expectedBoolean bool
-		expectedSet     HashSet[int]
+		expectedList    Vector[int]
 	}
 
 	removeIfTests := []removeIfTest{
 		{
 			input:           Of[int](),
 			expectedBoolean: false,
-			expectedSet:     Of[int](),
+			expectedList:    Of[int](),
 		},
 		{
 			input:           Of(2),
 			expectedBoolean: false,
-			expectedSet:     Of(2),
+			expectedList:    Of(2),
 		},
 		{
 			input:           Of(1, 2, 3, 4, 5),
 			expectedBoolean: true,
-			expectedSet:     Of(2, 4),
+			expectedList:    Of(2, 4),
 		},
 		{
 			input:           Of(1, 3, 5, 7),
 			expectedBoolean: true,
-			expectedSet:     Of[int](),
+			expectedList:    Of[int](),
 		},
 	}
 
@@ -145,17 +171,17 @@ func TestRemoveIf(t *testing.T) {
 
 	for _, test := range removeIfTests {
 		test.input.RemoveIf(f)
-		assert.Equal(t, test.expectedSet, test.input)
+		assert.Equal(t, test.expectedList, test.input)
 	}
 }
 
 func TestRemoveSlice(t *testing.T) {
 
 	type removeSliceTest struct {
-		input           HashSet[int]
+		input           Vector[int]
 		slice           []int
 		expectedBoolean bool
-		expectedSet     HashSet[int]
+		expectedList    Vector[int]
 	}
 
 	removeSliceTests := []removeSliceTest{
@@ -163,42 +189,42 @@ func TestRemoveSlice(t *testing.T) {
 			input:           Of[int](),
 			slice:           []int{},
 			expectedBoolean: false,
-			expectedSet:     Of[int](),
+			expectedList:    Of[int](),
 		},
 		{
 			input:           Of(2),
 			slice:           []int{3},
 			expectedBoolean: false,
-			expectedSet:     Of(2),
+			expectedList:    Of(2),
 		},
 		{
 			input:           Of(1, 2, 3, 4, 5),
 			slice:           []int{2, 3, 1, 4},
 			expectedBoolean: true,
-			expectedSet:     Of(5),
+			expectedList:    Of(5),
 		},
 	}
 
 	for _, test := range removeSliceTests {
 		test.input.RemoveSlice(test.slice)
-		assert.Equal(t, test.expectedSet, test.input)
+		assert.Equal(t, test.expectedList, test.input)
 	}
 }
 
 func TestClear(t *testing.T) {
 
-	set := Of(1, 2, 3, 4, 5)
-	set.Clear()
+	list := Of(1, 2, 3, 4, 5)
+	list.Clear()
 
-	assert.NotNil(t, set)
-	assert.True(t, set.Empty())
+	assert.NotNil(t, list)
+	assert.True(t, list.Empty())
 
 }
 
 func TestContains(t *testing.T) {
 
 	type containsTest struct {
-		input    HashSet[int]
+		input    Vector[int]
 		element  int
 		expected bool
 	}
@@ -229,9 +255,9 @@ func TestContains(t *testing.T) {
 func TestAddAll(t *testing.T) {
 
 	type addAllTest struct {
-		a        HashSet[int]
-		b        HashSet[int]
-		expected HashSet[int]
+		a        Vector[int]
+		b        Vector[int]
+		expected Vector[int]
 	}
 
 	addAllTests := []addAllTest{
@@ -254,12 +280,45 @@ func TestAddAll(t *testing.T) {
 
 }
 
+func TestRetainAll(t *testing.T) {
+
+	type retainAllTest struct {
+		a        Vector[int]
+		b        Vector[int]
+		expected Vector[int]
+	}
+
+	retainAllTests := []retainAllTest{
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of[int](),
+			expected: Of[int](),
+		},
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2),
+			expected: Of(1, 2),
+		},
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2, 3, 4, 5),
+			expected: Of(1, 2, 3, 4, 5),
+		},
+	}
+
+	for _, test := range retainAllTests {
+		test.a.RetainAll(&test.b)
+		assert.Equal(t, test.expected, test.a)
+	}
+
+}
+
 func TestRemoveAll(t *testing.T) {
 
 	type removeAllTest struct {
-		a        HashSet[int]
-		b        HashSet[int]
-		expected HashSet[int]
+		a        Vector[int]
+		b        Vector[int]
+		expected Vector[int]
 	}
 
 	removeAllTests := []removeAllTest{
@@ -292,120 +351,43 @@ func TestRemoveAll(t *testing.T) {
 
 }
 
-func TestRetainAll(t *testing.T) {
+func TestAt(t *testing.T) {
 
-	type retainAllTest struct {
-		a        HashSet[int]
-		b        HashSet[int]
-		expected HashSet[int]
+	type atTest struct {
+		input    Vector[int]
+		index    int
+		expected int
 	}
 
-	retainAllTests := []retainAllTest{
+	atTests := []atTest{
 		{
-			a:        Of(1, 2, 3, 4, 5),
-			b:        Of[int](),
-			expected: Of[int](),
+			input:    Of(1, 2, 3, 4),
+			index:    0,
+			expected: 1,
 		},
 		{
-			a:        Of(1, 2, 3, 4, 5),
-			b:        Of(9, 1, 2),
-			expected: Of(1, 2),
+			input:    Of(1, 2, 3, 4),
+			index:    3,
+			expected: 4,
 		},
 		{
-			a:        Of(1, 2, 3, 4, 5),
-			b:        Of(9, 1, 2, 3, 4, 5),
-			expected: Of(1, 2, 3, 4, 5),
+			input:    Of(1, 2, 3, 4),
+			index:    1,
+			expected: 2,
 		},
 	}
 
-	for _, test := range retainAllTests {
-		test.a.RetainAll(&test.b)
-		assert.Equal(t, test.expected, test.a)
+	for _, test := range atTests {
+		assert.Equal(t, test.expected, test.input.At(test.index))
 	}
-
 }
 
 func TestForEach(t *testing.T) {
 
-	set := Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	list := Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 	sum := 0
 
-	set.ForEach(func(i int) { sum = sum + i })
+	list.ForEach(func(i int) { sum = sum + i })
 
 	assert.Equal(t, 55, sum)
-}
-
-func TestEquals(t *testing.T) {
-
-	type equalsTest struct {
-		a        HashSet[int]
-		b        HashSet[int]
-		expected bool
-	}
-
-	equalsTests := []equalsTest{
-		{
-			a:        Of[int](),
-			b:        Of[int](),
-			expected: true,
-		},
-		{
-			a:        Of[int](1, 2),
-			b:        Of[int](),
-			expected: false,
-		},
-		{
-			a:        Of[int](1, 2),
-			b:        Of[int](2, 1),
-			expected: true,
-		},
-		{
-			a:        Of[int](1, 2, 3),
-			b:        Of[int](10, 12, 14),
-			expected: false,
-		},
-	}
-
-	for _, test := range equalsTests {
-		assert.Equal(t, test.expected, test.a.Equals(&test.b))
-		assert.Equal(t, test.expected, test.b.Equals(&test.a))
-
-	}
-
-	identity := Of[int]()
-	assert.True(t, identity.Equals(&identity))
-
-}
-
-func TestToSlice(t *testing.T) {
-
-	type toSliceTest struct {
-		input    HashSet[int]
-		expected []int
-	}
-
-	toSliceTests := []toSliceTest{
-		{
-			input:    Of[int](),
-			expected: []int{},
-		},
-		{
-			input:    Of(1, 2, 3, 4),
-			expected: []int{1, 2, 3, 4},
-		},
-		{
-			input:    Of(1, 2, 3, 4, 5),
-			expected: []int{1, 2, 3, 4, 5},
-		},
-	}
-
-	for _, test := range toSliceTests {
-		assert.ElementsMatch(t, test.expected, test.input.ToSlice())
-	}
-}
-
-func TestString(t *testing.T) {
-
-	assert.Equal(t, "{}", Of[int]().String())
-	assert.Equal(t, "{1}", Of(1).String())
 }

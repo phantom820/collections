@@ -192,55 +192,58 @@ func TestClear(t *testing.T) {
 func TestContains(t *testing.T) {
 
 	type containsTest struct {
-		input    int
+		input    LinkedHashSet[int]
+		element  int
 		expected bool
 	}
 
-	set := Of(0, 4, 5)
 	containsTests := []containsTest{
 		{
-			input:    1,
+			input:    Of(0, 4, 5),
+			element:  1,
 			expected: false,
 		},
 		{
-			input:    2,
+			input:    Of(0, 4, 5),
+			element:  2,
 			expected: false,
 		},
 		{
-			input:    4,
+			input:    Of(0, 4, 5),
+			element:  4,
 			expected: true,
 		},
 	}
 
 	for _, test := range containsTests {
-		assert.Equal(t, test.expected, set.Contains(test.input))
+		assert.Equal(t, test.expected, test.input.Contains(test.element))
 	}
 }
 
 func TestAddAll(t *testing.T) {
 
 	type addAllTest struct {
-		setA     LinkedHashSet[int]
-		setB     LinkedHashSet[int]
+		a        LinkedHashSet[int]
+		b        LinkedHashSet[int]
 		expected LinkedHashSet[int]
 	}
 
 	addAllTests := []addAllTest{
 		{
-			setA:     Of[int](),
-			setB:     Of(1, 2, 3, 4, 5),
+			a:        Of[int](),
+			b:        Of(1, 2, 3, 4, 5),
 			expected: Of(1, 2, 3, 4, 5),
 		},
 		{
-			setA:     Of(1, 2),
-			setB:     Of(9, 11, 12),
+			a:        Of(1, 2),
+			b:        Of(9, 11, 12),
 			expected: Of(1, 2, 9, 11, 12),
 		},
 	}
 
 	for _, test := range addAllTests {
-		test.setA.AddAll(&test.setB)
-		assert.Equal(t, test.expected.linkedHashMap.Keys(), test.setA.linkedHashMap.Keys())
+		test.a.AddAll(&test.b)
+		assert.Equal(t, test.expected.linkedHashMap.Keys(), test.a.linkedHashMap.Keys())
 	}
 
 }
@@ -248,32 +251,37 @@ func TestAddAll(t *testing.T) {
 func TestRemoveAll(t *testing.T) {
 
 	type removeAllTest struct {
-		setA     LinkedHashSet[int]
-		setB     LinkedHashSet[int]
+		a        LinkedHashSet[int]
+		b        LinkedHashSet[int]
 		expected LinkedHashSet[int]
 	}
 
 	removeAllTests := []removeAllTest{
 		{
-			setA:     Of(1, 2, 3, 4, 5),
-			setB:     Of[int](),
+			a:        Of[int](),
+			b:        Of[int](),
+			expected: Of[int](),
+		},
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of[int](),
 			expected: Of(1, 2, 3, 4, 5),
 		},
 		{
-			setA:     Of(1, 2, 3, 4, 5),
-			setB:     Of(9, 1, 2),
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2),
 			expected: Of(3, 4, 5),
 		},
 		{
-			setA:     Of(1, 2, 3, 4, 5),
-			setB:     Of(9, 1, 2, 3, 4, 5),
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2, 3, 4, 5),
 			expected: Of[int](),
 		},
 	}
 
 	for _, test := range removeAllTests {
-		test.setA.RemoveAll(&test.setB)
-		assert.Equal(t, test.expected.linkedHashMap.Keys(), test.setA.linkedHashMap.Keys())
+		test.a.RemoveAll(&test.b)
+		assert.Equal(t, test.expected.linkedHashMap.Keys(), test.a.linkedHashMap.Keys())
 	}
 
 }
@@ -281,32 +289,32 @@ func TestRemoveAll(t *testing.T) {
 func TestRetainAll(t *testing.T) {
 
 	type retainAllTest struct {
-		setA     LinkedHashSet[int]
-		setB     LinkedHashSet[int]
+		a        LinkedHashSet[int]
+		b        LinkedHashSet[int]
 		expected LinkedHashSet[int]
 	}
 
 	retainAllTests := []retainAllTest{
 		{
-			setA:     Of(1, 2, 3, 4, 5),
-			setB:     Of[int](),
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of[int](),
 			expected: Of[int](),
 		},
 		{
-			setA:     Of(1, 2, 3, 4, 5),
-			setB:     Of(9, 1, 2),
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2),
 			expected: Of(1, 2),
 		},
 		{
-			setA:     Of(1, 2, 3, 4, 5),
-			setB:     Of(9, 1, 2, 3, 4, 5),
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2, 3, 4, 5),
 			expected: Of(1, 2, 3, 4, 5),
 		},
 	}
 
 	for _, test := range retainAllTests {
-		test.setA.RetainAll(&test.setB)
-		assert.Equal(t, test.expected.linkedHashMap.Keys(), test.setA.linkedHashMap.Keys())
+		test.a.RetainAll(&test.b)
+		assert.Equal(t, test.expected.linkedHashMap.Keys(), test.a.linkedHashMap.Keys())
 	}
 
 }

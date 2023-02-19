@@ -21,11 +21,11 @@ func New[T comparable]() *HashSet[T] {
 
 // Of creates a set with the given elements.
 func Of[T comparable](elements ...T) HashSet[T] {
-	set := New[T]()
+	set := HashSet[T]{hashmap.New[T, struct{}]()}
 	for i := range elements {
 		set.Add(elements[i])
 	}
-	return *set
+	return set
 }
 
 // Add adds the specified element to this set if it is not already present.
@@ -136,22 +136,22 @@ func (set *HashSet[T]) ForEach(f func(T)) {
 
 // Iterator returns an iterator over the elements in the set.
 func (set *HashSet[T]) Iterator() collections.Iterator[T] {
-	return &iterator[T]{mapIterator: set.hashmap.Iterator()}
+	return &iterator[T]{iterator: set.hashmap.Iterator()}
 }
 
 // iterator implememantation for [HashSet].
 type iterator[T comparable] struct {
-	mapIterator maps.Iterator[T, struct{}]
+	iterator maps.Iterator[T, struct{}]
 }
 
 // HasNext returns true if the iterator has more elements.
 func (it *iterator[T]) HasNext() bool {
-	return it.mapIterator.HasNext()
+	return it.iterator.HasNext()
 }
 
 // Next returns the next element in the iterator.
 func (it iterator[T]) Next() T {
-	return it.mapIterator.Next().Key()
+	return it.iterator.Next().Key()
 }
 
 // ToSlice returns a slice containing all the elements in the set.

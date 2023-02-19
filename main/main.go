@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/phantom820/collections/lists/vector"
 	"github.com/phantom820/collections/sets"
 	"github.com/phantom820/collections/sets/hashset"
 )
@@ -25,6 +27,16 @@ func main() {
 	fmt.Println(c.Contains("1"))
 	fmt.Println(c.Len())
 	c.ForEach(func(s string) { fmt.Println(s) })
+
+	v := vector.New[int]()
+	for i := 1; i <= 1000000; i++ {
+		v.Add(i)
+	}
+	start := time.Now()
+	v.RemoveIf(func(i int) bool { return i%2 != 0 })
+	end := time.Now()
+	fmt.Println(v.Len())
+	fmt.Printf("Duration : %v\n", end.Sub(start))
 	// var a collections.ImmutableCollection[int] = hashset.ImmutableOf[int](1, 2, 345)
 	// fmt.Println(a)
 

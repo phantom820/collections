@@ -21,14 +21,14 @@ func New[T comparable]() *LinkedHashSet[T] {
 
 // Of creates a set with the given elements.
 func Of[T comparable](elements ...T) LinkedHashSet[T] {
-	set := New[T]()
+	set := LinkedHashSet[T]{linkedhashmap.New[T, struct{}]()}
 	for i := range elements {
 		set.Add(elements[i])
 	}
-	return *set
+	return set
 }
 
-// Add adds the specified element to this set if it is not already present.
+// Add adds the specified element to the set if it is not already present.
 func (set LinkedHashSet[T]) Add(e T) bool {
 	return set.linkedHashMap.PutIfAbsent(e, struct{}{})
 }

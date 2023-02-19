@@ -357,7 +357,7 @@ func TestForEach(t *testing.T) {
 
 func TestIterator(t *testing.T) {
 
-	iterate := func(it maps.MapIterator[string, int]) []maps.Entry[string, int] {
+	iterate := func(it maps.Iterator[string, int]) []maps.Entry[string, int] {
 		entries := make([]maps.Entry[string, int], 0)
 		for it.HasNext() {
 			entries = append(entries, it.Next())

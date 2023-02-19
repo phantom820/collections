@@ -95,7 +95,7 @@ func (set *HashSet[T]) Clear() {
 	set.hashmap.Clear()
 }
 
-// Contains returns true if this set contains the specified element.
+// Contains returns true if the set contains the specified element.
 func (set *HashSet[T]) Contains(e T) bool {
 	return set.hashmap.ContainsKey(e)
 }
@@ -141,7 +141,7 @@ func (set *HashSet[T]) Iterator() collections.Iterator[T] {
 
 // iterator implememantation for [HashSet].
 type iterator[T comparable] struct {
-	mapIterator maps.MapIterator[T, struct{}]
+	mapIterator maps.Iterator[T, struct{}]
 }
 
 // HasNext returns true if the iterator has more elements.
@@ -152,6 +152,17 @@ func (it *iterator[T]) HasNext() bool {
 // Next returns the next element in the iterator.
 func (it iterator[T]) Next() T {
 	return it.mapIterator.Next().Key()
+}
+
+// ToSlice returns a slice containing all the elements in the set.
+func (set *HashSet[T]) ToSlice() []T {
+	slice := make([]T, set.Len())
+	i := 0
+	for e, _ := range set.hashmap {
+		slice[i] = e
+		i++
+	}
+	return slice
 }
 
 // String returns the string representation of a set.

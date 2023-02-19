@@ -202,7 +202,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) ForEach(f func(K, V)) {
 }
 
 // Iterator returns an iterator over the map. Elements are iterated over following their insertion order.
-func (linkedHashMap LinkedHashMap[K, V]) Iterator() maps.MapIterator[K, V] {
+func (linkedHashMap LinkedHashMap[K, V]) Iterator() maps.Iterator[K, V] {
 	return &iterator[K, V]{initialized: false, initialize: func() *node[K, V] { return linkedHashMap.head }}
 }
 

@@ -42,6 +42,11 @@ func (set ImmutableLinkedHashSet[T]) Iterator() collections.Iterator[T] {
 	return set.linkedHashSet.Iterator()
 }
 
+// ToSlice returns a slice containing all the elements in the set.
+func (set ImmutableLinkedHashSet[T]) ToSlice() []T {
+	return set.linkedHashSet.ToSlice()
+}
+
 // Equals returns true if the set is equivalent to the given set. Two sets are equal if they are the same reference or have the same size and contain
 // the same elements.
 func (set ImmutableLinkedHashSet[T]) Equals(otherSet ImmutableLinkedHashSet[T]) bool {
@@ -62,4 +67,40 @@ func (set ImmutableLinkedHashSet[T]) String() string {
 	}
 	sb.WriteString("}")
 	return sb.String()
+}
+
+func (set ImmutableLinkedHashSet[T]) Remove(e T) bool {
+	panic("")
+}
+func (set ImmutableLinkedHashSet[T]) RemoveIf(func(T) bool) bool {
+	panic("")
+}
+
+func (set ImmutableLinkedHashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+	panic("")
+}
+
+// RetainAll retains only the elements in the set that are contained in the specified collection.
+func (set ImmutableLinkedHashSet[T]) RetainAll(c collections.Collection[T]) bool {
+	panic("")
+}
+
+// Add adds the specified element to this set if it is not already present.
+func (set ImmutableLinkedHashSet[T]) Add(e T) bool {
+	panic("")
+}
+
+// AddAll adds all of the elements in the specified iterable to the set.
+func (set ImmutableLinkedHashSet[T]) AddAll(iterable collections.Iterable[T]) bool {
+	panic("")
+}
+
+// Clear removes all of the elements from the set.
+func (set ImmutableLinkedHashSet[T]) Clear() {
+	panic("")
+}
+
+// AddSlice adds all the elements in the slice to the set.
+func (set ImmutableLinkedHashSet[T]) AddSlice(s []T) bool {
+	panic("")
 }

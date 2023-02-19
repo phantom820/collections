@@ -50,6 +50,33 @@ func TestImmutableIterator(t *testing.T) {
 	assert.Equal(t, 55, sum)
 }
 
+func TestImmutableToSlice(t *testing.T) {
+
+	type toSliceTest struct {
+		input    ImmutableHashSet[int]
+		expected []int
+	}
+
+	toSliceTests := []toSliceTest{
+		{
+			input:    ImmutableOf[int](),
+			expected: []int{},
+		},
+		{
+			input:    ImmutableOf(1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    ImmutableOf(1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+	}
+
+	for _, test := range toSliceTests {
+		assert.ElementsMatch(t, test.expected, test.input.ToSlice())
+	}
+}
+
 func TestImmutableString(t *testing.T) {
 
 	assert.Equal(t, "{}", ImmutableOf[int]().String())

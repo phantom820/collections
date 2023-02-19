@@ -136,7 +136,7 @@ func (hashMap HashMap[K, V]) ForEach(f func(K, V)) {
 }
 
 // Iterator returns an iterator over the map.
-func (hashMap HashMap[K, V]) Iterator() maps.MapIterator[K, V] {
+func (hashMap HashMap[K, V]) Iterator() maps.Iterator[K, V] {
 	return &iterator[K, V]{initialized: false, index: 0, hashMap: hashMap, entries: make([]maps.Entry[K, V], 0)}
 }
 

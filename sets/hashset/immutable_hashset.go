@@ -48,6 +48,11 @@ func (set ImmutableHashSet[T]) Equals(otherSet ImmutableHashSet[T]) bool {
 	return set.hashSet.Equals(&otherSet.hashSet)
 }
 
+// ToSlice returns a slice containing all the elements in the set.
+func (set ImmutableHashSet[T]) ToSlice() []T {
+	return set.hashSet.ToSlice()
+}
+
 // String returns the string representation of the set.
 func (set ImmutableHashSet[T]) String() string {
 	var sb strings.Builder
@@ -62,4 +67,40 @@ func (set ImmutableHashSet[T]) String() string {
 	}
 	sb.WriteString("}")
 	return sb.String()
+}
+
+func (set ImmutableHashSet[T]) Remove(e T) bool {
+	panic("")
+}
+func (set ImmutableHashSet[T]) RemoveIf(func(T) bool) bool {
+	panic("")
+}
+
+func (set ImmutableHashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+	panic("")
+}
+
+// RetainAll retains only the elements in the set that are contained in the specified collection.
+func (set ImmutableHashSet[T]) RetainAll(c collections.Collection[T]) bool {
+	panic("")
+}
+
+// Add adds the specified element to this set if it is not already present.
+func (set ImmutableHashSet[T]) Add(e T) bool {
+	panic("")
+}
+
+// AddAll adds all of the elements in the specified iterable to the set.
+func (set ImmutableHashSet[T]) AddAll(iterable collections.Iterable[T]) bool {
+	panic("")
+}
+
+// Clear removes all of the elements from the set.
+func (set ImmutableHashSet[T]) Clear() {
+	panic("")
+}
+
+// AddSlice adds all the elements in the slice to the set.
+func (set ImmutableHashSet[T]) AddSlice(s []T) bool {
+	panic("")
 }

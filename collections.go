@@ -1,5 +1,7 @@
 package collections
 
+import "reflect"
+
 type Iterator[T any] interface {
 	Next() T
 	HasNext() bool
@@ -23,12 +25,9 @@ type Collection[T comparable] interface {
 	RetainAll(c Collection[T]) bool
 	ForEach(func(T))
 	Len() int
+	ToSlice() []T
 }
 
-type ImmutableCollection[T comparable] interface {
-	Iterable[T]
-	Contains(e T) bool
-	Empty() bool
-	ForEach(func(T))
-	Len() int
+func IsNil[T comparable](c Collection[T]) bool {
+	return c == nil || reflect.ValueOf(c).IsNil()
 }

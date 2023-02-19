@@ -362,6 +362,37 @@ func TestEquals(t *testing.T) {
 	identity := Of[int]()
 	assert.True(t, identity.Equals(&identity))
 
+	type user struct {
+		a string
+	}
+
+}
+
+func TestToSlice(t *testing.T) {
+
+	type toSliceTest struct {
+		input    HashSet[int]
+		expected []int
+	}
+
+	toSliceTests := []toSliceTest{
+		{
+			input:    Of[int](),
+			expected: []int{},
+		},
+		{
+			input:    Of(1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    Of(1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+	}
+
+	for _, test := range toSliceTests {
+		assert.ElementsMatch(t, test.expected, test.input.ToSlice())
+	}
 }
 
 func TestString(t *testing.T) {

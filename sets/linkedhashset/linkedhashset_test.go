@@ -363,6 +363,33 @@ func TestEquals(t *testing.T) {
 
 }
 
+func TestToSlice(t *testing.T) {
+
+	type toSliceTest struct {
+		input    LinkedHashSet[int]
+		expected []int
+	}
+
+	toSliceTests := []toSliceTest{
+		{
+			input:    Of[int](),
+			expected: []int{},
+		},
+		{
+			input:    Of(1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    Of(1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+	}
+
+	for _, test := range toSliceTests {
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
+}
+
 func TestString(t *testing.T) {
 
 	assert.Equal(t, "{}", Of[int]().String())

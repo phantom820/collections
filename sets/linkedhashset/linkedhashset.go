@@ -140,9 +140,9 @@ func (set *LinkedHashSet[T]) Iterator() collections.Iterator[T] {
 	return &iterator[T]{mapIterator: set.linkedHashMap.Iterator()}
 }
 
-// iterator implememantation for [HashSet].
+// iterator implememantation for [LinkedHashSet].
 type iterator[T comparable] struct {
-	mapIterator maps.MapIterator[T, struct{}]
+	mapIterator maps.Iterator[T, struct{}]
 }
 
 // HasNext returns true if the iterator has more elements.
@@ -153,6 +153,18 @@ func (it *iterator[T]) HasNext() bool {
 // Next returns the next element in the iterator.
 func (it iterator[T]) Next() T {
 	return it.mapIterator.Next().Key()
+}
+
+// ToSlice returns a slice containing all the elements in the set.
+func (set *LinkedHashSet[T]) ToSlice() []T {
+	slice := make([]T, set.Len())
+	i := 0
+	it := set.Iterator()
+	for it.HasNext() {
+		slice[i] = it.Next()
+		i++
+	}
+	return slice
 }
 
 // String returns the string representation of a set.

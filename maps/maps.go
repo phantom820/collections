@@ -1,6 +1,6 @@
 package maps
 
-// NewEntry creates a
+// NewEntry creates a map entry.
 func NewEntry[K any, V any](key K, value V) Entry[K, V] {
 	return Entry[K, V]{key: key, value: value}
 }
@@ -21,8 +21,8 @@ func (entry Entry[K, V]) Value() V {
 	return entry.value
 }
 
-// MapIterator an iterator for a map.
-type MapIterator[K any, V any] interface {
+// Iterator an iterator for a map.
+type Iterator[K any, V any] interface {
 	Next() Entry[K, V] // returns the next entry in the iterator.
 	HasNext() bool     // returns true if the iterator has more emtries.
 }

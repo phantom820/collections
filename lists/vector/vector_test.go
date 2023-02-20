@@ -304,6 +304,11 @@ func TestRetainAll(t *testing.T) {
 			b:        Of(9, 1, 2, 3, 4, 5),
 			expected: Of(1, 2, 3, 4, 5),
 		},
+		{
+			a:        Of[int](),
+			b:        Of(9, 1, 2, 3, 4, 5),
+			expected: Of[int](),
+		},
 	}
 
 	for _, test := range retainAllTests {
@@ -382,6 +387,115 @@ func TestAt(t *testing.T) {
 	}
 }
 
+func TestRemoveAt(t *testing.T) {
+
+	type removeAtTest struct {
+		input           Vector[int]
+		index           int
+		expectedElement int
+		expectedList    Vector[int]
+	}
+
+	removeAtTests := []removeAtTest{
+		{
+			input:           Of(1, 2, 3, 4),
+			index:           0,
+			expectedElement: 1,
+			expectedList:    Of(2, 3, 4),
+		},
+		{
+			input:           Of(1, 2, 3, 4),
+			index:           3,
+			expectedElement: 4,
+			expectedList:    Of(1, 2, 3),
+		},
+		{
+			input:           Of(1, 2, 3, 4),
+			index:           2,
+			expectedElement: 3,
+			expectedList:    Of(1, 2, 4),
+		},
+	}
+
+	for _, test := range removeAtTests {
+		assert.Equal(t, test.expectedElement, test.input.RemoveAt(test.index))
+		assert.Equal(t, test.expectedList, test.input)
+	}
+
+}
+
+func TestAddAt(t *testing.T) {
+
+	type addAtTest struct {
+		input    Vector[int]
+		index    int
+		value    int
+		expected Vector[int]
+	}
+
+	addAtTests := []addAtTest{
+		{
+			input:    Of(1),
+			index:    0,
+			value:    -1,
+			expected: Of(-1, 1),
+		},
+		{
+			input:    Of(1, 2, 3),
+			index:    1,
+			value:    -2,
+			expected: Of(1, -2, 2, 3),
+		},
+		{
+			input:    Of(1, 2, 3),
+			index:    2,
+			value:    4,
+			expected: Of(1, 2, 3, 4),
+		},
+	}
+
+	for _, test := range addAtTests {
+		test.input.AddAt(test.index, test.value)
+		assert.Equal(t, test.expected, test.input)
+	}
+}
+
+func TestSet(t *testing.T) {
+
+	type setTest struct {
+		input    Vector[int]
+		index    int
+		value    int
+		expected Vector[int]
+	}
+
+	setTests := []setTest{
+		{
+			input:    Of(1),
+			index:    0,
+			value:    -1,
+			expected: Of(-1),
+		},
+		{
+			input:    Of(1, 2, 3),
+			index:    1,
+			value:    -2,
+			expected: Of(1, -2, 3),
+		},
+		{
+			input:    Of(1, 2, 3),
+			index:    2,
+			value:    4,
+			expected: Of(1, 2, 4),
+		},
+	}
+
+	for _, test := range setTests {
+		test.input.Set(test.index, test.value)
+		assert.Equal(t, test.expected, test.input)
+	}
+}
+
 func TestForEach(t *testing.T) {
 
 	list := Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
@@ -390,4 +504,46 @@ func TestForEach(t *testing.T) {
 	list.ForEach(func(i int) { sum = sum + i })
 
 	assert.Equal(t, 55, sum)
+}
+
+func TestEquals(t *testing.T) {
+
+	type equalsTest struct {
+		a        Vector[int]
+		b        Vector[int]
+		expected bool
+	}
+
+	equalsTests := []equalsTest{
+		{
+			a:        Of[int](),
+			b:        Of[int](),
+			expected: true,
+		},
+		{
+			a:        Of[int](1, 2),
+			b:        Of[int](),
+			expected: false,
+		},
+		{
+			a:        Of[int](1, 2),
+			b:        Of[int](1, 2),
+			expected: true,
+		},
+		{
+			a:        Of[int](1, 2, 3),
+			b:        Of[int](10, 12, 14),
+			expected: false,
+		},
+	}
+
+	for _, test := range equalsTests {
+		assert.Equal(t, test.expected, test.a.Equals(&test.b))
+		assert.Equal(t, test.expected, test.b.Equals(&test.a))
+
+	}
+
+	identity := Of[int]()
+	assert.True(t, identity.Equals(&identity))
+
 }

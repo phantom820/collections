@@ -46,6 +46,29 @@ func (list *Vector[T]) AddSlice(s []T) bool {
 	return true
 }
 
+// AddAt inserts the specified element at the specified position in this list (optional operation).
+func (list *Vector[T]) AddAt(i int, e T) {
+	if i < 0 || i >= list.Len() {
+		panic("")
+	} else if i == 0 {
+		data := make([]T, 0, list.Len()+1)
+		data = append(data, e)
+		list.data = append(data, list.data...)
+		return
+	} else if i == list.Len()-1 {
+		list.Add(e)
+		return
+	}
+	left := list.data[:i]
+	right := list.data[i:]
+	data := make([]T, 0, list.Len()+1)
+	data = append(data, left...)
+	data = append(data, e)
+	data = append(data, right...)
+	list.data = data
+	return
+}
+
 // At returns the element at the specified position in the list.
 func (list *Vector[T]) At(i int) T {
 	if i < 0 || i >= list.Len() {
@@ -206,9 +229,46 @@ func (list *Vector[T]) ForEach(f func(T)) {
 	}
 }
 
+// Set replaces the element at the specified index in the list with the specified element.
+func (list *Vector[T]) Set(i int, e T) T {
+	if i < 0 || i >= list.Len() {
+		panic("")
+	}
+	temp := list.data[i]
+	list.data[i] = e
+	return temp
+}
+
 // ToSlice returns the underlying slice.
 func (list *Vector[T]) ToSlice() []T {
 	return list.data
+}
+
+// Equals returns true if the list is equivalent to the given lists. Two lists are equal if they are the same reference or have the same size and contain
+// the same elements in the same order.
+func (list *Vector[T]) Equals(other *Vector[T]) bool {
+	if list == other {
+		return true
+	} else if list.Len() != other.Len() {
+		return false
+	}
+	for i := range list.data {
+		if list.data[i] != other.data[i] {
+			return false
+		}
+	}
+	return true
+
+}
+
+// RemoveAt removes the element at the specified position in the list.
+func (list *Vector[T]) RemoveAt(i int) T {
+	if i < 0 || i >= list.Len() {
+		panic("")
+	}
+	temp := list.data[i]
+	list.data = removeAt(list.data, i)
+	return temp
 }
 
 // Iterator returns an iterator over the elements in the list.

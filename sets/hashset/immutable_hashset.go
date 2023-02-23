@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/errors"
 )
 
 // ImmutableHashSet an immutable version of [HashSet].
@@ -70,37 +71,37 @@ func (set ImmutableHashSet[T]) String() string {
 }
 
 func (set ImmutableHashSet[T]) Remove(e T) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("Remove", "ImmutableHashSet"))
 }
 func (set ImmutableHashSet[T]) RemoveIf(func(T) bool) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("RemoveIf", "ImmutableHashSet"))
 }
 
 func (set ImmutableHashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("RemoveAll", "ImmutableHashSet"))
 }
 
 // RetainAll retains only the elements in the set that are contained in the specified collection.
 func (set ImmutableHashSet[T]) RetainAll(c collections.Collection[T]) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("RetainAll", "ImmutableHashSet"))
 }
 
 // Add adds the specified element to this set if it is not already present.
 func (set ImmutableHashSet[T]) Add(e T) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("Add", "ImmutableHashSet"))
 }
 
 // AddAll adds all of the elements in the specified iterable to the set.
 func (set ImmutableHashSet[T]) AddAll(iterable collections.Iterable[T]) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("AddAll", "ImmutableHashSet"))
 }
 
 // Clear removes all of the elements from the set.
 func (set ImmutableHashSet[T]) Clear() {
-	panic("")
+	panic(errors.UnsupportedOperation("Clear", "ImmutableHashSet"))
 }
 
 // AddSlice adds all the elements in the slice to the set.
 func (set ImmutableHashSet[T]) AddSlice(s []T) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("AddSlice", "ImmutableHashSet"))
 }

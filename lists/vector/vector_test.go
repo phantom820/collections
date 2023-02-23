@@ -8,10 +8,10 @@ import (
 
 func TestNew(t *testing.T) {
 
-	set := New[string]()
-	assert.NotNil(t, set)
-	assert.True(t, set.Empty())
-	assert.Equal(t, 0, set.Len())
+	list := New[string]()
+	assert.NotNil(t, list)
+	assert.True(t, list.Empty())
+	assert.Equal(t, 0, list.Len())
 }
 
 func TestOf(t *testing.T) {
@@ -71,9 +71,9 @@ func TestAddSlice(t *testing.T) {
 	}
 
 	for _, test := range addSliceTests {
-		set := New[string]()
-		set.AddSlice(test.input)
-		assert.Equal(t, test.expected, *set)
+		list := New[string]()
+		list.AddSlice(test.input)
+		assert.Equal(t, test.expected, *list)
 	}
 
 }
@@ -496,6 +496,73 @@ func TestSet(t *testing.T) {
 	}
 }
 
+func TestSubList(t *testing.T) {
+
+	type subListTest struct {
+		input      Vector[int]
+		start, end int
+		expected   Vector[int]
+	}
+
+	subListTests := []subListTest{
+		{
+			input:    Of(1),
+			start:    0,
+			end:      0,
+			expected: Of[int](),
+		},
+		{
+			input:    Of(1, 2),
+			start:    0,
+			end:      1,
+			expected: Of(1),
+		},
+		{
+			input:    Of(1, 2, 3, 4, 5),
+			start:    0,
+			end:      4,
+			expected: Of(1, 2, 3, 4),
+		},
+	}
+
+	for _, test := range subListTests {
+		assert.Equal(t, test.expected, *test.input.SubList(test.start, test.end))
+	}
+}
+
+func TestImmutableSubList(t *testing.T) {
+
+	type immutableSubListTest struct {
+		input      Vector[int]
+		start, end int
+		expected   ImmutableVector[int]
+	}
+
+	subListTests := []immutableSubListTest{
+		{
+			input:    Of(1),
+			start:    0,
+			end:      0,
+			expected: ImmutableOf[int](),
+		},
+		{
+			input:    Of(1, 2),
+			start:    0,
+			end:      1,
+			expected: ImmutableOf(1),
+		},
+		{
+			input:    Of(1, 2, 3, 4, 5),
+			start:    0,
+			end:      4,
+			expected: ImmutableOf(1, 2, 3, 4),
+		},
+	}
+
+	for _, test := range subListTests {
+		assert.Equal(t, test.expected, test.input.ImmutableSubList(test.start, test.end))
+	}
+}
 func TestForEach(t *testing.T) {
 
 	list := Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)

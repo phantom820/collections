@@ -2,6 +2,7 @@ package vector
 
 import (
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/sets/hashset"
 )
 
@@ -26,7 +27,7 @@ func (list *Vector[T]) Add(e T) bool {
 	return true
 }
 
-// Len the number of elements in this list.
+// Len returns the number of elements in the list.
 func (list *Vector[T]) Len() int {
 	return len(list.data)
 }
@@ -46,10 +47,10 @@ func (list *Vector[T]) AddSlice(s []T) bool {
 	return true
 }
 
-// AddAt inserts the specified element at the specified position in this list (optional operation).
+// AddAt inserts the specified element at the specified index in the list.
 func (list *Vector[T]) AddAt(i int, e T) {
 	if i < 0 || i >= list.Len() {
-		panic("")
+		panic(errors.IndexOutOfBounds(i, list.Len()))
 	} else if i == 0 {
 		data := make([]T, 0, list.Len()+1)
 		data = append(data, e)
@@ -66,13 +67,12 @@ func (list *Vector[T]) AddAt(i int, e T) {
 	data = append(data, e)
 	data = append(data, right...)
 	list.data = data
-	return
 }
 
-// At returns the element at the specified position in the list.
+// At returns the element at the specified index in the list.
 func (list *Vector[T]) At(i int) T {
 	if i < 0 || i >= list.Len() {
-		panic("")
+		panic(errors.IndexOutOfBounds(i, list.Len()))
 	}
 	return list.data[i]
 }
@@ -212,6 +212,31 @@ func (list *Vector[T]) RemoveSlice(s []T) bool {
 	return list.RemoveIf(func(t T) bool { return set.Contains(t) })
 }
 
+// ImmutableSubList returns an umodifiable view of the portion of the list between the specified start and end (exclusive) indices.
+func (list *Vector[T]) ImmutableSubList(start int, end int) ImmutableVector[T] {
+	if start < 0 || start >= list.Len() {
+		panic(errors.IndexOutOfBounds(start, list.Len()))
+	} else if end < 0 || end > list.Len() {
+		panic(errors.IndexOutOfBounds(end, list.Len()))
+	} else if start > end {
+		panic(errors.IndexBoundsOutOfRange(start, end))
+	}
+	return ImmutableVector[T]{Vector[T]{data: list.data[start:end]}}
+}
+
+// SubList returns a view of the portion of the list between the specified start and end indices (exclusive). Any modifications to elements in the list will
+// be visible in the original list.
+func (list *Vector[T]) SubList(start int, end int) *Vector[T] {
+	if start < 0 || start >= list.Len() {
+		panic(errors.IndexOutOfBounds(start, list.Len()))
+	} else if end < 0 || end > list.Len() {
+		panic(errors.IndexOutOfBounds(end, list.Len()))
+	} else if start > end {
+		panic(errors.IndexBoundsOutOfRange(start, end))
+	}
+	return &Vector[T]{data: list.data[start:end]}
+}
+
 // RetainAll retains only the elements in the list that are contained in the specified collection.
 func (list *Vector[T]) RetainAll(c collections.Collection[T]) bool {
 	if list.Empty() {
@@ -232,19 +257,19 @@ func (list *Vector[T]) ForEach(f func(T)) {
 // Set replaces the element at the specified index in the list with the specified element.
 func (list *Vector[T]) Set(i int, e T) T {
 	if i < 0 || i >= list.Len() {
-		panic("")
+		panic(errors.IndexOutOfBounds(i, list.Len()))
 	}
 	temp := list.data[i]
 	list.data[i] = e
 	return temp
 }
 
-// ToSlice returns the underlying slice.
+// ToSlice returns a slice containing the elements of the list.
 func (list *Vector[T]) ToSlice() []T {
 	return list.data
 }
 
-// Equals returns true if the list is equivalent to the given lists. Two lists are equal if they are the same reference or have the same size and contain
+// Equals returns true if the list is equivalent to the given list. Two lists are equal if they are the same reference or have the same size and contain
 // the same elements in the same order.
 func (list *Vector[T]) Equals(other *Vector[T]) bool {
 	if list == other {
@@ -264,7 +289,7 @@ func (list *Vector[T]) Equals(other *Vector[T]) bool {
 // RemoveAt removes the element at the specified position in the list.
 func (list *Vector[T]) RemoveAt(i int) T {
 	if i < 0 || i >= list.Len() {
-		panic("")
+		panic(errors.IndexOutOfBounds(i, list.Len()))
 	}
 	temp := list.data[i]
 	list.data = removeAt(list.data, i)

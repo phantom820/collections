@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/errors"
 )
 
 // ImmutableVector an immutable version of [Vector].
@@ -63,37 +64,37 @@ func (list ImmutableVector[T]) String() string {
 }
 
 func (list ImmutableVector[T]) Remove(e T) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("Remove", "ImmutableVector"))
 }
 func (list ImmutableVector[T]) RemoveIf(func(T) bool) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("RemoveIf", "ImmutableVector"))
 }
 
 func (list ImmutableVector[T]) RemoveAll(iterable collections.Iterable[T]) bool {
-	panic("")
+	panic("RemoveAll")
 }
 
 // RetainAll retains only the elements in the list that are contained in the specified collection.
 func (list ImmutableVector[T]) RetainAll(c collections.Collection[T]) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("RetainAll", "ImmutableVector"))
 }
 
 // Add adds the specified element to this list if it is not already present.
 func (list ImmutableVector[T]) Add(e T) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("Add", "ImmutableVector"))
 }
 
 // AddAll adds all of the elements in the specified iterable to the list.
 func (list ImmutableVector[T]) AddAll(iterable collections.Iterable[T]) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("AddAll", "ImmutableVector"))
 }
 
 // Clear removes all of the elements from the list.
 func (list ImmutableVector[T]) Clear() {
-	panic("")
+	panic(errors.UnsupportedOperation("Clear", "ImmutableVector"))
 }
 
 // AddSlice adds all the elements in the slice to the list.
 func (list ImmutableVector[T]) AddSlice(s []T) bool {
-	panic("")
+	panic(errors.UnsupportedOperation("AddSlice", "ImmutableVector"))
 }

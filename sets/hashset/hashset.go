@@ -165,6 +165,11 @@ func (set *HashSet[T]) ToSlice() []T {
 	return slice
 }
 
+// ImmutableCopy returns an immutable copy of the set.
+func (set *HashSet[T]) ImmutableCopy() ImmutableHashSet[T] {
+	return ImmutableOf(set.ToSlice()...)
+}
+
 // String returns the string representation of a set.
 func (set HashSet[T]) String() string {
 	var sb strings.Builder

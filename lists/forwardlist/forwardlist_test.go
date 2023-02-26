@@ -1,9 +1,9 @@
-package forwadlist
+package forwardlist
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/phantom820/collections"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -241,7 +241,7 @@ func TestRemoveIf(t *testing.T) {
 		return x%2 != 0
 	}
 
-	for _, test := range removeIfTests[2:3] {
+	for _, test := range removeIfTests {
 		test.input.RemoveIf(f)
 		assert.Equal(t, test.expectedList, test.input.ToSlice())
 	}
@@ -395,7 +395,255 @@ func TestAt(t *testing.T) {
 	}
 
 	for _, test := range atTests {
-		fmt.Println(test.input.ToSlice())
 		assert.Equal(t, test.expected, test.input.At(test.index))
 	}
+}
+
+func TestForEach(t *testing.T) {
+
+	list := Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	sum := 0
+
+	list.ForEach(func(i int) { sum = sum + i })
+
+	assert.Equal(t, 55, sum)
+}
+
+func TestRetainAll(t *testing.T) {
+
+	type retainAllTest struct {
+		a        ForwardList[int]
+		b        ForwardList[int]
+		expected []int
+	}
+
+	retainAllTests := []retainAllTest{
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of[int](),
+			expected: []int{},
+		},
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2),
+			expected: []int{1, 2},
+		},
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			a:        Of[int](),
+			b:        Of(9, 1, 2, 3, 4, 5),
+			expected: []int{},
+		},
+	}
+
+	for _, test := range retainAllTests {
+		test.a.RetainAll(&test.b)
+		assert.Equal(t, test.expected, test.a.ToSlice())
+	}
+
+}
+
+func TestAddAll(t *testing.T) {
+
+	type addAllTest struct {
+		a        ForwardList[int]
+		b        ForwardList[int]
+		expected []int
+	}
+
+	addAllTests := []addAllTest{
+		{
+			a:        Of[int](),
+			b:        Of(1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			a:        Of(1, 2),
+			b:        Of(9, 11, 12),
+			expected: []int{1, 2, 9, 11, 12},
+		},
+	}
+
+	for _, test := range addAllTests {
+		test.a.AddAll(&test.b)
+		assert.Equal(t, test.expected, test.a.ToSlice())
+	}
+
+}
+
+func TestRemoveAll(t *testing.T) {
+
+	type removeAllTest struct {
+		a        ForwardList[int]
+		b        ForwardList[int]
+		expected []int
+	}
+
+	removeAllTests := []removeAllTest{
+		{
+			a:        Of[int](),
+			b:        Of[int](),
+			expected: []int{},
+		},
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of[int](),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2),
+			expected: []int{3, 4, 5},
+		},
+		{
+			a:        Of(1, 2, 3, 4, 5),
+			b:        Of(9, 1, 2, 3, 4, 5),
+			expected: []int{},
+		},
+	}
+
+	for _, test := range removeAllTests {
+		test.a.RemoveAll(&test.b)
+		assert.Equal(t, test.expected, test.a.ToSlice())
+	}
+
+}
+
+func TestEquals(t *testing.T) {
+
+	type equalsTest struct {
+		a        ForwardList[int]
+		b        ForwardList[int]
+		expected bool
+	}
+
+	equalsTests := []equalsTest{
+		{
+			a:        Of[int](),
+			b:        Of[int](),
+			expected: true,
+		},
+		{
+			a:        Of[int](1, 2),
+			b:        Of[int](),
+			expected: false,
+		},
+		{
+			a:        Of[int](1, 2),
+			b:        Of[int](1, 2),
+			expected: true,
+		},
+		{
+			a:        Of[int](1, 2, 3),
+			b:        Of[int](10, 12, 14),
+			expected: false,
+		},
+	}
+
+	for _, test := range equalsTests {
+		assert.Equal(t, test.expected, test.a.Equals(&test.b))
+		assert.Equal(t, test.expected, test.b.Equals(&test.a))
+
+	}
+
+	identity := Of[int]()
+	assert.True(t, identity.Equals(&identity))
+
+}
+
+func TestSubList(t *testing.T) {
+
+	type subListTest struct {
+		input      ForwardList[int]
+		start, end int
+		expected   []int
+	}
+
+	subListTests := []subListTest{
+		{
+			input:    Of(1),
+			start:    0,
+			end:      0,
+			expected: []int{},
+		},
+		{
+			input:    Of(1, 2),
+			start:    0,
+			end:      1,
+			expected: []int{1},
+		},
+		{
+			input:    Of(1, 2, 3, 4, 5),
+			start:    0,
+			end:      4,
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    Of(1, 2, 3, 4, 5),
+			start:    1,
+			end:      4,
+			expected: []int{2, 3, 4},
+		},
+		{
+			input:    Of(1, 2, 3, 4, 5),
+			start:    0,
+			end:      5,
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			input:    Of(1, 2, 3, 4, 5),
+			start:    2,
+			end:      5,
+			expected: []int{3, 4, 5},
+		},
+	}
+
+	for _, test := range subListTests {
+		assert.Equal(t, test.expected, test.input.SubList(test.start, test.end).ToSlice())
+	}
+}
+
+func TestIterator(t *testing.T) {
+
+	type iteratorTest struct {
+		input    ForwardList[int]
+		expected []int
+	}
+
+	iteratorTests := []iteratorTest{
+		{
+			input:    Of[int](),
+			expected: []int{},
+		},
+		{
+			input:    Of[int](1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    Of[int](1),
+			expected: []int{1},
+		},
+	}
+
+	iterate := func(it collections.Iterator[int]) []int {
+		data := make([]int, 0)
+		for it.HasNext() {
+			data = append(data, it.Next())
+		}
+		return data
+	}
+	for _, test := range iteratorTests {
+		assert.Equal(t, test.expected, iterate(test.input.Iterator()))
+	}
+}
+
+func TestString(t *testing.T) {
+
+	assert.Equal(t, "[]", Of[int]().String())
+	assert.Equal(t, "[1]", Of(1).String())
+	assert.Equal(t, "[1 2]", Of(1, 2).String())
 }

@@ -70,38 +70,42 @@ func (set ImmutableLinkedHashSet[T]) String() string {
 	return sb.String()
 }
 
+// Remove unsupported operation.
 func (set ImmutableLinkedHashSet[T]) Remove(e T) bool {
 	panic(errors.UnsupportedOperation("Remove", "ImmutableLinkedHashSet"))
 }
+
+// RemoveIf unsupported operation.
 func (set ImmutableLinkedHashSet[T]) RemoveIf(func(T) bool) bool {
 	panic(errors.UnsupportedOperation("RemoveIf", "ImmutableLinkedHashSet"))
 }
 
+// RemoveAll unsupported operation.
 func (set ImmutableLinkedHashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("RemoveAll", "ImmutableLinkedHashSet"))
 }
 
-// RetainAll retains only the elements in the set that are contained in the specified collection.
+// RetainAll unsupported operation.
 func (set ImmutableLinkedHashSet[T]) RetainAll(c collections.Collection[T]) bool {
 	panic(errors.UnsupportedOperation("RetainAll", "ImmutableLinkedHashSet"))
 }
 
-// Add adds the specified element to this set if it is not already present.
+// Add unsupported operation.
 func (set ImmutableLinkedHashSet[T]) Add(e T) bool {
 	panic(errors.UnsupportedOperation("Add", "ImmutableLinkedHashSet"))
 }
 
-// AddAll adds all of the elements in the specified iterable to the set.
+// AddAll unsupported operation
 func (set ImmutableLinkedHashSet[T]) AddAll(iterable collections.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("AddAll", "ImmutableLinkedHashSet"))
 }
 
-// Clear removes all of the elements from the set.
+// Clear unsupported operation.
 func (set ImmutableLinkedHashSet[T]) Clear() {
 	panic(errors.UnsupportedOperation("Clear", "ImmutableLinkedHashSet"))
 }
 
-// AddSlice adds all the elements in the slice to the set.
+// AddSlice unsupported operation
 func (set ImmutableLinkedHashSet[T]) AddSlice(s []T) bool {
 	panic(errors.UnsupportedOperation("AddSlice", "ImmutableLinkedHashSet"))
 }

@@ -1,8 +1,11 @@
-package forwadlist
+package forwardlist
 
 import (
+	"fmt"
 	"math"
+	"strings"
 
+	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/sets/hashset"
 )
@@ -35,6 +38,15 @@ func Of[T comparable](elements ...T) ForwardList[T] {
 func (list *ForwardList[T]) AddSlice(s []T) bool {
 	for _, e := range s {
 		list.addBack(e)
+	}
+	return true
+}
+
+// AddAll adds all of the elements in the specified iterable to the set.
+func (list *ForwardList[T]) AddAll(iterable collections.Iterable[T]) bool {
+	it := iterable.Iterator()
+	for it.HasNext() {
+		list.Add(it.Next())
 	}
 	return true
 }
@@ -202,7 +214,7 @@ func (list *ForwardList[T]) removeFront() T {
 	return e
 }
 
-// removeBack removes the back node from the list.
+// removeBack removes the back node from the list, the passed node is the second last.
 func (list *ForwardList[T]) removeBack(prev *node[T]) T {
 	if list.head == list.tail {
 		return list.removeFront()
@@ -261,30 +273,46 @@ func (list *ForwardList[T]) RemoveIf(f func(T) bool) bool {
 	n := list.len
 	var prev *node[T] = nil
 	curr := list.head
-	removeFront := false
 
 	// chase curr and prev pointers and perform normal remove when predicate.
 	for curr != nil {
 		if f(curr.value) {
-			if prev == nil { // prev can only be nil for the front node.
-				removeFront = true
-			} else {
-				next := curr.next
-				list.remove(prev, curr)
-				curr = next
-				continue
-			}
+			next := curr.next
+			list.remove(prev, curr)
+			curr = next
+			continue
 		}
+
 		prev = curr
 		curr = curr.next
 	}
 
-	// check if we should remove front.
-	if removeFront {
-		list.removeFront()
-	}
-
 	return n != list.len
+}
+
+// RemoveAll removes from the list all of its elements that are contained in the specified collection.
+func (list *ForwardList[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+	if list.Empty() {
+		return false
+	}
+	// introduce a set so we can ensure the lookups fast, we only want to do a single linear pass in removing elements
+	// so the algorithm here is O(n) i.e 2 linear passes.
+	set := hashset.New[T]()
+	it := iterable.Iterator()
+	for it.HasNext() {
+		set.Add(it.Next())
+	}
+	return list.RemoveIf(func(t T) bool { return set.Contains(t) })
+}
+
+// RetainAll retains only the elements in the list that are contained in the specified collection.
+func (list *ForwardList[T]) RetainAll(c collections.Collection[T]) bool {
+	if list.Empty() {
+		return false
+	}
+	// create a predicate that removes elements that are not in the passed collection.
+	// performance here is mainly affected by how the given collection performs with contains.
+	return list.RemoveIf(func(t T) bool { return !c.Contains(t) })
 }
 
 // RemoveSlice removes all of the list elements that are also contained in the specified slice.
@@ -303,28 +331,135 @@ func (list *ForwardList[T]) RemoveSlice(s []T) bool {
 func (list *ForwardList[T]) ToSlice() []T {
 	data := make([]T, list.len)
 	j := 0
-	for curr := list.head; curr != nil; curr = curr.next {
-		data[j] = curr.value
+	it := list.Iterator()
+	for it.HasNext() {
+		data[j] = it.Next()
 		j++
 	}
 	return data
 }
 
-// Equals returns true if the list is equivalent to the given list. Two lists are equal if they are the same reference or have the same size and contain
-// the same elements in the same order.
+// ForEach performs the given action for each element of the list.
+func (list *ForwardList[T]) ForEach(f func(T)) {
+	it := list.Iterator()
+	for it.HasNext() {
+		f(it.Next())
+	}
+}
+
+// copy copies the values stored in the nodes from start to end  into a new list.
+func (list *ForwardList[T]) copy(start, end *node[T]) *ForwardList[T] {
+	copy := New[T]()
+	for curr := start; curr != nil; curr = curr.next {
+		if curr == end {
+			copy.Add(curr.value)
+			break
+		}
+		copy.Add(curr.value)
+	}
+	return copy
+}
+
+// SubList returns a copy of the portion of the list between the specified start and end indices (exclusive).
+func (list *ForwardList[T]) SubList(start int, end int) *ForwardList[T] {
+	if start < 0 || start >= list.Len() {
+		panic(errors.IndexOutOfBounds(start, list.Len()))
+	} else if end < 0 || end > list.Len() {
+		panic(errors.IndexOutOfBounds(end, list.Len()))
+	} else if start > end {
+		panic(errors.IndexBoundsOutOfRange(start, end))
+	} else if start == end {
+		return New[T]()
+	}
+	_, startNode := chaseIndex(list.head, start)
+	endNode, _ := chaseIndex(list.head, end)
+	return list.copy(startNode, endNode)
+}
+
+// ImmutableCopy returns an immutable copy of the list.
+func (list *ForwardList[T]) ImmutableCopy() ImmutableForwadList[T] {
+	copy := Of[T]()
+	list.ForEach(func(e T) {
+		copy.Add(e)
+	})
+	return ImmutableForwadList[T]{copy}
+}
+
+// Copy returns a copy of the list.
+func (list *ForwardList[T]) Copy() *ForwardList[T] {
+	copy := Of[T]()
+	list.ForEach(func(e T) {
+		copy.Add(e)
+	})
+	return &copy
+}
+
+// Equals returns true if the list is equivalent to the given list. Two lists are equal if they have the same size
+// and contain the same elements in the same order.
 func (list *ForwardList[T]) Equals(other *ForwardList[T]) bool {
 	if list == other {
 		return true
 	} else if list.Len() != other.Len() {
 		return false
 	}
-	head, otherHead := list.head, other.head
-	for curr := head; curr != nil; curr = curr.next {
-		if curr.value != otherHead.value {
+	it1, it2 := list.Iterator(), other.Iterator()
+	_, _ = it1.HasNext(), it2.HasNext() // initializes each iterator.
+	for it1.HasNext() {
+		if it1.Next() != it2.Next() {
 			return false
 		}
-		otherHead = otherHead.next
 	}
 	return true
 
+}
+
+// Iterator returns an iterator over the elements in the list.
+func (list *ForwardList[T]) Iterator() collections.Iterator[T] {
+	return &iterator[T]{initialized: false, initialize: func() (*node[T], int) { return list.head, list.len }}
+}
+
+// iterator implememantation for [ForwardList].
+type iterator[T comparable] struct {
+	initialized bool
+	initialize  func() (*node[T], int)
+	node        *node[T]
+	len         int
+	index       int
+}
+
+// HasNext returns true if the iterator has more elements.
+func (it *iterator[T]) HasNext() bool {
+	if !it.initialized {
+		it.node, it.len = it.initialize()
+		it.initialized = true
+	} else if it.node == nil {
+		return false
+	}
+	return it.node != nil && it.index < it.len
+}
+
+// Next returns the next element in the iterator.
+func (it *iterator[T]) Next() T {
+	if !it.HasNext() {
+		panic("iterator things shoould panic here")
+	}
+	e := it.node.value
+	it.node = it.node.next
+	it.index++
+	return e
+}
+
+// String returns the string representation of the list.
+func (list ForwardList[T]) String() string {
+	var sb strings.Builder
+	if list.Empty() {
+		return "[]"
+	}
+	it := list.Iterator()
+	sb.WriteString(fmt.Sprintf("[%v", it.Next()))
+	for it.HasNext() {
+		sb.WriteString(fmt.Sprintf(" %v", it.Next()))
+	}
+	sb.WriteString("]")
+	return sb.String()
 }

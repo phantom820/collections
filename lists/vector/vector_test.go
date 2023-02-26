@@ -3,6 +3,7 @@ package vector
 import (
 	"testing"
 
+	"github.com/phantom820/collections"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -523,46 +524,64 @@ func TestSubList(t *testing.T) {
 			end:      4,
 			expected: Of(1, 2, 3, 4),
 		},
-	}
-
-	for _, test := range subListTests {
-		assert.Equal(t, test.expected, *test.input.SubList(test.start, test.end))
-	}
-}
-
-func TestImmutableSubList(t *testing.T) {
-
-	type immutableSubListTest struct {
-		input      Vector[int]
-		start, end int
-		expected   ImmutableVector[int]
-	}
-
-	subListTests := []immutableSubListTest{
 		{
-			input:    Of(1),
-			start:    0,
-			end:      0,
-			expected: ImmutableOf[int](),
-		},
-		{
-			input:    Of(1, 2),
-			start:    0,
-			end:      1,
-			expected: ImmutableOf(1),
+			input:    Of(1, 2, 3, 4, 5),
+			start:    1,
+			end:      4,
+			expected: Of(2, 3, 4),
 		},
 		{
 			input:    Of(1, 2, 3, 4, 5),
 			start:    0,
-			end:      4,
-			expected: ImmutableOf(1, 2, 3, 4),
+			end:      5,
+			expected: Of(1, 2, 3, 4, 5),
+		},
+		{
+			input:    Of(1, 2, 3, 4, 5),
+			start:    2,
+			end:      5,
+			expected: Of(3, 4, 5),
 		},
 	}
 
 	for _, test := range subListTests {
-		assert.Equal(t, test.expected, test.input.ImmutableSubList(test.start, test.end))
+		assert.Equal(t, test.expected.data, test.input.SubList(test.start, test.end).ToSlice())
 	}
 }
+
+// func TestImmutableSubList(t *testing.T) {
+
+// 	type immutableSubListTest struct {
+// 		input      Vector[int]
+// 		start, end int
+// 		expected   ImmutableVector[int]
+// 	}
+
+// 	subListTests := []immutableSubListTest{
+// 		{
+// 			input:    Of(1),
+// 			start:    0,
+// 			end:      0,
+// 			expected: ImmutableOf[int](),
+// 		},
+// 		{
+// 			input:    Of(1, 2),
+// 			start:    0,
+// 			end:      1,
+// 			expected: ImmutableOf(1),
+// 		},
+// 		{
+// 			input:    Of(1, 2, 3, 4, 5),
+// 			start:    0,
+// 			end:      4,
+// 			expected: ImmutableOf(1, 2, 3, 4),
+// 		},
+// 	}
+
+//		for _, test := range subListTests {
+//			assert.Equal(t, test.expected, test.input.ImmutableSubList(test.start, test.end))
+//		}
+//	}
 func TestForEach(t *testing.T) {
 
 	list := Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
@@ -612,5 +631,88 @@ func TestEquals(t *testing.T) {
 
 	identity := Of[int]()
 	assert.True(t, identity.Equals(&identity))
+
+}
+
+func TestIterator(t *testing.T) {
+
+	type iteratorTest struct {
+		input    Vector[int]
+		expected []int
+	}
+
+	iteratorTests := []iteratorTest{
+		{
+			input:    Of[int](),
+			expected: []int{},
+		},
+		{
+			input:    Of[int](1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    Of[int](1),
+			expected: []int{1},
+		},
+	}
+
+	iterate := func(it collections.Iterator[int]) []int {
+		data := make([]int, 0)
+		for it.HasNext() {
+			data = append(data, it.Next())
+		}
+		return data
+	}
+	for _, test := range iteratorTests {
+		assert.Equal(t, test.expected, iterate(test.input.Iterator()))
+	}
+}
+
+func TestString(t *testing.T) {
+
+	assert.Equal(t, "[]", Of[int]().String())
+	assert.Equal(t, "[1 2]", Of(1, 2).String())
+}
+
+func TestSort(t *testing.T) {
+
+	type sortTest struct {
+		input    Vector[int]
+		less     func(int, int) bool
+		expected Vector[int]
+	}
+
+	sortTests := []sortTest{
+		{
+			input:    Of[int](),
+			less:     func(i1, i2 int) bool { return i1 < i2 },
+			expected: Of[int](),
+		},
+		{
+			input:    Of[int](2, 1, 4),
+			less:     func(i1, i2 int) bool { return i1 < i2 },
+			expected: Of[int](1, 2, 4),
+		},
+		{
+			input:    Of[int](1, 2, 3, 5, 4),
+			less:     func(i1, i2 int) bool { return i1 < i2 },
+			expected: Of[int](1, 2, 3, 4, 5),
+		},
+		{
+			input:    Of[int](5, 4, 3, 2, 1),
+			less:     func(i1, i2 int) bool { return i1 <= i2 },
+			expected: Of[int](1, 2, 3, 4, 5),
+		},
+		{
+			input:    Of[int](1, 2, 3, 4, 5),
+			less:     func(i1, i2 int) bool { return i1 >= i2 },
+			expected: Of[int](5, 4, 3, 2, 1),
+		},
+	}
+
+	for _, test := range sortTests {
+		test.input.Sort(test.less)
+		assert.Equal(t, test.expected, test.input)
+	}
 
 }

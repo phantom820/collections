@@ -48,9 +48,9 @@ func (list ImmutableVector[T]) Iterator() collections.Iterator[T] {
 }
 
 // Equals returns true if the list is equivalent to the given list. Two lists are equal if they are the same reference or have the same size and contain
-// the same elements.
-func (list ImmutableVector[T]) Equals(otherSet ImmutableVector[T]) bool {
-	return list.vector.Equals(&otherSet.vector)
+// the same elements in the same order.
+func (list ImmutableVector[T]) Equals(otherList ImmutableVector[T]) bool {
+	return list.vector.Equals(&otherList.vector)
 }
 
 // ToSlice returns a slice containing all the elements in the list.
@@ -58,43 +58,74 @@ func (list ImmutableVector[T]) ToSlice() []T {
 	return list.vector.ToSlice()
 }
 
+// SubList returns a view of the portion of the list between the specified start and end indices (exclusive).
+func (list ImmutableVector[T]) SubList(start int, end int) ImmutableVector[T] {
+	if start < 0 || start >= list.Len() {
+		panic(errors.IndexOutOfBounds(start, list.Len()))
+	} else if end < 0 || end > list.Len() {
+		panic(errors.IndexOutOfBounds(end, list.Len()))
+	} else if start > end {
+		panic(errors.IndexBoundsOutOfRange(start, end))
+	}
+	return ImmutableVector[T]{Vector[T]{data: list.vector.data[start:end]}}
+}
+
 // String returns the string representation of the list.
 func (list ImmutableVector[T]) String() string {
 	return fmt.Sprint(list.vector.data)
 }
 
+// Remove unsupported operation.
 func (list ImmutableVector[T]) Remove(e T) bool {
 	panic(errors.UnsupportedOperation("Remove", "ImmutableVector"))
 }
+
+// RemoveAt unsupported operation.
+func (list ImmutableVector[T]) RemoveAt(i int) T {
+	panic(errors.UnsupportedOperation("RemoveAt", "ImmutableVector"))
+}
+
+// Set unsupported operation.
+func (list ImmutableVector[T]) Set(i int, e T) T {
+	panic(errors.UnsupportedOperation("Set", "ImmutableVector"))
+}
+
+// RemoveIf unsupported operation.
 func (list ImmutableVector[T]) RemoveIf(func(T) bool) bool {
 	panic(errors.UnsupportedOperation("RemoveIf", "ImmutableVector"))
 }
 
+// RemoveAll unsupported operation.
 func (list ImmutableVector[T]) RemoveAll(iterable collections.Iterable[T]) bool {
 	panic("RemoveAll")
 }
 
-// RetainAll retains only the elements in the list that are contained in the specified collection.
+// RetainAll unsupported operation.
 func (list ImmutableVector[T]) RetainAll(c collections.Collection[T]) bool {
 	panic(errors.UnsupportedOperation("RetainAll", "ImmutableVector"))
 }
 
-// Add adds the specified element to this list if it is not already present.
+// Add unsupported operation.
 func (list ImmutableVector[T]) Add(e T) bool {
 	panic(errors.UnsupportedOperation("Add", "ImmutableVector"))
 }
 
-// AddAll adds all of the elements in the specified iterable to the list.
+// AddAt (unsupported operation).
+func (list ImmutableVector[T]) AddAt(i int, e T) {
+	panic(errors.UnsupportedOperation("AddAt", "ImmutableVector"))
+}
+
+// AddAll unsupported operation.
 func (list ImmutableVector[T]) AddAll(iterable collections.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("AddAll", "ImmutableVector"))
 }
 
-// Clear removes all of the elements from the list.
+// Clear unsupported operation.
 func (list ImmutableVector[T]) Clear() {
 	panic(errors.UnsupportedOperation("Clear", "ImmutableVector"))
 }
 
-// AddSlice adds all the elements in the slice to the list.
+// AddSlice unsupported operation.
 func (list ImmutableVector[T]) AddSlice(s []T) bool {
 	panic(errors.UnsupportedOperation("AddSlice", "ImmutableVector"))
 }

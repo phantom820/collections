@@ -1,4 +1,4 @@
-package vector
+package forwardlist
 
 import (
 	"testing"
@@ -40,10 +40,10 @@ func TestImmutableEquals(t *testing.T) {
 
 func TestImmutableSubList(t *testing.T) {
 
-	assert.Equal(t, ImmutableOf[int](), ImmutableOf(1, 2, 3, 4).SubList(1, 1))
-	assert.Equal(t, ImmutableOf(2), ImmutableOf(1, 2, 3, 4).SubList(1, 2))
+	assert.Equal(t, []int{}, ImmutableOf(1, 2, 3, 4).SubList(1, 1).ToSlice())
+	assert.Equal(t, []int{2}, ImmutableOf(1, 2, 3, 4).SubList(1, 2).ToSlice())
 	assert.Equal(t, 1, ImmutableOf(1, 2, 3, 4).SubList(1, 2).Len())
-	assert.Equal(t, ImmutableOf(3, 4, 5, 6), ImmutableOf(1, 2, 3, 4, 5, 6, 7).SubList(2, 6))
+	assert.Equal(t, []int{3, 4, 5, 6}, ImmutableOf(1, 2, 3, 4, 5, 6, 7).SubList(2, 6).ToSlice())
 	assert.Equal(t, 4, ImmutableOf(1, 2, 3, 4, 5, 6, 7).SubList(2, 6).Len())
 }
 
@@ -69,7 +69,7 @@ func TestImmutableIterator(t *testing.T) {
 func TestImmutableToSlice(t *testing.T) {
 
 	type toSliceTest struct {
-		input    ImmutableVector[int]
+		input    ImmutableForwadList[int]
 		expected []int
 	}
 
@@ -89,7 +89,7 @@ func TestImmutableToSlice(t *testing.T) {
 	}
 
 	for _, test := range toSliceTests {
-		assert.ElementsMatch(t, test.expected, test.input.ToSlice())
+		assert.Equal(t, test.expected, test.input.ToSlice())
 	}
 }
 
@@ -98,5 +98,4 @@ func TestImmutableString(t *testing.T) {
 	assert.Equal(t, "[]", ImmutableOf[int]().String())
 	assert.Equal(t, "[1]", ImmutableOf(1).String())
 	assert.Equal(t, "[1 2]", ImmutableOf(1, 2).String())
-
 }

@@ -167,6 +167,11 @@ func (set *LinkedHashSet[T]) ToSlice() []T {
 	return slice
 }
 
+// ImmutableCopy returns an immutable copy of the set.
+func (set *LinkedHashSet[T]) ImmutableCopy() ImmutableLinkedHashSet[T] {
+	return ImmutableOf(set.ToSlice()...)
+}
+
 // String returns the string representation of a set.
 func (set LinkedHashSet[T]) String() string {
 	var sb strings.Builder

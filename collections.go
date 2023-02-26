@@ -1,6 +1,8 @@
 package collections
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type Iterator[T any] interface {
 	Next() T
@@ -29,5 +31,6 @@ type Collection[T comparable] interface {
 }
 
 func IsNil[T comparable](c Collection[T]) bool {
+	// l := forwadlist.ForwardList[int]
 	return c == nil || reflect.ValueOf(c).IsNil()
 }

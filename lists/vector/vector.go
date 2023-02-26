@@ -1,6 +1,9 @@
 package vector
 
 import (
+	"fmt"
+	"sort"
+
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/sets/hashset"
@@ -190,8 +193,8 @@ func (list *Vector[T]) RemoveAll(iterable collections.Iterable[T]) bool {
 	if list.Empty() {
 		return false
 	}
-	// introduce a set so we can make the lookups fast, also passing a collection here introduces
-	// uncertainty about performance of contains so we just need an iterable and enforce the set.
+	// introduce a set so we can ensure the lookups fast, we only want to do a single linear pass in removing elements
+	// so the algorithm here is O(n) i.e 2 linear passes.
 	set := hashset.New[T]()
 	it := iterable.Iterator()
 	for it.HasNext() {
@@ -212,20 +215,18 @@ func (list *Vector[T]) RemoveSlice(s []T) bool {
 	return list.RemoveIf(func(t T) bool { return set.Contains(t) })
 }
 
-// ImmutableSubList returns an umodifiable view of the portion of the list between the specified start and end (exclusive) indices.
-func (list *Vector[T]) ImmutableSubList(start int, end int) ImmutableVector[T] {
-	if start < 0 || start >= list.Len() {
-		panic(errors.IndexOutOfBounds(start, list.Len()))
-	} else if end < 0 || end > list.Len() {
-		panic(errors.IndexOutOfBounds(end, list.Len()))
-	} else if start > end {
-		panic(errors.IndexBoundsOutOfRange(start, end))
-	}
-	return ImmutableVector[T]{Vector[T]{data: list.data[start:end]}}
+// ImmutableCopy returns an immutable copy of the list.
+func (list *Vector[T]) ImmutableCopy() ImmutableVector[T] {
+	return ImmutableOf(list.data...)
 }
 
-// SubList returns a view of the portion of the list between the specified start and end indices (exclusive). Any modifications to elements in the list will
-// be visible in the original list.
+// Copy returns a copy of the list.
+func (list *Vector[T]) Copy() *Vector[T] {
+	copy := Of(list.data...)
+	return &copy
+}
+
+// SubList returns a copy of the portion of the list between the specified start and end indices (exclusive).
 func (list *Vector[T]) SubList(start int, end int) *Vector[T] {
 	if start < 0 || start >= list.Len() {
 		panic(errors.IndexOutOfBounds(start, list.Len()))
@@ -233,8 +234,12 @@ func (list *Vector[T]) SubList(start int, end int) *Vector[T] {
 		panic(errors.IndexOutOfBounds(end, list.Len()))
 	} else if start > end {
 		panic(errors.IndexBoundsOutOfRange(start, end))
+	} else if start == end {
+		return &Vector[T]{data: make([]T, 0)}
 	}
-	return &Vector[T]{data: list.data[start:end]}
+	subData := make([]T, end-start)
+	copy(subData, list.data[start:end])
+	return &Vector[T]{data: subData}
 }
 
 // RetainAll retains only the elements in the list that are contained in the specified collection.
@@ -269,8 +274,8 @@ func (list *Vector[T]) ToSlice() []T {
 	return list.data
 }
 
-// Equals returns true if the list is equivalent to the given list. Two lists are equal if they are the same reference or have the same size and contain
-// the same elements in the same order.
+// Equals returns true if the list is equivalent to the given list. Two lists are equal if they have the same size
+// and contain the same elements in the same order.
 func (list *Vector[T]) Equals(other *Vector[T]) bool {
 	if list == other {
 		return true
@@ -328,4 +333,16 @@ func (it *iterator[T]) Next() T {
 	index := it.index
 	it.index++
 	return it.data[index]
+}
+
+// String returns the string representation of the list.
+func (list Vector[T]) String() string {
+	return fmt.Sprint(list.data)
+}
+
+// Sort sorts the list using the given less function. if less(a,b) = true then a would be before b in a sortled list.
+func (list *Vector[T]) Sort(less func(a, b T) bool) {
+	sort.Slice(list.data, func(i, j int) bool {
+		return less(list.data[i], list.data[j])
+	})
 }

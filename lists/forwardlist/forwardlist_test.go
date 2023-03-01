@@ -647,3 +647,70 @@ func TestString(t *testing.T) {
 	assert.Equal(t, "[1]", Of(1).String())
 	assert.Equal(t, "[1 2]", Of(1, 2).String())
 }
+
+func TestSort(t *testing.T) {
+
+	type sortTest struct {
+		input    ForwardList[int]
+		less     func(int, int) bool
+		expected []int
+	}
+
+	sortTests := []sortTest{
+		{
+			input:    Of[int](),
+			less:     func(i1, i2 int) bool { return i1 < i2 },
+			expected: []int{},
+		},
+		{
+			input:    Of[int](2, 1, 4),
+			less:     func(i1, i2 int) bool { return i1 < i2 },
+			expected: []int{1, 2, 4},
+		},
+		{
+			input:    Of[int](1, 2, 3, 5, 4),
+			less:     func(i1, i2 int) bool { return i1 < i2 },
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			input:    Of[int](5, 4, 3, 2, 1),
+			less:     func(i1, i2 int) bool { return i1 <= i2 },
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			input:    Of[int](1, 2, 3, 4, 5),
+			less:     func(i1, i2 int) bool { return i1 >= i2 },
+			expected: []int{5, 4, 3, 2, 1},
+		},
+	}
+
+	for _, test := range sortTests {
+		test.input.Sort(test.less)
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
+
+}
+
+func TestCopy(t *testing.T) {
+
+	type copyTest struct {
+		input    ForwardList[int]
+		expected []int
+	}
+
+	copyTests := []copyTest{
+		{
+			input:    Of[int](),
+			expected: []int{},
+		},
+		{
+			input:    Of[int](1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+	}
+
+	for _, test := range copyTests {
+		assert.Equal(t, test.expected, test.input.Copy().ToSlice())
+		assert.Equal(t, test.expected, test.input.ImmutableCopy().ToSlice())
+	}
+}

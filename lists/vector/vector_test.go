@@ -716,3 +716,27 @@ func TestSort(t *testing.T) {
 	}
 
 }
+
+func TestCopy(t *testing.T) {
+
+	type copyTest struct {
+		input    Vector[int]
+		expected []int
+	}
+
+	copyTests := []copyTest{
+		{
+			input:    Of[int](),
+			expected: []int{},
+		},
+		{
+			input:    Of[int](1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+	}
+
+	for _, test := range copyTests {
+		assert.Equal(t, test.expected, test.input.Copy().ToSlice())
+		assert.Equal(t, test.expected, test.input.ImmutableCopy().ToSlice())
+	}
+}

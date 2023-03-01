@@ -8,6 +8,28 @@ import (
 	"github.com/phantom820/collections/lists/vector"
 )
 
+type Matrix[T any] [][]T
+
+func new[T any](m, n int) Matrix[T] {
+	data := make([][]T, m)
+	for i := 0; i < m; i++ {
+		data[i] = make([]T, n)
+	}
+	return data
+}
+
+type Node[T any] struct {
+	next  *Node[T]
+	value T
+}
+
+// type LinkedList[T any] *Node[T]
+
+// func (list LinkedList[T]) Add(e T) bool {
+// 	list.next = *Node[T]{e}
+// 	return true
+// }
+
 func main() {
 
 	// m := hashmap.New[string, int]()
@@ -16,29 +38,23 @@ func main() {
 
 	// fmt.Println(m)
 
-	a := vector.Of[int]()
-	b := linkedlist.New[int]()
-	b.Add(1)
-	fmt.Println(b.ImmutableCopy())
-	// b := forwadlist.Of(1, 2, 3, 4)
-	// a.SubList(1, 3)
+	a := vector.Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	b := linkedlist.Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
-	// fmt.Println(a.SubList(1, 2))
-	// fmt.Println(b.SubList(1, 2))
+	sum, _ := lists.Reduce[int](&a, func(x, y int) int { return x + y })
+	fmt.Println(sum)
+	sum, _ = lists.Reduce[int](&b, func(x, y int) int { return x + y })
+	fmt.Println(sum)
 
-	c := lists.Map[int](&a, func(s int) int { return s * 2 })
+	partitions := lists.Partition[int](&a, 3)
+	fmt.Println(partitions)
+
+	f := func() {}
+	f()
+
+	f()
+
+	c := new[int](2, 2)
+	c[0][0] = 1
 	fmt.Println(c)
-	// var a collections.ImmutableCollection[int] = hashset.ImmutableOf[int](1, 2, 345)
-	// fmt.Println(a)
-
-	// tree := rbt.New[int, int](func(i1, i2 int) bool { return i1 < i2 })
-
-	// tree.Insert(1, 1)
-	// tree.Insert(2, 2)
-	// root := tree.Root()
-
-	// trees.InOrderTraversal(root)
-	// fmt.Println(tree.Root())
-	// fmt.Println(root.Left().Left())
-	// // fmt.Println(root.eft())
 }

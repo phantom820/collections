@@ -463,3 +463,72 @@ func (list ForwardList[T]) String() string {
 	sb.WriteString("]")
 	return sb.String()
 }
+
+// locateMid finds the mid of a list using the Tortoise and Hare approach.  For internal use to support sorting.
+func locateMid[T comparable](head *node[T]) *node[T] {
+	slow := head
+	fast := head.next
+	for fast != nil && fast.next != nil {
+		slow = slow.next
+		fast = fast.next.next
+	}
+	return slow
+}
+
+// merge combines 2 list that have been sorted by natural ordering of elements. For internal use to support sorting.
+func merge[T comparable](leftHead *node[T], rightHead *node[T], less func(a, b T) bool) (*node[T], *node[T]) {
+
+	falseHead := &node[T]{}
+	sentinel := falseHead
+
+	// merge by comparing front of each list and traversing.
+	for leftHead != nil && rightHead != nil {
+		if less(leftHead.value, rightHead.value) {
+			sentinel.next = leftHead
+			leftHead = leftHead.next
+		} else {
+			sentinel.next = rightHead
+			rightHead = rightHead.next
+		}
+		sentinel = sentinel.next
+	}
+
+	// at the end one of the 2 lists must have been exhauted.
+	for leftHead != nil {
+		sentinel.next = leftHead
+		leftHead = leftHead.next
+		sentinel = sentinel.next
+	}
+
+	for rightHead != nil {
+		sentinel.next = rightHead
+		rightHead = rightHead.next
+		sentinel = sentinel.next
+	}
+
+	return falseHead.next, sentinel
+}
+
+// sort sorts the list using the given less function. The sorting algorithm is merge sort.
+func sort[T comparable](head *node[T], less func(a, b T) bool) (*node[T], *node[T]) {
+	if head.next == nil {
+		return head, nil
+	}
+	mid := locateMid(head)
+	rightHead := mid.next
+	mid.next = nil
+	leftHeadSorted, _ := sort(head, less)
+	rightHeadSorted, _ := sort(rightHead, less)
+	finalHead, finalTail := merge(leftHeadSorted, rightHeadSorted, less)
+	return finalHead, finalTail
+}
+
+// Sort sorts the list using the given less function. if less(a,b) = true then a would be before b in a sortled list.
+func (list *ForwardList[T]) Sort(less func(a, b T) bool) {
+	if list.Empty() || list.len == 1 {
+		return
+	}
+	head, tail := sort(list.head, less)
+	list.head = head
+	list.tail = tail
+}

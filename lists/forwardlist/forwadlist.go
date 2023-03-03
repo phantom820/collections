@@ -15,12 +15,14 @@ type node[T comparable] struct {
 	value T
 }
 
+// ForwardList a singly linked list with a tail pointer.
 type ForwardList[T comparable] struct {
 	head *node[T]
 	len  int
 	tail *node[T]
 }
 
+// New creates an empty list.
 func New[T comparable]() *ForwardList[T] {
 	return &ForwardList[T]{head: nil, len: 0}
 }
@@ -179,6 +181,19 @@ func (list *ForwardList[T]) Contains(e T) bool {
 		}
 	}
 	return false
+}
+
+// IndexOf returns the index of the first occurrence of the specified element in the list or -1 if the list does not contain the element.
+func (list *ForwardList[T]) IndexOf(e T) int {
+	j := 0
+	it := list.Iterator()
+	for it.HasNext() {
+		if it.Next() == e {
+			return j
+		}
+		j++
+	}
+	return -1
 }
 
 // chaseValue chase the given value using a current pointer and previous pointer.

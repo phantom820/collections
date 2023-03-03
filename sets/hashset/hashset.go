@@ -14,7 +14,7 @@ type HashSet[T comparable] struct {
 	hashmap hashmap.HashMap[T, struct{}]
 }
 
-// New creates a new, empty set; the backing HashMap has default initial capacity (16)
+// New creates an empty set.
 func New[T comparable]() *HashSet[T] {
 	return &HashSet[T]{hashmap.New[T, struct{}]()}
 }

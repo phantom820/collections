@@ -13,7 +13,7 @@ type ImmutableHashSet[T comparable] struct {
 	hashSet HashSet[T]
 }
 
-// ImmutableOf creates an ImmutableHashSet with the specified elements.
+// ImmutableOf creates an immutable set with the specified elements.
 func ImmutableOf[T comparable](elements ...T) ImmutableHashSet[T] {
 	return ImmutableHashSet[T]{Of(elements...)}
 }

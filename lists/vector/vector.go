@@ -9,10 +9,12 @@ import (
 	"github.com/phantom820/collections/sets/hashset"
 )
 
+// Vector a wrapper around a slice.
 type Vector[T comparable] struct {
 	data []T
 }
 
+// New creates an empty list.
 func New[T comparable]() *Vector[T] {
 	return &Vector[T]{data: make([]T, 0, 16)}
 }
@@ -111,6 +113,11 @@ func indexOf[T comparable](data []T, e T) int {
 		}
 	}
 	return index
+}
+
+// IndexOf returns the index of the first occurrence of the specified element in the list or -1 if the list does not contain the element.
+func (list *Vector[T]) IndexOf(e T) int {
+	return indexOf(list.data, e)
 }
 
 // removeAt removes the element at the specified index.

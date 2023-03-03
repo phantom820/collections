@@ -19,12 +19,14 @@ type node[T comparable] struct {
 	value T
 }
 
+// LinkedList a doubly linked list.
 type LinkedList[T comparable] struct {
 	head *node[T]
 	len  int
 	tail *node[T]
 }
 
+// New creates an empty list.
 func New[T comparable]() *LinkedList[T] {
 	return &LinkedList[T]{head: nil, len: 0}
 }
@@ -427,6 +429,19 @@ func (list *LinkedList[T]) Equals(other *LinkedList[T]) bool {
 	}
 	return true
 
+}
+
+// IndexOf returns the index of the first occurrence of the specified element in the list or -1 if the list does not contain the element.
+func (list *LinkedList[T]) IndexOf(e T) int {
+	j := 0
+	it := list.Iterator()
+	for it.HasNext() {
+		if it.Next() == e {
+			return j
+		}
+		j++
+	}
+	return -1
 }
 
 // Iterator returns an iterator over the elements in the list.

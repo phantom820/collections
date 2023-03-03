@@ -12,7 +12,7 @@ type ImmutableVector[T comparable] struct {
 	vector Vector[T]
 }
 
-// ImmutableOf creates an ImmutableVector with the specified elements.
+// ImmutableOf creates an immutable list with the specified elements.
 func ImmutableOf[T comparable](elements ...T) ImmutableVector[T] {
 	return ImmutableVector[T]{Of(elements...)}
 }
@@ -25,6 +25,11 @@ func (list ImmutableVector[T]) At(i int) T {
 // Contains returns true if this list contains the specified element.
 func (list ImmutableVector[T]) Contains(e T) bool {
 	return list.vector.Contains(e)
+}
+
+// IndexOf returns the index of the first occurrence of the specified element in the list or -1 if the list does not contain the element.
+func (list ImmutableVector[T]) IndexOf(e T) int {
+	return list.vector.IndexOf(e)
 }
 
 // Len returns the number of elements in the list.

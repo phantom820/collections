@@ -671,6 +671,38 @@ func TestCopy(t *testing.T) {
 		assert.Equal(t, test.expected, test.input.ImmutableCopy().ToSlice())
 	}
 }
+
+func TestIndexOf(t *testing.T) {
+
+	type indexOfTest struct {
+		input    LinkedList[int]
+		expected int
+	}
+
+	indexOfTests := []indexOfTest{
+		{
+			input:    Of[int](),
+			expected: -1,
+		},
+		{
+			input:    Of[int](1, 2, 3, 4),
+			expected: 0,
+		},
+		{
+			input:    Of[int](0, 2, 1, 4),
+			expected: 2,
+		},
+		{
+			input:    Of[int](0, 1, 1, 4),
+			expected: 1,
+		},
+	}
+
+	for _, test := range indexOfTests {
+		assert.Equal(t, test.expected, test.input.IndexOf(1))
+	}
+}
+
 func TestSort(t *testing.T) {
 
 	type sortTest struct {

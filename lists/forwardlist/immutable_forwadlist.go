@@ -7,6 +7,7 @@ import (
 	"github.com/phantom820/collections/errors"
 )
 
+// ImmutableForwardList an immutable version of [ImmutableForwadList].
 type ImmutableForwadList[T comparable] struct {
 	list ForwardList[T]
 }
@@ -45,6 +46,11 @@ func (list ImmutableForwadList[T]) AddAt(i int, e T) {
 // At returns the element at the specified index in the list.
 func (list ImmutableForwadList[T]) At(i int) T {
 	return list.list.At(i)
+}
+
+// IndexOf returns the index of the first occurrence of the specified element in the list or -1 if the list does not contain the element.
+func (list ImmutableForwadList[T]) IndexOf(e T) int {
+	return list.list.IndexOf(e)
 }
 
 // Set unsupported operation.

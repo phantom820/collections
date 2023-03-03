@@ -9,12 +9,12 @@ import (
 	"github.com/phantom820/collections/maps/linkedhashmap"
 )
 
-// LinkedHashSet implementation of a set backed by a HashMap.
+// LinkedHashSet implementation of a set backed by a LinkedHashMap.
 type LinkedHashSet[T comparable] struct {
 	linkedHashMap *linkedhashmap.LinkedHashMap[T, struct{}]
 }
 
-// New creates a new, empty set; the backing HashMap has default initial capacity (16)
+// New creates an empty set.
 func New[T comparable]() *LinkedHashSet[T] {
 	return &LinkedHashSet[T]{linkedhashmap.New[T, struct{}]()}
 }

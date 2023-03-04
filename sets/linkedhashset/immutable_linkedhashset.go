@@ -13,7 +13,7 @@ type ImmutableLinkedHashSet[T comparable] struct {
 	linkedHashSet LinkedHashSet[T]
 }
 
-// ImmutableOf creates an immutable with the specified elements.
+// ImmutableOf creates an immutable set with the specified elements.
 func ImmutableOf[T comparable](elements ...T) ImmutableLinkedHashSet[T] {
 	return ImmutableLinkedHashSet[T]{Of(elements...)}
 }

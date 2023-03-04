@@ -6,6 +6,7 @@ import (
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/sets/hashset"
 	"github.com/phantom820/collections/sets/linkedhashset"
+	"github.com/phantom820/collections/sets/treeset"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,6 +19,7 @@ func TestIsSet(t *testing.T) {
 
 	a := hashset.ImmutableOf[int]()
 	b := linkedhashset.ImmutableOf[int]()
+	c := treeset.ImmutableOf[int](func(e1, e2 int) bool { return e1 < e2 })
 	isSetTests := []isSetTest{
 		{
 			input:    nil,
@@ -36,7 +38,15 @@ func TestIsSet(t *testing.T) {
 			expected: true,
 		},
 		{
+			input:    treeset.New(func(e1, e2 int) bool { return e1 < e2 }),
+			expected: true,
+		},
+		{
 			input:    &b,
+			expected: true,
+		},
+		{
+			input:    &c,
 			expected: true,
 		},
 	}
@@ -67,10 +77,19 @@ func TestUnion(t *testing.T) {
 			expectedLen:      0,
 			expectedContains: false,
 		},
-
 		{
 			inputs: func() (collections.Collection[int], collections.Collection[int]) {
 				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(4, 5, 6)
+				return &a, &b
+			},
+			element:          4,
+			expectedSlice:    []int{1, 2, 3, 4, 5, 6},
+			expectedLen:      6,
+			expectedContains: true,
+		},
+		{
+			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+				a, b := hashset.Of(1, 2, 3), treeset.Of(func(e1, e2 int) bool { return e1 > e2 }, 4, 5, 6)
 				return &a, &b
 			},
 			element:          4,
@@ -242,5 +261,15 @@ func TestToLinkedHashSet(t *testing.T) {
 	c := Union[int](&a, &b).ToLinkedHashSet()
 
 	assert.ElementsMatch(t, []int{1, 2, 3, 4, 5, 6, 7, 8}, c.ToSlice())
+
+}
+
+func TestToTreeSet(t *testing.T) {
+
+	a := hashset.Of(1, 2, 3, 4)
+	b := linkedhashset.Of(5, 6, 7, 8)
+	c := Union[int](&a, &b).ToTreeSet(func(e1, e2 int) bool { return e1 >= e2 })
+
+	assert.Equal(t, []int{8, 7, 6, 5, 4, 3, 2, 1}, c.ToSlice())
 
 }

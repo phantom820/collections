@@ -173,7 +173,7 @@ func TestRemoveSlice(t *testing.T) {
 		},
 	}
 
-	for _, test := range removeSliceTests[2:] {
+	for _, test := range removeSliceTests {
 		test.input.RemoveSlice(test.slice)
 		assert.Equal(t, test.expectedSet.linkedHashMap.Keys(), test.input.linkedHashMap.Keys())
 	}

@@ -3,7 +3,9 @@ package hashmap
 import (
 	"testing"
 
-	"github.com/phantom820/collections/maps"
+	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/types/optional"
+	"github.com/phantom820/collections/types/pair"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -87,21 +89,21 @@ func TestGet(t *testing.T) {
 	type getTest struct {
 		input    HashMap[string, int]
 		key      string
-		expected int
+		expected optional.Optional[int]
 	}
 
 	getTests := []getTest{
 		{input: New[string, int](),
 			key:      "A",
-			expected: 0,
+			expected: optional.Empty[int](),
 		},
 		{input: map[string]int{"A": 1},
 			key:      "A",
-			expected: 1,
+			expected: optional.Of(1),
 		},
 		{input: map[string]int{"A": 1},
 			key:      "B",
-			expected: 0,
+			expected: optional.Empty[int](),
 		},
 	}
 
@@ -143,21 +145,21 @@ func TestRemove(t *testing.T) {
 	type removeTest struct {
 		input    HashMap[string, int]
 		key      string
-		expected int
+		expected optional.Optional[int]
 	}
 
 	removeTests := []removeTest{
 		{input: New[string, int](),
 			key:      "A",
-			expected: 0,
+			expected: optional.Empty[int](),
 		},
 		{input: map[string]int{"A": 1},
 			key:      "A",
-			expected: 1,
+			expected: optional.Of[int](1),
 		},
 		{input: map[string]int{"A": 1},
 			key:      "B",
-			expected: 0,
+			expected: optional.Empty[int](),
 		},
 	}
 
@@ -357,8 +359,8 @@ func TestForEach(t *testing.T) {
 
 func TestIterator(t *testing.T) {
 
-	iterate := func(it maps.Iterator[string, int]) []maps.Entry[string, int] {
-		entries := make([]maps.Entry[string, int], 0)
+	iterate := func(it collections.Iterator[pair.Pair[string, int]]) []pair.Pair[string, int] {
+		entries := make([]pair.Pair[string, int], 0)
 		for it.HasNext() {
 			entries = append(entries, it.Next())
 		}
@@ -366,18 +368,18 @@ func TestIterator(t *testing.T) {
 	}
 
 	h := HashMap[string, int](map[string]int{})
-	assert.ElementsMatch(t, []maps.Entry[string, int]{}, iterate(h.Iterator()))
+	assert.ElementsMatch(t, []pair.Pair[string, int]{}, iterate(h.Iterator()))
 
 	h = HashMap[string, int](map[string]int{"A": 1, "B": 2, "C": 3})
-	assert.ElementsMatch(t, []maps.Entry[string, int]{
-		maps.NewEntry("A", 1), maps.NewEntry("B", 2), maps.NewEntry("C", 3)}, iterate(h.Iterator()))
+	assert.ElementsMatch(t, []pair.Pair[string, int]{
+		pair.New("A", 1), pair.New("B", 2), pair.New("C", 3)}, iterate(h.Iterator()))
 
 	h = HashMap[string, int](map[string]int{"A": 1, "B": 2, "C": 3})
 	it := h.Iterator()
 	h.Put("F", 23)
 
-	assert.ElementsMatch(t, []maps.Entry[string, int]{
-		maps.NewEntry("A", 1), maps.NewEntry("B", 2), maps.NewEntry("C", 3), maps.NewEntry("F", 23)}, iterate(it))
+	assert.ElementsMatch(t, []pair.Pair[string, int]{
+		pair.New("A", 1), pair.New("B", 2), pair.New("C", 3), pair.New("F", 23)}, iterate(it))
 
 }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/sets/hashset"
 	"github.com/phantom820/collections/sets/linkedhashset"
+	"github.com/phantom820/collections/sets/treeset"
 )
 
 const (
@@ -14,7 +15,7 @@ const (
 	DIFFERENCE   = 2
 )
 
-// SetView an unmodifiable view of a set which is backed by other sets, this view will change as the backing sets do
+// SetView an unmodifiable view of a set which is backed by other sets, this view will change as the backing sets change.
 type SetView[T comparable] struct {
 	a    collections.Collection[T]
 	b    collections.Collection[T]
@@ -178,6 +179,15 @@ func (setView SetView[T]) ToLinkedHashSet() *linkedhashset.LinkedHashSet[T] {
 	return set
 }
 
+// ToTreeSet returns a [TreeSet] with all the elements from the set view.
+func (setView SetView[T]) ToTreeSet(lessThan func(e1, e2 T) bool) *treeset.TreeSet[T] {
+	set := treeset.New(lessThan)
+	setView.ForEach(func(t T) {
+		set.Add(t)
+	})
+	return set
+}
+
 // Contains returns true if the set view contains the specified element.
 func (setView SetView[T]) Contains(e T) bool {
 	switch setView.view {
@@ -215,6 +225,10 @@ func IsSet[T comparable](c collections.Collection[T]) bool {
 	case *linkedhashset.LinkedHashSet[T]:
 		return true
 	case *linkedhashset.ImmutableLinkedHashSet[T]:
+		return true
+	case *treeset.TreeSet[T]:
+		return true
+	case *treeset.ImmutableTreeSet[T]:
 		return true
 	default:
 		return false

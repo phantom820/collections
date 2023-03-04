@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/phantom820/collections/maps"
-)
-
-const (
-	DEFAULT_CAPACITY = 16 // Initial capacity of the hash table.
+	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/types/optional"
+	"github.com/phantom820/collections/types/pair"
 )
 
 // HashMap wrapper around a map[K]V.
@@ -16,29 +15,35 @@ type HashMap[K comparable, V any] map[K]V
 
 // New creates an empty HashMap.
 func New[K comparable, V any]() HashMap[K, V] {
-	return make(map[K]V, DEFAULT_CAPACITY)
+	return make(map[K]V)
 }
 
-// Put associates the specified value with the specified key in the map.
-func (hashMap HashMap[K, V]) Put(key K, value V) V {
-	storedValue := hashMap[key]
+// Put associates the specified value with the specified key in the map. The previously mapped value is returned.
+func (hashMap HashMap[K, V]) Put(key K, value V) optional.Optional[V] {
+	if storedValue, ok := hashMap[key]; ok {
+		hashMap[key] = value
+		return optional.Of(storedValue)
+	}
 	hashMap[key] = value
-	return storedValue
+	return optional.Empty[V]()
 }
 
 // PutIfAbsent associates the specified key with the given value if the key is not already mapped. Will return the
-// current value if present otherwise the zero value.
-func (hashMap HashMap[K, V]) PutIfAbsent(key K, value V) bool {
-	if _, ok := hashMap[key]; ok {
-		return false
+// current value.
+func (hashMap HashMap[K, V]) PutIfAbsent(key K, value V) optional.Optional[V] {
+	if storedValue, ok := hashMap[key]; ok {
+		return optional.Of(storedValue)
 	}
 	hashMap[key] = value
-	return true
+	return optional.Empty[V]()
 }
 
 // Get returns the value to which the specified key is mapped, or the zero value if the key is not present.
-func (hashMap HashMap[K, V]) Get(key K) V {
-	return hashMap[key]
+func (hashMap HashMap[K, V]) Get(key K) optional.Optional[V] {
+	if storedValue, ok := hashMap[key]; ok {
+		return optional.Of(storedValue)
+	}
+	return optional.Empty[V]()
 }
 
 // GetIf returns the values mapped by keys that match the given predicate.
@@ -52,11 +57,13 @@ func (hashMap HashMap[K, V]) GetIf(f func(K) bool) []V {
 	return values
 }
 
-// Remove removes the mapping for the specified key from the map if present
-func (hashMap HashMap[K, V]) Remove(key K) V {
-	storedValue := hashMap[key]
-	delete(hashMap, key)
-	return storedValue
+// Remove removes the mapping for the specified key from the map if present.
+func (hashMap HashMap[K, V]) Remove(key K) optional.Optional[V] {
+	if storedValue, ok := hashMap[key]; ok {
+		delete(hashMap, key)
+		return optional.Of(storedValue)
+	}
+	return optional.Empty[V]()
 }
 
 // RemoveIf removes all the key, value mapping in which the key matches the given predicate.
@@ -136,8 +143,8 @@ func (hashMap HashMap[K, V]) ForEach(f func(K, V)) {
 }
 
 // Iterator returns an iterator over the map.
-func (hashMap HashMap[K, V]) Iterator() maps.Iterator[K, V] {
-	return &iterator[K, V]{initialized: false, index: 0, hashMap: hashMap, entries: make([]maps.Entry[K, V], 0)}
+func (hashMap HashMap[K, V]) Iterator() collections.Iterator[pair.Pair[K, V]] {
+	return &iterator[K, V]{initialized: false, index: 0, hashMap: hashMap, entries: make([]pair.Pair[K, V], 0)}
 }
 
 // iterator implementation of an iterator for [HashMap].
@@ -145,7 +152,7 @@ type iterator[K comparable, V any] struct {
 	initialized bool
 	index       int
 	hashMap     map[K]V
-	entries     []maps.Entry[K, V]
+	entries     []pair.Pair[K, V]
 }
 
 // HasNext returns true if the iterator has more elements.
@@ -155,7 +162,7 @@ func (it *iterator[K, V]) HasNext() bool {
 	} else if !it.initialized {
 		it.initialized = true
 		for key, value := range it.hashMap {
-			it.entries = append(it.entries, maps.NewEntry(key, value))
+			it.entries = append(it.entries, pair.New(key, value))
 		}
 	}
 	return it.index < len(it.entries)
@@ -163,9 +170,9 @@ func (it *iterator[K, V]) HasNext() bool {
 }
 
 // Next returns the next element in the iterator.
-func (it *iterator[K, V]) Next() maps.Entry[K, V] {
+func (it *iterator[K, V]) Next() pair.Pair[K, V] {
 	if !it.HasNext() {
-		panic("iterator things shoould panic here")
+		panic(errors.NoSuchElement())
 	}
 	index := it.index
 	it.index++

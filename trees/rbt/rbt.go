@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/phantom820/collections/types/optional"
+	"github.com/phantom820/collections/types/pair"
 )
 
 const (
@@ -61,16 +64,20 @@ func New[K comparable, V any](lessThan func(K, K) bool) *RedBlackTree[K, V] {
 		sentinel: &sentinel}
 }
 
-// Insert inserts a node of the form (key,value) into the tree.
-func (tree *RedBlackTree[K, V]) Insert(key K, value V) bool {
+// Insert inserts a node of the form (key,value) into the tree. If the key already exist its value will be updated,
+// the currently stored value is returned.
+func (tree *RedBlackTree[K, V]) Insert(key K, value V) optional.Optional[V] {
 	node := newRedBlackNode(key, value, tree.sentinel)
-	tree.insert(node)
-	tree.insertFix(node)
-	tree.len++
-	return true
+	stored, ok := tree.insert(node)
+	if ok {
+		tree.insertFix(node)
+		tree.len++
+		return optional.Empty[V]()
+	}
+	return optional.Of(stored)
 }
 
-// Update replaces the value stored in the node with given key and returns the previous value that was stored if it was present.
+// Update replaces the value stored in the node with given key and returns the previous value that was stored.
 func (tree *RedBlackTree[K, V]) Update(key K, value V) (V, bool) {
 	node := tree.search(key)
 	if node == tree.sentinel {
@@ -82,12 +89,16 @@ func (tree *RedBlackTree[K, V]) Update(key K, value V) (V, bool) {
 }
 
 // insert inserts a node into the tree. For internal use to support Insert function.
-func (tree *RedBlackTree[K, V]) insert(z *redBlackNode[K, V]) {
+func (tree *RedBlackTree[K, V]) insert(z *redBlackNode[K, V]) (V, bool) {
 	var y *redBlackNode[K, V] = tree.sentinel
 	x := tree.root
 	for x != tree.sentinel {
 		y = x
-		if tree.lessThan(z.key, x.key) {
+		if z.key == x.key {
+			stored := x.value
+			x.value = z.value
+			return stored, false
+		} else if tree.lessThan(z.key, x.key) {
 			x = x.left
 		} else {
 			x = x.right
@@ -102,6 +113,7 @@ func (tree *RedBlackTree[K, V]) insert(z *redBlackNode[K, V]) {
 		y.right = z
 	}
 	z.color = RED
+	return tree.sentinel.value, true
 }
 
 // insertFix fixes the tree after an insertion. For internal use to support Insert function.
@@ -321,20 +333,45 @@ func (tree *RedBlackTree[K, V]) Search(key K) bool {
 }
 
 // Get returns the value of the node with the given key.
-func (tree *RedBlackTree[K, V]) Get(key K) (V, bool) {
+func (tree *RedBlackTree[K, V]) Get(key K) optional.Optional[V] {
 	node := tree.search(key)
 	if node == tree.sentinel {
-		var value V
-		return value, false
+		return optional.Empty[V]()
 	}
-	return node.value, true
+	return optional.Of(node.value)
+}
+
+// GetIf returns the values of the nodes with keys that satisfy the given predicate.
+func (tree *RedBlackTree[K, V]) GetIf(f func(K) bool) []V {
+	values := make([]V, 0)
+	var traverse func(node *redBlackNode[K, V])
+	traverse = func(node *redBlackNode[K, V]) {
+		if node == tree.sentinel {
+			return
+		}
+
+		if node.left != tree.sentinel {
+			traverse(node.left)
+		}
+
+		if f(node.key) {
+			values = append(values, node.value)
+		}
+
+		if node.right != tree.sentinel {
+			traverse(node.right)
+		}
+
+	}
+	traverse(tree.root)
+	return values
 }
 
 // Delete deletes the node with the specified key from the tree and returns the value that was stored.
-func (tree *RedBlackTree[K, V]) Delete(key K) (V, bool) {
+func (tree *RedBlackTree[K, V]) Delete(key K) optional.Optional[V] {
 	node := tree.search(key)
 	if node == tree.sentinel {
-		return node.value, false
+		return optional.Empty[V]()
 	}
 	tree.delete(node)
 	tree.len = int(math.Max(0, float64(tree.len-1)))
@@ -342,7 +379,7 @@ func (tree *RedBlackTree[K, V]) Delete(key K) (V, bool) {
 	node.right = nil
 	temp := node.value
 	node = nil
-	return temp, true
+	return optional.Of(temp)
 }
 
 // delete deletes the node z from the tree. For internal use to support Delete function.
@@ -460,6 +497,29 @@ func (tree *RedBlackTree[K, V]) Values() []V {
 	index := 0
 	tree.values(tree.root, data, &index)
 	return data
+}
+
+// nodes collects the nodes of the tree using an in order traversal. For internal use to support Nodes function.
+func (tree *RedBlackTree[K, V]) nodes(node *redBlackNode[K, V], nodes []pair.Pair[K, V], index *int) {
+	if node == tree.sentinel {
+		return
+	}
+	if node.left != tree.sentinel {
+		tree.nodes(node.left, nodes, index)
+	}
+	nodes[*index] = pair.New(node.key, node.value)
+	*index++
+	if node.right != tree.sentinel {
+		tree.nodes(node.right, nodes, index)
+	}
+}
+
+// Nodes returns the nodes of the tree using an in order traversal.
+func (tree *RedBlackTree[K, V]) Nodes() []pair.Pair[K, V] {
+	nodes := make([]pair.Pair[K, V], tree.len)
+	index := 0
+	tree.nodes(tree.root, nodes, &index)
+	return nodes
 }
 
 // keys collects the keys in the tree into a slice using an in order traversal. For internal use to support Keys function.

@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/phantom820/collections/maps"
+	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/maps/hashmap"
-)
-
-const (
-	DEFAULT_CAPACITY = 16 // Initial capacity of the hash table.
+	"github.com/phantom820/collections/types/optional"
+	"github.com/phantom820/collections/types/pair"
 )
 
 type node[K comparable, V any] struct {
@@ -23,7 +22,7 @@ func newNode[K comparable, V any](key K, value V) *node[K, V] {
 	return &node[K, V]{key: key, value: value}
 }
 
-// LinkedHashMap implementation of [HashMap] with a predicatble order of key,value pairs for iteration.
+// LinkedHashMap implementation of a map with a predicatble order of iteration.
 type LinkedHashMap[K comparable, V any] struct {
 	head    *node[K, V]
 	hashMap hashmap.HashMap[K, *node[K, V]]
@@ -35,20 +34,19 @@ func New[K comparable, V any]() *LinkedHashMap[K, V] {
 	return &LinkedHashMap[K, V]{hashMap: hashmap.New[K, *node[K, V]]()}
 }
 
-// Put associates the specified value with the specified key in the map.
-func (linkedHashMap *LinkedHashMap[K, V]) Put(key K, value V) V {
+// Put associates the specified value with the specified key in the map. The previously mapped value is returned.
+func (linkedHashMap *LinkedHashMap[K, V]) Put(key K, value V) optional.Optional[V] {
 	if linkedHashMap.Empty() {
 		node := newNode(key, value)
 		linkedHashMap.head = node
 		linkedHashMap.tail = node
 		linkedHashMap.hashMap.Put(key, node)
-		var zeroValue V
-		return zeroValue
+		return optional.Empty[V]()
 	} else if storedNode, ok := linkedHashMap.hashMap[key]; ok {
-		// The key is alredy mapped and we swap out the value.
+		// The key is already mapped and we swap out the value.
 		storedValue := storedNode.value
 		storedNode.value = value
-		return storedValue
+		return optional.Of(storedValue)
 	}
 	// Effectively inserting at the back of a linked list.
 	node := newNode(key, value)
@@ -57,28 +55,26 @@ func (linkedHashMap *LinkedHashMap[K, V]) Put(key K, value V) V {
 	node.next = nil
 	linkedHashMap.tail = node
 	linkedHashMap.hashMap.Put(key, node)
-	var zeroValue V
-	return zeroValue
+	return optional.Empty[V]()
 }
 
 // PutIfAbsent associates the specified key with the given value if the key is not already mapped. Will return the
-// current value if present otherwise the zero value.
-func (linkedHashMap *LinkedHashMap[K, V]) PutIfAbsent(key K, value V) bool {
-	if _, ok := linkedHashMap.hashMap[key]; ok {
-		return false
+// current value.
+func (linkedHashMap *LinkedHashMap[K, V]) PutIfAbsent(key K, value V) optional.Optional[V] {
+	if storedValue, ok := linkedHashMap.hashMap[key]; ok {
+		return optional.Of(storedValue.value)
 	}
 	linkedHashMap.Put(key, value)
-	return true
+	return optional.Empty[V]()
 }
 
 // Get returns the value to which the specified key is mapped, or the zero value if the key is not present.
-func (linkedHashMap *LinkedHashMap[K, V]) Get(key K) V {
+func (linkedHashMap *LinkedHashMap[K, V]) Get(key K) optional.Optional[V] {
 	node := linkedHashMap.hashMap.Get(key)
-	if node == nil {
-		var zeroValue V
-		return zeroValue
+	if node.Empty() {
+		return optional.Empty[V]()
 	}
-	return node.value
+	return optional.Of(node.Value().value)
 }
 
 // GetIf returns the values mapped by keys that match the given predicate.
@@ -94,19 +90,18 @@ func (linkedHashMap LinkedHashMap[K, V]) GetIf(f func(K) bool) []V {
 }
 
 // Remove removes the mapping for the specified key from the map if present
-func (linkedHashMap *LinkedHashMap[K, V]) Remove(key K) V {
+func (linkedHashMap *LinkedHashMap[K, V]) Remove(key K) optional.Optional[V] {
 	node, ok := linkedHashMap.hashMap[key]
 	delete(linkedHashMap.hashMap, key)
 	if !ok {
-		var zero V
-		return zero
+		return optional.Empty[V]()
 	} else if node == linkedHashMap.head {
 		linkedHashMap.head = node.next
 		node.next = nil
 		node.prev = nil
 		storedValue := node.value
 		node = nil
-		return storedValue
+		return optional.Of(storedValue)
 	} else if node == linkedHashMap.tail {
 		linkedHashMap.tail = linkedHashMap.tail.prev
 		linkedHashMap.tail.next = nil
@@ -114,7 +109,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) Remove(key K) V {
 		node.prev = nil
 		storedValue := node.value
 		node = nil
-		return storedValue
+		return optional.Of(storedValue)
 	}
 	node.prev.next = node.next
 	node.next.prev = node.prev
@@ -122,7 +117,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) Remove(key K) V {
 	node.next = nil
 	storedValue := node.value
 	node = nil
-	return storedValue
+	return optional.Of(storedValue)
 }
 
 // RemoveIf removes all the key, value mapping in which the key matches the given predicate.
@@ -202,7 +197,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) ForEach(f func(K, V)) {
 }
 
 // Iterator returns an iterator over the map. Elements are iterated over following their insertion order.
-func (linkedHashMap LinkedHashMap[K, V]) Iterator() maps.Iterator[K, V] {
+func (linkedHashMap LinkedHashMap[K, V]) Iterator() collections.Iterator[pair.Pair[K, V]] {
 	return &iterator[K, V]{initialized: false, initialize: func() *node[K, V] { return linkedHashMap.head }}
 }
 
@@ -226,11 +221,11 @@ func (it *iterator[K, V]) HasNext() bool {
 }
 
 // Next returns the next element in the iterator.
-func (it *iterator[K, V]) Next() maps.Entry[K, V] {
+func (it *iterator[K, V]) Next() pair.Pair[K, V] {
 	if !it.HasNext() {
-		panic("iterator things shoould panic here")
+		panic(errors.NoSuchElement())
 	}
-	entry := maps.NewEntry(it.head.key, it.head.value)
+	entry := pair.New(it.head.key, it.head.value)
 	it.head = it.head.next
 	return entry
 }

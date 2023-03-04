@@ -3,6 +3,8 @@ package rbt
 import (
 	"testing"
 
+	"github.com/phantom820/collections/types/optional"
+	"github.com/phantom820/collections/types/pair"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -108,6 +110,23 @@ func TestInsert(t *testing.T) {
 				return tree
 			},
 			expectedTree: "{(10, 3, B) (15, 10, R) (20, 1, R) (24, 11, B) (25, 111, R) (30, 2, B) (40, 12, B)}",
+			expectedLen:  7,
+		},
+		{
+			action: func() *RedBlackTree[int, int] {
+				tree := New[int, int](lessThan)
+				tree.Insert(20, 1)
+				tree.Insert(30, 2)
+				tree.Insert(30, -2)
+				tree.Insert(40, 12)
+				tree.Insert(10, 3)
+				tree.Insert(15, 10)
+				tree.Insert(25, 111)
+				tree.Insert(24, 11)
+				tree.Insert(24, 9)
+				return tree
+			},
+			expectedTree: "{(10, 3, B) (15, 10, R) (20, 1, R) (24, 9, B) (25, 111, R) (30, -2, B) (40, 12, B)}",
 			expectedLen:  7,
 		},
 	}
@@ -352,11 +371,10 @@ func TestSearch(t *testing.T) {
 func TestUpdate(t *testing.T) {
 
 	type updateTest struct {
-		input           *RedBlackTree[int, string]
-		key             int
-		value           string
-		expectedValue   string
-		expectedBoolean bool
+		input    *RedBlackTree[int, string]
+		key      int
+		value    string
+		expected optional.Optional[string]
 	}
 
 	lessThan := func(i1, i2 int) bool { return i1 < i2 }
@@ -379,33 +397,28 @@ func TestUpdate(t *testing.T) {
 
 	updateTests := []updateTest{
 		{
-			input:           New[int, string](lessThan),
-			key:             0,
-			value:           "RR",
-			expectedValue:   "",
-			expectedBoolean: false,
+			input:    New[int, string](lessThan),
+			key:      0,
+			value:    "RR",
+			expected: optional.Empty[string](),
 		},
 		{
-			input:           defaultTree(),
-			key:             20,
-			value:           "RR",
-			expectedValue:   "RR",
-			expectedBoolean: true,
+			input:    defaultTree(),
+			key:      20,
+			value:    "RR",
+			expected: optional.Of("RR"),
 		},
 		{
-			input:           defaultTree(),
-			key:             -1,
-			value:           "AB",
-			expectedValue:   "",
-			expectedBoolean: false,
+			input:    defaultTree(),
+			key:      -1,
+			value:    "AB",
+			expected: optional.Empty[string](),
 		},
 	}
 
 	for _, test := range updateTests {
 		test.input.Update(test.key, test.value)
-		value, ok := test.input.Get(test.key)
-		assert.Equal(t, test.expectedValue, value)
-		assert.Equal(t, test.expectedBoolean, ok)
+		assert.Equal(t, test.expected, test.input.Get(test.key))
 	}
 }
 
@@ -459,7 +472,7 @@ func TestKeys(t *testing.T) {
 
 				return tree
 			},
-			expected: []int{2, 5, 5, 7, 10, 11, 12},
+			expected: []int{2, 5, 7, 10, 11, 12},
 		},
 	}
 
@@ -514,17 +527,128 @@ func TestValues(t *testing.T) {
 				tree.Insert(12, 12)
 				tree.Insert(11, 11)
 				tree.Insert(5, 5)
-				tree.Insert(5, 5)
+				tree.Insert(5, 90)
 				tree.Insert(7, 7)
 
 				return tree
 			},
-			expected: []int{2, 5, 5, 7, 10, 11, 12},
+			expected: []int{2, 90, 7, 10, 11, 12},
 		},
 	}
 
 	for _, test := range valuesTests {
 		assert.Equal(t, test.expected, test.input().Values())
+	}
+
+}
+
+func TestNodes(t *testing.T) {
+
+	less := func(i1, i2 int) bool { return i1 < i2 }
+
+	type valuesTest struct {
+		input    func() *RedBlackTree[int, int]
+		expected []pair.Pair[int, int]
+	}
+
+	valuesTests := []valuesTest{
+		{
+			input: func() *RedBlackTree[int, int] {
+				tree := New[int, int](less)
+				return tree
+			},
+			expected: []pair.Pair[int, int]{},
+		},
+		{
+			input: func() *RedBlackTree[int, int] {
+				tree := New[int, int](less)
+				tree.Insert(1, 1)
+				tree.Insert(2, 2)
+				tree.Insert(3, 3)
+				return tree
+			},
+			expected: []pair.Pair[int, int]{pair.New(1, 1), pair.New(2, 2), pair.New(3, 3)},
+		},
+		{
+			input: func() *RedBlackTree[int, int] {
+				tree := New[int, int](less)
+				tree.Insert(3, 3)
+				tree.Insert(2, 2)
+				tree.Insert(1, 1)
+				tree.Insert(5, 22)
+				return tree
+			},
+			expected: []pair.Pair[int, int]{pair.New(1, 1), pair.New(2, 2), pair.New(3, 3), pair.New(5, 22)},
+		},
+	}
+
+	for _, test := range valuesTests {
+		assert.Equal(t, test.expected, test.input().Nodes())
+	}
+
+}
+
+func TestGetIf(t *testing.T) {
+
+	less := func(i1, i2 int) bool { return i1 < i2 }
+
+	type valuesTest struct {
+		input    func() *RedBlackTree[int, int]
+		expected []int
+	}
+
+	valuesTests := []valuesTest{
+		{
+			input: func() *RedBlackTree[int, int] {
+				tree := New[int, int](less)
+				return tree
+			},
+			expected: []int{},
+		},
+		{
+			input: func() *RedBlackTree[int, int] {
+				tree := New[int, int](less)
+				tree.Insert(1, 1)
+				tree.Insert(2, 2)
+				tree.Insert(3, 3)
+				tree.Insert(4, 4)
+				return tree
+			},
+			expected: []int{2, 4},
+		},
+		{
+			input: func() *RedBlackTree[int, int] {
+				tree := New[int, int](less)
+				tree.Insert(3, 3)
+				tree.Insert(2, 2)
+				tree.Insert(1, 1)
+				tree.Insert(9, 9)
+				return tree
+			},
+			expected: []int{2},
+		},
+		{
+			input: func() *RedBlackTree[int, int] {
+				tree := New[int, int](less)
+				tree.Insert(10, 10)
+				tree.Insert(2, 2)
+				tree.Insert(12, 12)
+				tree.Insert(11, 11)
+				tree.Insert(5, 5)
+				tree.Insert(7, 7)
+
+				return tree
+			},
+			expected: []int{2, 10, 12},
+		},
+	}
+
+	f := func(key int) bool {
+		return key%2 == 0
+	}
+
+	for _, test := range valuesTests[3:] {
+		assert.Equal(t, test.expected, test.input().GetIf(f))
 	}
 
 }

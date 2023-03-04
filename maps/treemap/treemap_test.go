@@ -1,4 +1,4 @@
-package linkedhashmap
+package treemap
 
 import (
 	"fmt"
@@ -11,55 +11,64 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	linkedHashMap := New[string, int]()
-	assert.NotNil(t, linkedHashMap)
-	assert.True(t, linkedHashMap.Empty())
-	assert.Equal(t, 0, linkedHashMap.Len())
-	assert.Nil(t, linkedHashMap.head)
-	assert.Nil(t, linkedHashMap.tail)
+	treeMap := New[string, int](func(k1, k2 string) bool { return k1 < k2 })
+	assert.NotNil(t, treeMap)
+	assert.True(t, treeMap.Empty())
+	assert.Equal(t, 0, treeMap.Len())
 
 }
 
 func TestPut(t *testing.T) {
 
 	type putTest struct {
-		input          *LinkedHashMap[string, int]
-		action         func(*LinkedHashMap[string, int])
+		input          *TreeMap[string, int]
+		action         func(*TreeMap[string, int])
 		expectedKeys   []string
 		expectedValues []int
 	}
 
+	lessThan := func(k1, k2 string) bool { return k1 < k2 }
 	putTests := []putTest{
-		{input: New[string, int](),
-			action: func(hm *LinkedHashMap[string, int]) {
+		{input: New[string, int](lessThan),
+			action: func(hm *TreeMap[string, int]) {
 				hm.Put("A", 1)
 			},
 			expectedKeys:   []string{"A"},
 			expectedValues: []int{1},
 		},
-		{input: New[string, int](),
-			action: func(hm *LinkedHashMap[string, int]) {
+		{input: New[string, int](lessThan),
+			action: func(hm *TreeMap[string, int]) {
 				hm.Put("A", 1)
 				hm.Put("A", 2)
 			},
 			expectedKeys:   []string{"A"},
 			expectedValues: []int{2},
 		},
-		{input: New[string, int](),
-			action: func(hm *LinkedHashMap[string, int]) {
-				hm.Put("A", 1)
+		{input: New[string, int](lessThan),
+			action: func(hm *TreeMap[string, int]) {
 				hm.Put("B", 2)
 				hm.Put("C", 3)
 				hm.Put("C", 4)
+				hm.Put("A", 1)
 			},
 			expectedKeys:   []string{"A", "B", "C"},
 			expectedValues: []int{1, 2, 4},
+		},
+		{input: New[string, int](func(k1, k2 string) bool { return k1 > k2 }),
+			action: func(hm *TreeMap[string, int]) {
+				hm.Put("B", 2)
+				hm.Put("C", 3)
+				hm.Put("C", 4)
+				hm.Put("A", 1)
+			},
+			expectedKeys:   []string{"C", "B", "A"},
+			expectedValues: []int{4, 2, 1},
 		},
 	}
 
 	for _, test := range putTests {
 		test.action(test.input)
-		keys, values := collect(test.input)
+		keys, values := test.input.Keys(), test.input.Values()
 		assert.Equal(t, test.expectedKeys, keys)
 		assert.Equal(t, test.expectedValues, values)
 
@@ -69,25 +78,27 @@ func TestPut(t *testing.T) {
 func TestPutIfAbsent(t *testing.T) {
 
 	type putIfAbsentTest struct {
-		input          *LinkedHashMap[string, int]
-		action         func(*LinkedHashMap[string, int])
+		input          *TreeMap[string, int]
+		action         func(*TreeMap[string, int])
 		expectedKeys   []string
 		expectedValues []int
 	}
 
+	lessThan := func(k1, k2 string) bool { return k1 < k2 }
+
 	putIfAbsentTests := []putIfAbsentTest{
-		{input: New[string, int](),
-			action: func(hm *LinkedHashMap[string, int]) {
+		{input: New[string, int](lessThan),
+			action: func(hm *TreeMap[string, int]) {
 				hm.PutIfAbsent("A", 1)
 			},
 			expectedKeys:   []string{"A"},
 			expectedValues: []int{1},
 		},
-		{input: New[string, int](),
-			action: func(hm *LinkedHashMap[string, int]) {
+		{input: New[string, int](lessThan),
+			action: func(hm *TreeMap[string, int]) {
+				hm.PutIfAbsent("B", 3)
 				hm.PutIfAbsent("A", 1)
 				hm.PutIfAbsent("A", 2)
-				hm.PutIfAbsent("B", 3)
 
 			},
 			expectedKeys:   []string{"A", "B"},
@@ -97,7 +108,7 @@ func TestPutIfAbsent(t *testing.T) {
 
 	for _, test := range putIfAbsentTests {
 		test.action(test.input)
-		keys, values := collect(test.input)
+		keys, values := test.input.Keys(), test.input.Values()
 		assert.Equal(t, test.expectedKeys, keys)
 		assert.Equal(t, test.expectedValues, values)
 
@@ -107,31 +118,33 @@ func TestPutIfAbsent(t *testing.T) {
 func TestGet(t *testing.T) {
 
 	type getTest struct {
-		input    *LinkedHashMap[string, int]
+		input    *TreeMap[string, int]
 		key      string
-		action   func(*LinkedHashMap[string, int])
+		action   func(*TreeMap[string, int])
 		expected optional.Optional[int]
 	}
 
+	lessThan := func(k1, k2 string) bool { return k1 < k2 }
+
 	getTests := []getTest{
-		{input: New[string, int](),
+		{input: New[string, int](lessThan),
 			key:      "A",
-			action:   func(lhm *LinkedHashMap[string, int]) {},
+			action:   func(tm *TreeMap[string, int]) {},
 			expected: optional.Empty[int](),
 		},
-		{input: New[string, int](),
+		{input: New[string, int](lessThan),
 			key: "B",
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
-				lhm.Put("B", 2)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
+				tm.Put("B", 2)
 			},
 			expected: optional.Of(2),
 		},
-		{input: New[string, int](),
+		{input: New[string, int](lessThan),
 			key: "C",
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
-				lhm.Put("B", 2)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
+				tm.Put("B", 2)
 			},
 			expected: optional.Empty[int](),
 		},
@@ -146,27 +159,29 @@ func TestGet(t *testing.T) {
 func TestGetIf(t *testing.T) {
 
 	type getIfTest struct {
-		input    *LinkedHashMap[string, int]
+		input    *TreeMap[string, int]
 		f        func(string) bool
 		expected []int
 	}
 
-	lhm := New[string, int]()
-	lhm.Put("A", 1)
-	lhm.Put("B", 2)
-	lhm.Put("C", 3)
-	lhm.Put("D", 4)
+	lessThan := func(k1, k2 string) bool { return k1 < k2 }
+
+	tm := New[string, int](lessThan)
+	tm.Put("B", 2)
+	tm.Put("C", 3)
+	tm.Put("D", 4)
+	tm.Put("A", 1)
 
 	getIfTests := []getIfTest{
-		{input: lhm,
+		{input: tm,
 			f:        func(s string) bool { return s == "" },
 			expected: []int{},
 		},
-		{input: lhm,
+		{input: tm,
 			f:        func(s string) bool { return s == "A" || s == "B" },
 			expected: []int{1, 2},
 		},
-		{input: lhm,
+		{input: tm,
 			f:        func(s string) bool { return false },
 			expected: []int{},
 		},
@@ -180,63 +195,65 @@ func TestGetIf(t *testing.T) {
 func TestRemove(t *testing.T) {
 
 	type removeTest struct {
-		input          *LinkedHashMap[string, int]
-		action         func(*LinkedHashMap[string, int])
+		input          *TreeMap[string, int]
+		action         func(*TreeMap[string, int])
 		key            string
 		expectedKeys   []string
 		expectedValues []int
 	}
 
+	lessThan := func(k1, k2 string) bool { return k1 < k2 }
+
 	removeTests := []removeTest{
 		{
-			input:          New[string, int](),
+			input:          New[string, int](lessThan),
 			key:            "A",
-			action:         func(lhm *LinkedHashMap[string, int]) {},
+			action:         func(tm *TreeMap[string, int]) {},
 			expectedKeys:   []string{},
 			expectedValues: []int{},
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			key:   "A",
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
 			},
 			expectedKeys:   []string{},
 			expectedValues: []int{},
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			key:   "A",
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
-				lhm.Put("B", 2)
-				lhm.Put("C", 3)
-				lhm.Put("D", 4)
-				lhm.Put("E", 5)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
+				tm.Put("B", 2)
+				tm.Put("C", 3)
+				tm.Put("D", 4)
+				tm.Put("E", 5)
 			},
 			expectedKeys:   []string{"B", "C", "D", "E"},
 			expectedValues: []int{2, 3, 4, 5},
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			key:   "B",
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
-				lhm.Put("B", 2)
-				lhm.Put("C", 3)
-				lhm.Put("D", 4)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
+				tm.Put("B", 2)
+				tm.Put("C", 3)
+				tm.Put("D", 4)
 			},
 			expectedKeys:   []string{"A", "C", "D"},
 			expectedValues: []int{1, 3, 4},
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			key:   "D",
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
-				lhm.Put("B", 2)
-				lhm.Put("C", 3)
-				lhm.Put("D", 4)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("B", 2)
+				tm.Put("C", 3)
+				tm.Put("D", 4)
+				tm.Put("A", 1)
 			},
 			expectedKeys:   []string{"A", "B", "C"},
 			expectedValues: []int{1, 2, 3},
@@ -246,7 +263,7 @@ func TestRemove(t *testing.T) {
 	for _, test := range removeTests {
 		test.action(test.input)
 		test.input.Remove(test.key)
-		keys, values := collect(test.input)
+		keys, values := test.input.Keys(), test.input.Values()
 		assert.Equal(t, test.expectedKeys, keys)
 		assert.Equal(t, test.expectedValues, values)
 	}
@@ -255,76 +272,77 @@ func TestRemove(t *testing.T) {
 func TestRemoveIf(t *testing.T) {
 
 	type removeIfTest struct {
-		input          *LinkedHashMap[string, int]
-		action         func(*LinkedHashMap[string, int])
+		input          *TreeMap[string, int]
+		action         func(*TreeMap[string, int])
 		f              func(string) bool
 		expectedKeys   []string
 		expectedValues []int
 	}
 
+	lessThan := func(k1, k2 string) bool { return k1 < k2 }
 	removeIfTests := []removeIfTest{
 		{
-			input:          New[string, int](),
+			input:          New[string, int](lessThan),
 			f:              func(s string) bool { return s == "" },
-			action:         func(lhm *LinkedHashMap[string, int]) {},
+			action:         func(tm *TreeMap[string, int]) {},
 			expectedKeys:   []string{},
 			expectedValues: []int{},
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			f:     func(s string) bool { return s == "A" },
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
 			},
 			expectedKeys:   []string{},
 			expectedValues: []int{},
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			f:     func(s string) bool { return s == "A" || s == "C" },
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
-				lhm.Put("B", 2)
-				lhm.Put("C", 3)
-				lhm.Put("D", 4)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
+				tm.Put("B", 2)
+				tm.Put("C", 3)
+				tm.Put("D", 4)
 			},
 			expectedKeys:   []string{"B", "D"},
 			expectedValues: []int{2, 4},
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			f:     func(s string) bool { return true },
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
-				lhm.Put("B", 2)
-				lhm.Put("C", 3)
-				lhm.Put("D", 4)
-				lhm.Put("E", 4)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
+				tm.Put("B", 2)
+				tm.Put("C", 3)
+				tm.Put("D", 4)
+				tm.Put("E", 4)
 			},
 			expectedKeys:   []string{},
 			expectedValues: []int{},
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			f:     func(s string) bool { return s == "A" || s == "B" || s == "C" || s == "D" },
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
-				lhm.Put("B", 2)
-				lhm.Put("C", 3)
-				lhm.Put("D", 4)
-				lhm.Put("E", 5)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
+				tm.Put("B", 2)
+				tm.Put("C", 3)
+				tm.Put("D", 4)
+				tm.Put("E", 5)
 			},
 			expectedKeys:   []string{"E"},
 			expectedValues: []int{5},
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			f:     func(s string) bool { return s == "B" || s == "C" || s == "D" },
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
-				lhm.Put("B", 2)
-				lhm.Put("C", 3)
-				lhm.Put("D", 4)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
+				tm.Put("B", 2)
+				tm.Put("C", 3)
+				tm.Put("D", 4)
 			},
 			expectedKeys:   []string{"A"},
 			expectedValues: []int{1},
@@ -334,7 +352,7 @@ func TestRemoveIf(t *testing.T) {
 	for _, test := range removeIfTests {
 		test.action(test.input)
 		test.input.RemoveIf(test.f)
-		keys, values := collect(test.input)
+		keys, values := test.input.Keys(), test.input.Values()
 		assert.Equal(t, test.expectedKeys, keys)
 		assert.Equal(t, test.expectedValues, values)
 	}
@@ -343,32 +361,33 @@ func TestRemoveIf(t *testing.T) {
 func TestContainsKey(t *testing.T) {
 
 	type containsKeyTest struct {
-		input    *LinkedHashMap[string, int]
-		action   func(*LinkedHashMap[string, int])
+		input    *TreeMap[string, int]
+		action   func(*TreeMap[string, int])
 		key      string
 		expected bool
 	}
 
+	lessThan := func(k1, k2 string) bool { return k1 < k2 }
 	containsKeyTests := []containsKeyTest{
 		{
-			input:    New[string, int](),
+			input:    New[string, int](lessThan),
 			key:      "A",
-			action:   func(lhm *LinkedHashMap[string, int]) {},
+			action:   func(tm *TreeMap[string, int]) {},
 			expected: false,
 		},
 		{
-			input: New[string, int](),
+			input: New[string, int](lessThan),
 			key:   "A",
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("C", 1)
-				lhm.Put("D", 1)
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("C", 1)
+				tm.Put("D", 1)
 			},
 			expected: false,
 		},
 		{
-			input: New[string, int](),
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 1)
+			input: New[string, int](lessThan),
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 1)
 			},
 			key:      "A",
 			expected: true,
@@ -384,35 +403,36 @@ func TestContainsKey(t *testing.T) {
 func TestContainsValue(t *testing.T) {
 
 	type containsValueTest struct {
-		input    *LinkedHashMap[string, int]
-		action   func(*LinkedHashMap[string, int])
+		input    *TreeMap[string, int]
+		action   func(*TreeMap[string, int])
 		value    int
 		expected bool
 	}
 
+	lessThan := func(k1, k2 string) bool { return k1 < k2 }
 	containsValueTests := []containsValueTest{
 		{
-			input:    New[string, int](),
-			action:   func(lhm *LinkedHashMap[string, int]) {},
+			input:    New[string, int](lessThan),
+			action:   func(tm *TreeMap[string, int]) {},
 			value:    0,
 			expected: false,
 		},
 		{
-			input: New[string, int](),
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("A", 22)
-				lhm.Put("B", 45)
-				lhm.Put("C", 33)
+			input: New[string, int](lessThan),
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("A", 22)
+				tm.Put("B", 45)
+				tm.Put("C", 33)
 			},
 			value:    2,
 			expected: false,
 		},
 		{
-			input: New[string, int](),
-			action: func(lhm *LinkedHashMap[string, int]) {
-				lhm.Put("B", 45)
-				lhm.Put("C", 33)
-				lhm.Put("A", 1)
+			input: New[string, int](lessThan),
+			action: func(tm *TreeMap[string, int]) {
+				tm.Put("B", 45)
+				tm.Put("C", 33)
+				tm.Put("A", 1)
 			},
 			value:    1,
 			expected: true,
@@ -427,63 +447,51 @@ func TestContainsValue(t *testing.T) {
 
 func TestClear(t *testing.T) {
 
-	lhm := New[string, int]()
-	lhm.Put("A", 1)
-	lhm.Put("B", 2)
+	tm := New[string, int](func(k1, k2 string) bool { return k1 < k2 })
+	tm.Put("A", 1)
+	tm.Put("B", 2)
 
-	lhm.Clear()
-	assert.Nil(t, lhm.head)
-	assert.Nil(t, lhm.tail)
-	assert.True(t, lhm.Empty())
+	tm.Clear()
+	assert.True(t, tm.Empty())
 
 }
 
 func TestKeys(t *testing.T) {
 
-	lhm := New[string, int]()
-	lhm.Put("A", 1)
-	lhm.Put("B", 2)
-	lhm.Put("C", 3)
-	lhm.Put("D", 4)
+	tm := New[string, int](func(k1, k2 string) bool { return k1 < k2 })
+	tm.Put("A", 1)
+	tm.Put("B", 2)
+	tm.Put("C", 3)
+	tm.Put("D", 4)
 
-	assert.Equal(t, []string{"A", "B", "C", "D"}, lhm.Keys())
+	assert.Equal(t, []string{"A", "B", "C", "D"}, tm.Keys())
 }
 
 func TestValues(t *testing.T) {
 
-	lhm := New[string, int]()
-	lhm.Put("A", 1)
-	lhm.Put("B", 2)
-	lhm.Put("C", 3)
-	lhm.Put("D", 4)
+	tm := New[string, int](func(k1, k2 string) bool { return k1 < k2 })
+	tm.Put("A", 1)
+	tm.Put("B", 2)
+	tm.Put("C", 3)
+	tm.Put("D", 4)
 
-	assert.Equal(t, []int{1, 2, 3, 4}, lhm.Values())
+	assert.Equal(t, []int{1, 2, 3, 4}, tm.Values())
 }
 
 func TestForEach(t *testing.T) {
 
 	m := make(map[string]int)
-	lhm := New[string, int]()
-	lhm.Put("A", 1)
-	lhm.Put("B", 2)
-	lhm.Put("C", 3)
-	lhm.Put("D", 4)
+	tm := New[string, int](func(k1, k2 string) bool { return k1 < k2 })
+	tm.Put("A", 1)
+	tm.Put("B", 2)
+	tm.Put("C", 3)
+	tm.Put("D", 4)
 
-	lhm.ForEach(func(s string, i int) {
+	tm.ForEach(func(s string, i int) {
 		m[s] = i
 	})
 
 	assert.Equal(t, map[string]int{"A": 1, "B": 2, "C": 3, "D": 4}, m)
-}
-
-func collect(linkedHashMap *LinkedHashMap[string, int]) ([]string, []int) {
-	keys := make([]string, 0)
-	values := make([]int, 0)
-	for curr := linkedHashMap.head; curr != nil; curr = curr.next {
-		keys = append(keys, curr.key)
-		values = append(values, curr.value)
-	}
-	return keys, values
 }
 
 func TestIterator(t *testing.T) {
@@ -496,10 +504,10 @@ func TestIterator(t *testing.T) {
 		return entries
 	}
 
-	h := New[string, int]()
+	h := New[string, int](func(k1, k2 string) bool { return k1 < k2 })
 	assert.Equal(t, []pair.Pair[string, int]{}, iterate(h.Iterator()))
 
-	h = New[string, int]()
+	h = New[string, int](func(k1, k2 string) bool { return k1 < k2 })
 	h.Put("A", 1)
 	h.Put("B", 2)
 	h.Put("C", 3)
@@ -507,7 +515,7 @@ func TestIterator(t *testing.T) {
 	assert.Equal(t, []pair.Pair[string, int]{
 		pair.New("A", 1), pair.New("B", 2), pair.New("C", 3)}, iterate(h.Iterator()))
 
-	h = New[string, int]()
+	h = New[string, int](func(k1, k2 string) bool { return k1 < k2 })
 	h.Put("A", 1)
 	h.Put("B", 2)
 	h.Put("C", 3)
@@ -521,8 +529,8 @@ func TestIterator(t *testing.T) {
 
 func TestString(t *testing.T) {
 
-	assert.Equal(t, "{}", fmt.Sprint(New[string, string]()))
-	m := New[string, int]()
+	assert.Equal(t, "{}", fmt.Sprint(New[string, string](func(k1, k2 string) bool { return k1 < k2 })))
+	m := New[string, int](func(k1, k2 string) bool { return k1 < k2 })
 	m.Put("A", 1)
 	m.Put("B", 2)
 	m.Put("C", 3)

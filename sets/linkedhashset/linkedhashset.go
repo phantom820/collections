@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
-	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/maps/linkedhashmap"
+	"github.com/phantom820/collections/types/pair"
 )
 
-// LinkedHashSet implementation of a set backed by a LinkedHashMap.
+// LinkedHashSet implementation of a set backed by a [LinkedHashMap].
 type LinkedHashSet[T comparable] struct {
 	linkedHashMap *linkedhashmap.LinkedHashMap[T, struct{}]
 }
@@ -30,7 +30,8 @@ func Of[T comparable](elements ...T) LinkedHashSet[T] {
 
 // Add adds the specified element to the set if it is not already present.
 func (set LinkedHashSet[T]) Add(e T) bool {
-	return set.linkedHashMap.PutIfAbsent(e, struct{}{})
+	value := set.linkedHashMap.PutIfAbsent(e, struct{}{})
+	return value.Empty()
 }
 
 // AddAll adds all of the elements in the specified iterable to the set.
@@ -142,7 +143,7 @@ func (set *LinkedHashSet[T]) Iterator() collections.Iterator[T] {
 
 // iterator implememantation for [LinkedHashSet].
 type iterator[T comparable] struct {
-	mapIterator maps.Iterator[T, struct{}]
+	mapIterator collections.Iterator[pair.Pair[T, struct{}]]
 }
 
 // HasNext returns true if the iterator has more elements.

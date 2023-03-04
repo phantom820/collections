@@ -335,7 +335,7 @@ func (it *iterator[T]) HasNext() bool {
 // Next returns the next element in the iterator.
 func (it *iterator[T]) Next() T {
 	if !it.HasNext() {
-		panic("iterator things shoould panic here")
+		panic(errors.NoSuchElement())
 	}
 	index := it.index
 	it.index++

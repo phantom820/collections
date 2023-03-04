@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
-	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/maps/hashmap"
+	"github.com/phantom820/collections/types/pair"
 )
 
 // HashSet implementation of a set backed by a HashMap.
@@ -30,7 +30,8 @@ func Of[T comparable](elements ...T) HashSet[T] {
 
 // Add adds the specified element to this set if it is not already present.
 func (set *HashSet[T]) Add(e T) bool {
-	return set.hashmap.PutIfAbsent(e, struct{}{})
+	value := set.hashmap.PutIfAbsent(e, struct{}{})
+	return value.Empty()
 }
 
 // AddAll adds all of the elements in the specified iterable to the set.
@@ -141,7 +142,7 @@ func (set *HashSet[T]) Iterator() collections.Iterator[T] {
 
 // iterator implememantation for [HashSet].
 type iterator[T comparable] struct {
-	iterator maps.Iterator[T, struct{}]
+	iterator collections.Iterator[pair.Pair[T, struct{}]]
 }
 
 // HasNext returns true if the iterator has more elements.

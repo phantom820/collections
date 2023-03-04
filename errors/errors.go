@@ -10,6 +10,7 @@ var (
 	IndexOutOfBoundsTemplate, _      = template.New("IndexOutOfBounds").Parse("ErrorIndexOutOfBounds: Index {{.index}} out of bounds for length {{.length}}.")
 	UnsupportedOperationTemplate, _  = template.New("UnsupportedOperation").Parse("ErrorUnsupportedOperation: Unsupported operation {{.operation}} on [{{.type}}].")
 	IndexBoundsOutOfRangeTemplate, _ = template.New("IndexBoundsOutOfRange").Parse("ErrorIndexBoundsOutOfRange: Index bounds [{{.start}}:{{.end}}] out of range.")
+	NoSuchElementTemplate, _         = template.New("NoSuchElement").Parse("NoSuchElement: No such element to access.")
 )
 
 func IndexOutOfBounds(index int, length int) error {
@@ -27,5 +28,11 @@ func IndexBoundsOutOfRange(start int, end int) error {
 func UnsupportedOperation(operation string, _type string) error {
 	var buffer bytes.Buffer
 	UnsupportedOperationTemplate.Execute(&buffer, map[string]string{"operation": operation, "type": _type})
+	return errors.New(buffer.String())
+}
+
+func NoSuchElement() error {
+	var buffer bytes.Buffer
+	NoSuchElementTemplate.Execute(&buffer, nil)
 	return errors.New(buffer.String())
 }

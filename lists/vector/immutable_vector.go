@@ -105,6 +105,11 @@ func (list ImmutableVector[T]) RemoveAll(iterable collections.Iterable[T]) bool 
 	panic("RemoveAll")
 }
 
+// RemoveSlice unsupported operation.
+func (list ImmutableVector[T]) RemoveSlice(s []T) bool {
+	panic(errors.UnsupportedOperation("RemoveSlice", "ImmutableVector"))
+}
+
 // RetainAll unsupported operation.
 func (list ImmutableVector[T]) RetainAll(c collections.Collection[T]) bool {
 	panic(errors.UnsupportedOperation("RetainAll", "ImmutableVector"))

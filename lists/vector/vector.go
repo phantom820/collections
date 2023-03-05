@@ -26,7 +26,7 @@ func Of[T comparable](elements ...T) Vector[T] {
 	return list
 }
 
-// Add appends the specified element to the end of this list.
+// Add appends the specified element to the end of the list.
 func (list *Vector[T]) Add(e T) bool {
 	list.data = append(list.data, e)
 	return true
@@ -37,7 +37,7 @@ func (list *Vector[T]) Len() int {
 	return len(list.data)
 }
 
-// AddAll adds all of the elements in the specified iterable to the set.
+// AddAll adds all of the elements in the specified iterable to the list.
 func (list *Vector[T]) AddAll(iterable collections.Iterable[T]) bool {
 	it := iterable.Iterator()
 	for it.HasNext() {
@@ -138,7 +138,7 @@ func removeAt[T comparable](data []T, index int) []T {
 	return data[:len(data)-1]
 }
 
-// Remove removes the first occurrence of the specified element from this list, if it is present.
+// Remove removes the first occurrence of the specified element from the list, if it is present.
 func (list *Vector[T]) Remove(e T) bool {
 	index := indexOf(list.data, e)
 	if index == -1 {

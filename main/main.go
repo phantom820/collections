@@ -57,4 +57,7 @@ func main() {
 	c := new[int](2, 2)
 	c[0][0] = 1
 	fmt.Println(c)
+
+	// d := dequeue.NewListDequeue[int]()
+	// d.
 }

@@ -24,6 +24,7 @@ type Collection[T comparable] interface {
 	Remove(e T) bool
 	RemoveIf(func(T) bool) bool
 	RemoveAll(iterable Iterable[T]) bool
+	RemoveSlice(s []T) bool
 	RetainAll(c Collection[T]) bool
 	ForEach(func(T))
 	Len() int

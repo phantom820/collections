@@ -85,6 +85,11 @@ func (set ImmutableHashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool 
 	panic(errors.UnsupportedOperation("RemoveAll", "ImmutableHashSet"))
 }
 
+// RemoveSlice unsupported operation.
+func (set ImmutableHashSet[T]) RemoveSlice(s []T) bool {
+	panic(errors.UnsupportedOperation("RemoveSlice", "ImmutableHashSet"))
+}
+
 // RetainAll unsupported operation.
 func (set ImmutableHashSet[T]) RetainAll(c collections.Collection[T]) bool {
 	panic(errors.UnsupportedOperation("RetainAll", "ImmutableHashSet"))

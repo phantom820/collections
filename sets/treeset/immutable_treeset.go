@@ -88,6 +88,11 @@ func (set ImmutableTreeSet[T]) RemoveAll(iterable collections.Iterable[T]) bool 
 	panic(errors.UnsupportedOperation("RemoveAll", "ImmutableTreeSet"))
 }
 
+// RemoveSlice unsupported operation.
+func (set ImmutableTreeSet[T]) RemoveSlice(s []T) bool {
+	panic(errors.UnsupportedOperation("RemoveSlice", "ImmutableTreeSet"))
+}
+
 // RetainAll unsupported operation.
 func (set ImmutableTreeSet[T]) RetainAll(c collections.Collection[T]) bool {
 	panic(errors.UnsupportedOperation("RetainAll", "ImmutableTreeSet"))

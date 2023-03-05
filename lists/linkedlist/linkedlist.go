@@ -270,7 +270,7 @@ func (list *LinkedList[T]) RemoveAt(i int) T {
 	} else if i == 0 {
 		return list.removeFront()
 	} else if i == list.Len()-1 {
-		prev, _ := chaseIndex(list.head, i)
+		prev := list.tail.prev
 		return list.removeBack(prev)
 	}
 	_, curr := chaseIndex(list.head, i)

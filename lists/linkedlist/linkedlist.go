@@ -102,14 +102,12 @@ func (list *LinkedList[T]) Add(e T) bool {
 
 // chaseIndex chase the given index using a current pointer and previous pointer.
 func chaseIndex[T comparable](start *node[T], i int) (*node[T], *node[T]) {
-	var prev *node[T]
 	curr := start
 	j := 0
 	for curr != nil {
 		if j == i {
-			return prev, curr
+			return curr.prev, curr
 		}
-		prev = curr
 		curr = curr.next
 		j++
 	}
@@ -226,12 +224,11 @@ func (list *LinkedList[T]) removeFront() T {
 }
 
 // removeBack removes the back node from the list.
-func (list *LinkedList[T]) removeBack(curr *node[T]) T {
+func (list *LinkedList[T]) removeBack() T {
 	e := list.tail.value
-	list.tail = curr.prev
-	curr.prev = nil
-	curr.next = nil
-	curr = nil
+	// temp := list.tail
+	list.tail = list.tail.prev
+	// temp = nil
 	list.len = int(math.Max(0, float64(list.len-1)))
 	return e
 }
@@ -242,7 +239,7 @@ func (list *LinkedList[T]) remove(curr *node[T]) {
 		list.removeFront()
 		return
 	} else if curr == list.tail {
-		list.removeBack(curr)
+		list.removeBack()
 		return
 	}
 	prev := curr.prev
@@ -270,8 +267,7 @@ func (list *LinkedList[T]) RemoveAt(i int) T {
 	} else if i == 0 {
 		return list.removeFront()
 	} else if i == list.Len()-1 {
-		prev := list.tail.prev
-		return list.removeBack(prev)
+		return list.removeBack()
 	}
 	_, curr := chaseIndex(list.head, i)
 	e := curr.value

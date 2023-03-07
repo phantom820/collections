@@ -48,7 +48,6 @@ func newMutable[T comparable, U comparable](l List[T]) List[U] {
 		return linkedlist.New[U]()
 	default:
 		panic("")
-
 	}
 }
 

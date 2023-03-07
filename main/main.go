@@ -6,6 +6,7 @@ import (
 	"github.com/phantom820/collections/lists"
 	"github.com/phantom820/collections/lists/linkedlist"
 	"github.com/phantom820/collections/lists/vector"
+	"github.com/phantom820/collections/queues/dequeue"
 )
 
 type Matrix[T any] [][]T
@@ -58,6 +59,6 @@ func main() {
 	c[0][0] = 1
 	fmt.Println(c)
 
-	// d := dequeue.NewListDequeue[int]()
-	// d.
+	d := dequeue.NewListDequeue[int]()
+	fmt.Println(d.PeekFirst())
 }

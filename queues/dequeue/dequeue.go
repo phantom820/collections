@@ -10,14 +10,27 @@ import (
 	"github.com/phantom820/collections/types/optional"
 )
 
+// Dequeue a double ended queue.
 type Dequeue[T comparable] struct {
 	list lists.List[T]
 }
 
+func ListDequeueOf[T comparable](elements ...T) Dequeue[T] {
+	list := linkedlist.Of(elements...)
+	return Dequeue[T]{list: &list}
+}
+
+func VectorDequeueOf[T comparable](elements ...T) Dequeue[T] {
+	list := vector.Of(elements...)
+	return Dequeue[T]{list: &list}
+}
+
+// NewVectorDequeue creates a [Vector] based dequeue.
 func NewVectorDequeue[T comparable]() *Dequeue[T] {
 	return &Dequeue[T]{list: vector.New[T]()}
 }
 
+// NewListDequeue creates a [LinkedList] based dequeue.
 func NewListDequeue[T comparable]() *Dequeue[T] {
 	return &Dequeue[T]{list: linkedlist.New[T]()}
 }

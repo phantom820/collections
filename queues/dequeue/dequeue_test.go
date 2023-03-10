@@ -215,3 +215,79 @@ func TestRemoveLast(t *testing.T) {
 		}
 	}
 }
+
+func TestAddFirst(t *testing.T) {
+
+	addFirstTests := []struct {
+		input    Dequeue[int]
+		elements []int
+		expected []int
+	}{
+		{
+			input:    ListDequeueOf[int](),
+			elements: []int{},
+			expected: []int{},
+		},
+		{
+			input:    VectorDequeueOf[int](),
+			elements: []int{},
+			expected: []int{},
+		},
+		{
+			input:    ListDequeueOf[int](),
+			elements: []int{1, 2, 3, 4, 5},
+			expected: []int{5, 4, 3, 2, 1},
+		},
+		{
+			input:    VectorDequeueOf[int](),
+			elements: []int{1, 2, 3, 4, 5},
+			expected: []int{5, 4, 3, 2, 1},
+		},
+	}
+
+	for _, test := range addFirstTests {
+		for _, e := range test.elements {
+			test.input.AddFirst(e)
+		}
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
+
+}
+
+func TestAddLast(t *testing.T) {
+
+	addLastTests := []struct {
+		input    Dequeue[int]
+		elements []int
+		expected []int
+	}{
+		{
+			input:    ListDequeueOf[int](),
+			elements: []int{},
+			expected: []int{},
+		},
+		{
+			input:    VectorDequeueOf[int](),
+			elements: []int{},
+			expected: []int{},
+		},
+		{
+			input:    ListDequeueOf[int](),
+			elements: []int{1, 2, 3, 4, 5},
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			input:    VectorDequeueOf[int](),
+			elements: []int{1, 2, 3, 4, 5},
+			expected: []int{1, 2, 3, 4, 5},
+		},
+	}
+
+	for _, test := range addLastTests {
+		for _, e := range test.elements {
+			test.input.AddLast(e)
+		}
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
+
+}

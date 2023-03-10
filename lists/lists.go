@@ -55,8 +55,6 @@ func newMutable[T comparable, U comparable](l List[T]) List[U] {
 func Partition[T comparable](list List[T], size int) []List[T] {
 	if list.Empty() {
 		return []List[T]{}
-	} else if list.Len() <= size {
-		return []List[T]{list}
 	}
 
 	it := list.Iterator()

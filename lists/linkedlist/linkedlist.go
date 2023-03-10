@@ -100,23 +100,23 @@ func (list *LinkedList[T]) Add(e T) bool {
 	return true
 }
 
-// chaseIndex chase the given index using a current pointer and previous pointer.
-func chaseIndex[T comparable](start *node[T], i int) (*node[T], *node[T]) {
+// chaseIndex chase the given index.
+func chaseIndex[T comparable](start *node[T], i int) *node[T] {
 	curr := start
 	j := 0
 	for curr != nil {
 		if j == i {
-			return curr.prev, curr
+			return curr
 		}
 		curr = curr.next
 		j++
 	}
-	return nil, nil
+	return curr
 }
 
 // AddAt inserts the specified element at the specified index in the list.
 func (list *LinkedList[T]) AddAt(i int, e T) {
-	if i < 0 || i >= list.Len() {
+	if i < 0 || i >= list.Len() && !list.Empty() {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
 	} else if i == 0 {
 		list.addFront(e)
@@ -269,7 +269,7 @@ func (list *LinkedList[T]) RemoveAt(i int) T {
 	} else if i == list.Len()-1 {
 		return list.removeBack()
 	}
-	_, curr := chaseIndex(list.head, i)
+	curr := chaseIndex(list.head, i)
 	e := curr.value
 	list.remove(curr)
 	return e
@@ -374,8 +374,8 @@ func (list *LinkedList[T]) SubList(start int, end int) *LinkedList[T] {
 	} else if start == end {
 		return New[T]()
 	}
-	_, startNode := chaseIndex(list.head, start)
-	endNode, _ := chaseIndex(list.head, end)
+	startNode := chaseIndex(list.head, start)
+	endNode := chaseIndex(list.head, end-1)
 	return list.copy(startNode, endNode)
 }
 

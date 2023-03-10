@@ -15,11 +15,13 @@ type Dequeue[T comparable] struct {
 	list lists.List[T]
 }
 
+// ListDequeueOf creates a list based dequeue of the given elements.
 func ListDequeueOf[T comparable](elements ...T) Dequeue[T] {
 	list := linkedlist.Of(elements...)
 	return Dequeue[T]{list: &list}
 }
 
+// VectorDequeueOf creates a vector based dequeue of the given elements.
 func VectorDequeueOf[T comparable](elements ...T) Dequeue[T] {
 	list := vector.Of(elements...)
 	return Dequeue[T]{list: &list}

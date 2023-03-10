@@ -54,7 +54,7 @@ func (list *Vector[T]) AddSlice(s []T) bool {
 
 // AddAt inserts the specified element at the specified index in the list.
 func (list *Vector[T]) AddAt(i int, e T) {
-	if i < 0 || i >= list.Len() {
+	if i < 0 || i >= list.Len() && !list.Empty() {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
 	} else if i == 0 {
 		data := make([]T, 0, list.Len()+1)

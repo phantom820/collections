@@ -54,8 +54,8 @@ func (list ImmutableVector[T]) Iterator() collections.Iterator[T] {
 
 // Equals returns true if the list is equivalent to the given list. Two lists are equal if they are the same reference or have the same size and contain
 // the same elements in the same order.
-func (list ImmutableVector[T]) Equals(otherList ImmutableVector[T]) bool {
-	return list.vector.Equals(&otherList.vector)
+func (list ImmutableVector[T]) Equals(otherList collections.List[T]) bool {
+	return list.vector.Equals(otherList)
 }
 
 // ToSlice returns a slice containing all the elements in the list.
@@ -138,4 +138,8 @@ func (list ImmutableVector[T]) Clear() {
 // AddSlice unsupported operation.
 func (list ImmutableVector[T]) AddSlice(s []T) bool {
 	panic(errors.UnsupportedOperation("AddSlice", "ImmutableVector"))
+}
+
+func (list ImmutableVector[T]) Sort(less func(a, b T) bool) {
+	panic(errors.UnsupportedOperation("Sort", "ImmutableVector"))
 }

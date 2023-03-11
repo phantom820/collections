@@ -130,8 +130,8 @@ func (list ImmutableForwadList[T]) SubList(start int, end int) ImmutableForwadLi
 
 // Equals returns true if the list is equivalent to the given list. Two lists are equal if they have the same size
 // and contain the same elements in the same order.
-func (list ImmutableForwadList[T]) Equals(other ImmutableForwadList[T]) bool {
-	return list.list.Equals(&other.list)
+func (list ImmutableForwadList[T]) Equals(other collections.List[T]) bool {
+	return list.list.Equals(other)
 }
 
 // Iterator returns an iterator over the elements in the list.
@@ -142,4 +142,8 @@ func (list ImmutableForwadList[T]) Iterator() collections.Iterator[T] {
 // String returns the string representation of the list.
 func (list ImmutableForwadList[T]) String() string {
 	return fmt.Sprint(list.ToSlice())
+}
+
+func (list ImmutableForwadList[T]) Sort(less func(a, b T) bool) {
+	panic(errors.UnsupportedOperation("Sort", "ImmutableForwardList"))
 }

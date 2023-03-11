@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/phantom820/collections"
-	"github.com/phantom820/collections/lists"
 	"github.com/phantom820/collections/lists/linkedlist"
 	"github.com/phantom820/collections/lists/vector"
 	"github.com/phantom820/collections/types/optional"
@@ -12,7 +11,7 @@ import (
 
 // Dequeue a double ended queue.
 type Dequeue[T comparable] struct {
-	list lists.List[T]
+	list collections.List[T]
 }
 
 // ListDequeueOf creates a list based dequeue of the given elements.
@@ -159,7 +158,7 @@ func (dequeue *Dequeue[T]) Equals(other *Dequeue[T]) bool {
 	if dequeue == other {
 		return true
 	}
-	return lists.Equal(dequeue.list, other.list)
+	return dequeue.list.Equals(other.list)
 }
 
 // Iterator returns an iterator over the elements in the dequeue.

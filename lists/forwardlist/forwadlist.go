@@ -11,8 +11,8 @@ import (
 )
 
 type node[T comparable] struct {
-	next  *node[T]
-	value T
+	next    *node[T]
+	element T
 }
 
 // ForwardList a singly linked list with a tail pointer.
@@ -61,13 +61,13 @@ func (list *ForwardList[T]) Empty() bool {
 // addFront add the element to the front of the list.
 func (list *ForwardList[T]) addFront(e T) {
 	if list.head == nil {
-		list.head = &node[T]{value: e}
+		list.head = &node[T]{element: e}
 		list.tail = list.head
 		list.len++
 		return
 	}
 	temp := list.head
-	list.head = &node[T]{value: e}
+	list.head = &node[T]{element: e}
 	list.head.next = temp
 	list.len++
 }
@@ -78,7 +78,7 @@ func (list *ForwardList[T]) addBack(e T) {
 		list.addFront(e)
 		return
 	}
-	temp := &node[T]{value: e}
+	temp := &node[T]{element: e}
 	list.tail.next = temp
 	list.tail = temp
 	list.len++
@@ -121,7 +121,7 @@ func (list *ForwardList[T]) AddAt(i int, e T) {
 		list.Add(e)
 		return
 	}
-	node := node[T]{value: e}
+	node := node[T]{element: e}
 	prev, curr := chaseIndex(list.head, i)
 	prev.next = &node
 	node.next = curr
@@ -147,7 +147,7 @@ func (list *ForwardList[T]) At(i int) T {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
 	}
 	node := at(i, list.head)
-	return node.value
+	return node.element
 }
 
 // Set replaces the element at the specified index in the list with the specified element.
@@ -156,8 +156,8 @@ func (list *ForwardList[T]) Set(i int, e T) T {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
 	}
 	node := at(i, list.head)
-	temp := node.value
-	node.value = e
+	temp := node.element
+	node.element = e
 	return temp
 }
 
@@ -176,7 +176,7 @@ func (list *ForwardList[T]) Clear() {
 // Contains returns true if the list contains the specified element.
 func (list *ForwardList[T]) Contains(e T) bool {
 	for curr := list.head; curr != nil; curr = curr.next {
-		if curr.value == e {
+		if curr.element == e {
 			return true
 		}
 	}
@@ -201,7 +201,7 @@ func chaseValue[T comparable](start *node[T], e T) (*node[T], *node[T]) {
 	var prev *node[T]
 	curr := start
 	for curr != nil {
-		if curr.value == e {
+		if curr.element == e {
 			return prev, curr
 		}
 		prev = curr
@@ -214,14 +214,14 @@ func chaseValue[T comparable](start *node[T], e T) (*node[T], *node[T]) {
 func (list *ForwardList[T]) removeFront() T {
 	if list.head != list.tail {
 		temp := list.head
-		e := temp.value
+		e := temp.element
 		list.head = list.head.next
 		temp.next = nil
 		temp = nil
 		list.len = int(math.Max(0, float64(list.len-1)))
 		return e
 	}
-	e := list.head.value
+	e := list.head.element
 	list.head.next = nil
 	list.head = nil
 	list.tail = nil
@@ -234,7 +234,7 @@ func (list *ForwardList[T]) removeBack(prev *node[T]) T {
 	if list.head == list.tail {
 		return list.removeFront()
 	}
-	e := list.tail.value
+	e := list.tail.element
 	list.tail = nil
 	prev.next = nil
 	list.tail = prev
@@ -278,7 +278,7 @@ func (list *ForwardList[T]) RemoveAt(i int) T {
 		return list.removeBack(prev)
 	}
 	prev, curr := chaseIndex(list.head, i)
-	e := curr.value
+	e := curr.element
 	list.remove(prev, curr)
 	return e
 }
@@ -291,7 +291,7 @@ func (list *ForwardList[T]) RemoveIf(f func(T) bool) bool {
 
 	// chase curr and prev pointers and perform normal remove when predicate.
 	for curr != nil {
-		if f(curr.value) {
+		if f(curr.element) {
 			next := curr.next
 			list.remove(prev, curr)
 			curr = next
@@ -367,10 +367,10 @@ func (list *ForwardList[T]) copy(start, end *node[T]) *ForwardList[T] {
 	copy := New[T]()
 	for curr := start; curr != nil; curr = curr.next {
 		if curr == end {
-			copy.Add(curr.value)
+			copy.Add(curr.element)
 			break
 		}
-		copy.Add(curr.value)
+		copy.Add(curr.element)
 	}
 	return copy
 }
@@ -411,7 +411,7 @@ func (list *ForwardList[T]) Copy() *ForwardList[T] {
 
 // Equals returns true if the list is equivalent to the given list. Two lists are equal if they have the same size
 // and contain the same elements in the same order.
-func (list *ForwardList[T]) Equals(other *ForwardList[T]) bool {
+func (list *ForwardList[T]) Equals(other collections.List[T]) bool {
 	if list == other {
 		return true
 	} else if list.Len() != other.Len() {
@@ -458,7 +458,7 @@ func (it *iterator[T]) Next() T {
 	if !it.HasNext() {
 		panic(errors.NoSuchElement())
 	}
-	e := it.node.value
+	e := it.node.element
 	it.node = it.node.next
 	it.index++
 	return e
@@ -498,7 +498,7 @@ func merge[T comparable](leftHead *node[T], rightHead *node[T], less func(a, b T
 
 	// merge by comparing front of each list and traversing.
 	for leftHead != nil && rightHead != nil {
-		if less(leftHead.value, rightHead.value) {
+		if less(leftHead.element, rightHead.element) {
 			sentinel.next = leftHead
 			leftHead = leftHead.next
 		} else {

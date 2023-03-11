@@ -283,14 +283,15 @@ func (list *Vector[T]) ToSlice() []T {
 
 // Equals returns true if the list is equivalent to the given list. Two lists are equal if they have the same size
 // and contain the same elements in the same order.
-func (list *Vector[T]) Equals(other *Vector[T]) bool {
+func (list *Vector[T]) Equals(other collections.List[T]) bool {
 	if list == other {
 		return true
 	} else if list.Len() != other.Len() {
 		return false
 	}
+	it := other.Iterator()
 	for i := range list.data {
-		if list.data[i] != other.data[i] {
+		if list.data[i] != it.Next() {
 			return false
 		}
 	}

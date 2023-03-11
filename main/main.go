@@ -1,64 +1,41 @@
 package main
 
 import (
-	"fmt"
+	"time"
 
-	"github.com/phantom820/collections/lists"
-	"github.com/phantom820/collections/lists/linkedlist"
-	"github.com/phantom820/collections/lists/vector"
-	"github.com/phantom820/collections/queues/dequeue"
+	"github.com/phantom820/collections"
 )
 
-type Matrix[T any] [][]T
+type list[T comparable] interface {
+	Add(e T) bool
+	Iterator() collections.Iterator[T]
+}
 
-func new[T any](m, n int) Matrix[T] {
-	data := make([][]T, m)
+func benchmarkAdd(list list[int], m, n int) float64 {
+
+	accumulator := 0
 	for i := 0; i < m; i++ {
-		data[i] = make([]T, n)
+		start := time.Now()
+		for j := 0; j < n; j++ {
+			list.Add(j)
+		}
+		end := time.Now()
+		accumulator = accumulator + int(end.Sub(start).Milliseconds())
 	}
-	return data
+	return float64(accumulator) / float64(m)
 }
-
-type Node[T any] struct {
-	next  *Node[T]
-	value T
-}
-
-// type LinkedList[T any] *Node[T]
-
-// func (list LinkedList[T]) Add(e T) bool {
-// 	list.next = *Node[T]{e}
-// 	return true
-// }
 
 func main() {
 
-	// m := hashmap.New[string, int]()
-	// m.Put("A", 0)
-	// m["ADD"] = 22
+	// a := forwardlist.New[int]()
+	// b := other.New[int]()
 
-	// fmt.Println(m)
+	// m := 10
+	// n := 1000000
+	// for i := 0; i < 5; i++ {
+	// 	fmt.Printf("Default implementation add %v elements duration %v.\n", n, benchmarkAdd(a, m, n))
+	// 	fmt.Printf("Type definition implementation add %v elements duration %v.\n", n, benchmarkAdd(b, m, n))
+	// }
 
-	a := vector.Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-	b := linkedlist.Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-
-	sum, _ := lists.Reduce[int](&a, func(x, y int) int { return x + y })
-	fmt.Println(sum)
-	sum, _ = lists.Reduce[int](&b, func(x, y int) int { return x + y })
-	fmt.Println(sum)
-
-	partitions := lists.Partition[int](&a, 3)
-	fmt.Println(partitions)
-
-	f := func() {}
-	f()
-
-	f()
-
-	c := new[int](2, 2)
-	c[0][0] = 1
-	fmt.Println(c)
-
-	d := dequeue.NewListDequeue[int]()
-	fmt.Println(d.PeekFirst())
+	// s := linkedhashmap.New[int, int]()
 }

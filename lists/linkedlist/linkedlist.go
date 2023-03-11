@@ -14,9 +14,9 @@ import (
 )
 
 type node[T comparable] struct {
-	prev  *node[T]
-	next  *node[T]
-	value T
+	prev    *node[T]
+	next    *node[T]
+	element T
 }
 
 // LinkedList a doubly linked list.
@@ -65,13 +65,13 @@ func (list *LinkedList[T]) Empty() bool {
 // addFront add the element to the front of the list.
 func (list *LinkedList[T]) addFront(e T) {
 	if list.head == nil {
-		list.head = &node[T]{value: e}
+		list.head = &node[T]{element: e}
 		list.tail = list.head
 		list.len++
 		return
 	}
 	temp := list.head
-	list.head = &node[T]{value: e}
+	list.head = &node[T]{element: e}
 	list.head.next = temp
 	temp.prev = list.head
 	list.len++
@@ -83,10 +83,10 @@ func (list *LinkedList[T]) addBack(e T) {
 		list.addFront(e)
 		return
 	}
-	temp := &node[T]{value: e}
-	list.tail.next = temp
-	temp.prev = list.tail
-	list.tail = temp
+	newTail := &node[T]{element: e}
+	list.tail.next = newTail
+	newTail.prev = list.tail
+	list.tail = newTail
 	list.len++
 }
 
@@ -125,7 +125,7 @@ func (list *LinkedList[T]) AddAt(i int, e T) {
 		list.Add(e)
 		return
 	}
-	node := node[T]{value: e}
+	node := node[T]{element: e}
 	curr := at(i, list.head)
 	prev := curr.prev
 	prev.next = &node
@@ -154,7 +154,7 @@ func (list *LinkedList[T]) At(i int) T {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
 	}
 	node := at(i, list.head)
-	return node.value
+	return node.element
 }
 
 // Set replaces the element at the specified index in the list with the specified element.
@@ -163,8 +163,8 @@ func (list *LinkedList[T]) Set(i int, e T) T {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
 	}
 	node := at(i, list.head)
-	temp := node.value
-	node.value = e
+	temp := node.element
+	node.element = e
 	return temp
 }
 
@@ -185,7 +185,7 @@ func (list *LinkedList[T]) Clear() {
 // Contains returns true if the list contains the specified element.
 func (list *LinkedList[T]) Contains(e T) bool {
 	for curr := list.head; curr != nil; curr = curr.next {
-		if curr.value == e {
+		if curr.element == e {
 			return true
 		}
 	}
@@ -196,7 +196,7 @@ func (list *LinkedList[T]) Contains(e T) bool {
 func findValue[T comparable](start *node[T], e T) *node[T] {
 	curr := start
 	for curr != nil {
-		if curr.value == e {
+		if curr.element == e {
 			return curr
 		}
 		curr = curr.next
@@ -208,14 +208,14 @@ func findValue[T comparable](start *node[T], e T) *node[T] {
 func (list *LinkedList[T]) removeFront() T {
 	if list.head != list.tail {
 		temp := list.head
-		e := temp.value
+		e := temp.element
 		list.head = list.head.next
 		temp.next = nil
 		temp = nil
 		list.len = int(math.Max(0, float64(list.len-1)))
 		return e
 	}
-	e := list.head.value
+	e := list.head.element
 	list.head.next = nil
 	list.head = nil
 	list.tail = nil
@@ -225,7 +225,7 @@ func (list *LinkedList[T]) removeFront() T {
 
 // removeBack removes the back node from the list.
 func (list *LinkedList[T]) removeBack() T {
-	e := list.tail.value
+	e := list.tail.element
 	// temp := list.tail
 	list.tail = list.tail.prev
 	// temp = nil
@@ -270,7 +270,7 @@ func (list *LinkedList[T]) RemoveAt(i int) T {
 		return list.removeBack()
 	}
 	curr := chaseIndex(list.head, i)
-	e := curr.value
+	e := curr.element
 	list.remove(curr)
 	return e
 }
@@ -282,7 +282,7 @@ func (list *LinkedList[T]) RemoveIf(f func(T) bool) bool {
 
 	// chase curr and prev pointers and perform normal remove when predicate.
 	for curr != nil {
-		if f(curr.value) {
+		if f(curr.element) {
 			next := curr.next
 			list.remove(curr)
 			curr = next
@@ -355,10 +355,10 @@ func (list *LinkedList[T]) copy(start, end *node[T]) *LinkedList[T] {
 	copy := New[T]()
 	for curr := start; curr != nil; curr = curr.next {
 		if curr == end {
-			copy.Add(curr.value)
+			copy.Add(curr.element)
 			break
 		}
-		copy.Add(curr.value)
+		copy.Add(curr.element)
 	}
 	return copy
 }
@@ -410,7 +410,7 @@ func (list *LinkedList[T]) Copy() *LinkedList[T] {
 
 // Equals returns true if the list is equivalent to the given list. Two lists are equal if they have the same size
 // and contain the same elements in the same order.
-func (list *LinkedList[T]) Equals(other *LinkedList[T]) bool {
+func (list *LinkedList[T]) Equals(other collections.List[T]) bool {
 	if list == other {
 		return true
 	} else if list.Len() != other.Len() {
@@ -470,7 +470,7 @@ func (it *iterator[T]) Next() T {
 	if !it.HasNext() {
 		panic(errors.NoSuchElement())
 	}
-	e := it.node.value
+	e := it.node.element
 	it.node = it.node.next
 	it.index++
 	return e
@@ -510,7 +510,7 @@ func merge[T comparable](leftHead *node[T], rightHead *node[T], less func(a, b T
 
 	// merge by comparing front of each list and traversing.
 	for leftHead != nil && rightHead != nil {
-		if less(leftHead.value, rightHead.value) {
+		if less(leftHead.element, rightHead.element) {
 			sentinel.next = leftHead
 			leftHead = leftHead.next
 		} else {

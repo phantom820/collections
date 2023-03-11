@@ -15,6 +15,10 @@ const (
 	DIFFERENCE   = 2
 )
 
+type Set[T comparable] interface {
+	hashset.HashSet[T] | linkedhashset.LinkedHashSet[T] | treeset.TreeSet[T]
+}
+
 // SetView an unmodifiable view of a set which is backed by other sets, this view will change as the backing sets change.
 type SetView[T comparable] struct {
 	a    collections.Collection[T]

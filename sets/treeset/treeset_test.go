@@ -13,7 +13,7 @@ var (
 
 func TestNew(t *testing.T) {
 
-	set := New[string](lessThan)
+	set := New(lessThan)
 	assert.NotNil(t, set)
 	assert.True(t, set.Empty())
 	assert.Equal(t, 0, set.Len())
@@ -21,7 +21,7 @@ func TestNew(t *testing.T) {
 
 func TestOf(t *testing.T) {
 
-	assert.Equal(t, []string{}, Of[string](lessThan).treeMap.Keys())
+	assert.Equal(t, []string{}, Of(lessThan).treeMap.Keys())
 	assert.Equal(t, []string{"A"}, Of(lessThan, "A").treeMap.Keys())
 
 }
@@ -36,7 +36,7 @@ func TestAdd(t *testing.T) {
 	addTests := []addTest{
 		{
 			input:    []string{},
-			expected: Of[string](lessThan),
+			expected: Of(lessThan),
 		},
 		{
 			input:    []string{"A", "A", "B"},
@@ -45,7 +45,7 @@ func TestAdd(t *testing.T) {
 	}
 
 	f := func(values []string) TreeSet[string] {
-		set := New[string](lessThan)
+		set := New(lessThan)
 		for _, value := range values {
 			set.Add(value)
 		}
@@ -67,7 +67,7 @@ func TestAddSlice(t *testing.T) {
 	addSliceTests := []addSliceTest{
 		{
 			input:    []string{},
-			expected: Of[string](lessThan),
+			expected: Of(lessThan),
 		},
 		{
 			input:    []string{"A", "A", "B"},
@@ -76,7 +76,7 @@ func TestAddSlice(t *testing.T) {
 	}
 
 	for _, test := range addSliceTests {
-		set := New[string](lessThan)
+		set := New(lessThan)
 		set.AddSlice(test.input)
 		assert.Equal(t, test.expected.treeMap.Keys(), set.treeMap.Keys())
 	}
@@ -122,9 +122,9 @@ func TestRemoveIf(t *testing.T) {
 
 	removeIfTests := []removeIfTest{
 		{
-			input:           Of[int](lessThanInt),
+			input:           Of(lessThanInt),
 			expectedBoolean: false,
-			expectedSet:     Of[int](lessThanInt),
+			expectedSet:     Of(lessThanInt),
 		},
 		{
 			input:           Of(lessThanInt, 2),
@@ -159,10 +159,10 @@ func TestRemoveSlice(t *testing.T) {
 
 	removeSliceTests := []removeSliceTest{
 		{
-			input:           Of[int](lessThanInt),
+			input:           Of(lessThanInt),
 			slice:           []int{},
 			expectedBoolean: false,
-			expectedSet:     Of[int](lessThanInt),
+			expectedSet:     Of(lessThanInt),
 		},
 		{
 			input:           Of(lessThanInt, 2),
@@ -225,6 +225,53 @@ func TestContains(t *testing.T) {
 	}
 }
 
+func TestContainsAll(t *testing.T) {
+
+	type containsAllTest struct {
+		input    TreeSet[int]
+		elements []int
+		expected bool
+	}
+
+	containsAllTests := []containsAllTest{
+		{
+			input:    Of(lessThanInt, 0, 4, 5),
+			elements: []int{},
+			expected: true,
+		},
+		{
+			input:    Of(lessThanInt, 0, 4, 5),
+			elements: []int{1},
+			expected: false,
+		},
+		{
+			input:    Of(lessThanInt, 0, 4, 5),
+			elements: []int{4, 5},
+			expected: true,
+		},
+		{
+			input:    Of(lessThanInt, 0, 4, 5),
+			elements: []int{0, 4, 5},
+			expected: true,
+		},
+		{
+			input:    Of(lessThanInt, 0, 4, 5),
+			elements: []int{3},
+			expected: false,
+		},
+		{
+			input:    Of(lessThanInt, 0, 4, 5),
+			elements: []int{0, 4, 5, 8},
+			expected: false,
+		},
+	}
+
+	for _, test := range containsAllTests {
+		iterable := Of(lessThanInt, test.elements...)
+		assert.Equal(t, test.expected, test.input.ContainsAll(&iterable))
+	}
+}
+
 func TestAddAll(t *testing.T) {
 
 	type addAllTest struct {
@@ -235,7 +282,7 @@ func TestAddAll(t *testing.T) {
 
 	addAllTests := []addAllTest{
 		{
-			a:        Of[int](lessThanInt),
+			a:        Of(lessThanInt),
 			b:        Of(lessThanInt, 1, 2, 3, 4, 5),
 			expected: Of(lessThanInt, 1, 2, 3, 4, 5),
 		},
@@ -263,13 +310,13 @@ func TestRemoveAll(t *testing.T) {
 
 	removeAllTests := []removeAllTest{
 		{
-			a:        Of[int](lessThanInt),
-			b:        Of[int](lessThanInt),
-			expected: Of[int](lessThanInt),
+			a:        Of(lessThanInt),
+			b:        Of(lessThanInt),
+			expected: Of(lessThanInt),
 		},
 		{
 			a:        Of(lessThanInt, 1, 2, 3, 4, 5),
-			b:        Of[int](lessThanInt),
+			b:        Of(lessThanInt),
 			expected: Of(lessThanInt, 1, 2, 3, 4, 5),
 		},
 		{
@@ -280,7 +327,7 @@ func TestRemoveAll(t *testing.T) {
 		{
 			a:        Of(lessThanInt, 1, 2, 3, 4, 5),
 			b:        Of(lessThanInt, 9, 1, 2, 3, 4, 5),
-			expected: Of[int](lessThanInt),
+			expected: Of(lessThanInt),
 		},
 	}
 
@@ -302,8 +349,8 @@ func TestRetainAll(t *testing.T) {
 	retainAllTests := []retainAllTest{
 		{
 			a:        Of(lessThanInt, 1, 2, 3, 4, 5),
-			b:        Of[int](lessThanInt),
-			expected: Of[int](lessThanInt),
+			b:        Of(lessThanInt),
+			expected: Of(lessThanInt),
 		},
 		{
 			a:        Of(lessThanInt, 1, 2, 3, 4, 5),
@@ -344,13 +391,13 @@ func TestEquals(t *testing.T) {
 
 	equalsTests := []equalsTest{
 		{
-			a:        Of[int](lessThanInt),
-			b:        Of[int](lessThanInt),
+			a:        Of(lessThanInt),
+			b:        Of(lessThanInt),
 			expected: true,
 		},
 		{
 			a:        Of(lessThanInt, 1, 2),
-			b:        Of[int](lessThanInt),
+			b:        Of(lessThanInt),
 			expected: false,
 		},
 		{
@@ -371,7 +418,7 @@ func TestEquals(t *testing.T) {
 
 	}
 
-	identity := Of[int](lessThanInt)
+	identity := Of(lessThanInt)
 	assert.True(t, identity.Equals(&identity))
 
 }

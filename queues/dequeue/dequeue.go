@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/linkedlist"
 	"github.com/phantom820/collections/lists/vector"
 	"github.com/phantom820/collections/types/optional"
@@ -61,7 +63,7 @@ func (dequeue *Dequeue[T]) Len() int {
 }
 
 // AddAll adds all of the elements in the specified iterable to the dequeue.
-func (dequeue *Dequeue[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (dequeue *Dequeue[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	return dequeue.list.AddAll(iterable)
 }
 
@@ -128,7 +130,7 @@ func (dequeue *Dequeue[T]) RemoveIf(f func(T) bool) bool {
 }
 
 // RemoveAll removes from the dequeue all of its elements that are contained in the specified collection.
-func (dequeue *Dequeue[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (dequeue *Dequeue[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	return dequeue.list.RemoveAll(iterable)
 }
 
@@ -162,7 +164,7 @@ func (dequeue *Dequeue[T]) Equals(other *Dequeue[T]) bool {
 }
 
 // Iterator returns an iterator over the elements in the dequeue.
-func (dequeue *Dequeue[T]) Iterator() collections.Iterator[T] {
+func (dequeue *Dequeue[T]) Iterator() iterator.Iterator[T] {
 	return dequeue.list.Iterator()
 }
 

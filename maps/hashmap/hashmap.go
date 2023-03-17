@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/types/optional"
 	"github.com/phantom820/collections/types/pair"
 )
@@ -143,12 +143,12 @@ func (hashMap HashMap[K, V]) ForEach(f func(K, V)) {
 }
 
 // Iterator returns an iterator over the map.
-func (hashMap HashMap[K, V]) Iterator() collections.Iterator[pair.Pair[K, V]] {
-	return &iterator[K, V]{initialized: false, index: 0, hashMap: hashMap, entries: make([]pair.Pair[K, V], 0)}
+func (hashMap HashMap[K, V]) Iterator() iterator.Iterator[pair.Pair[K, V]] {
+	return &mapIterator[K, V]{initialized: false, index: 0, hashMap: hashMap, entries: make([]pair.Pair[K, V], 0)}
 }
 
-// iterator implementation of an iterator for [HashMap].
-type iterator[K comparable, V any] struct {
+// mapIterator implementation of an mapIterator for [HashMap].
+type mapIterator[K comparable, V any] struct {
 	initialized bool
 	index       int
 	hashMap     map[K]V
@@ -156,7 +156,7 @@ type iterator[K comparable, V any] struct {
 }
 
 // HasNext returns true if the iterator has more elements.
-func (it *iterator[K, V]) HasNext() bool {
+func (it *mapIterator[K, V]) HasNext() bool {
 	if it.hashMap == nil {
 		return false
 	} else if !it.initialized {
@@ -170,7 +170,7 @@ func (it *iterator[K, V]) HasNext() bool {
 }
 
 // Next returns the next element in the iterator.
-func (it *iterator[K, V]) Next() pair.Pair[K, V] {
+func (it *mapIterator[K, V]) Next() pair.Pair[K, V] {
 	if !it.HasNext() {
 		panic(errors.NoSuchElement())
 	}

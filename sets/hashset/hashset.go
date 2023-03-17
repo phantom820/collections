@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps/hashmap"
 	"github.com/phantom820/collections/types/pair"
 )
@@ -35,7 +37,7 @@ func (set *HashSet[T]) Add(e T) bool {
 }
 
 // AddAll adds all of the elements in the specified iterable to the set.
-func (set *HashSet[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (set *HashSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	n := set.hashmap.Len()
 	it := iterable.Iterator()
 	for it.HasNext() {
@@ -73,7 +75,7 @@ func (set *HashSet[T]) RetainAll(c collections.Collection[T]) bool {
 }
 
 // RemoveAll removes all of the set's elements that are also contained in the specified iterable.
-func (set *HashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (set *HashSet[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	n := set.hashmap.Len()
 	it := iterable.Iterator()
 	for it.HasNext() {
@@ -101,6 +103,17 @@ func (set *HashSet[T]) Contains(e T) bool {
 	return set.hashmap.ContainsKey(e)
 }
 
+// ContainsAll returns true if the set contains all of the elements of the specified iterable.
+func (set *HashSet[T]) ContainsAll(iterable iterable.Iterable[T]) bool {
+	it := iterable.Iterator()
+	for it.HasNext() {
+		if !set.Contains(it.Next()) {
+			return false
+		}
+	}
+	return true
+}
+
 // Len returns the number of elements in the set.
 func (set *HashSet[T]) Len() int {
 	return set.hashmap.Len()
@@ -113,7 +126,7 @@ func (set *HashSet[T]) Empty() bool {
 
 // Equals returns true if the set is equivalent to the given set. Two sets are equal if they are the same reference or have the same size and contain
 // the same elements.
-func (set *HashSet[T]) Equals(otherSet *HashSet[T]) bool {
+func (set *HashSet[T]) Equals(otherSet collections.Set[T]) bool {
 	if set == otherSet {
 		return true
 	} else if set.Len() != otherSet.Len() {
@@ -136,22 +149,22 @@ func (set *HashSet[T]) ForEach(f func(T)) {
 }
 
 // Iterator returns an iterator over the elements in the set.
-func (set *HashSet[T]) Iterator() collections.Iterator[T] {
-	return &iterator[T]{iterator: set.hashmap.Iterator()}
+func (set *HashSet[T]) Iterator() iterator.Iterator[T] {
+	return &setIterator[T]{iterator: set.hashmap.Iterator()}
 }
 
-// iterator implememantation for [HashSet].
-type iterator[T comparable] struct {
-	iterator collections.Iterator[pair.Pair[T, struct{}]]
+// setIterator implememantation for [HashSet].
+type setIterator[T comparable] struct {
+	iterator iterator.Iterator[pair.Pair[T, struct{}]]
 }
 
 // HasNext returns true if the iterator has more elements.
-func (it *iterator[T]) HasNext() bool {
+func (it *setIterator[T]) HasNext() bool {
 	return it.iterator.HasNext()
 }
 
 // Next returns the next element in the iterator.
-func (it iterator[T]) Next() T {
+func (it setIterator[T]) Next() T {
 	return it.iterator.Next().Key()
 }
 

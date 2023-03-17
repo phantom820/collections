@@ -1,9 +1,14 @@
 package sets
 
 import (
-	"reflect"
+	"fmt"
+	"strings"
 
+	// "github.com/phantom820/collections"
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/sets/hashset"
 	"github.com/phantom820/collections/sets/linkedhashset"
 	"github.com/phantom820/collections/sets/treeset"
@@ -15,14 +20,10 @@ const (
 	DIFFERENCE   = 2
 )
 
-type Set[T comparable] interface {
-	hashset.HashSet[T] | linkedhashset.LinkedHashSet[T] | treeset.TreeSet[T]
-}
-
 // SetView an unmodifiable view of a set which is backed by other sets, this view will change as the backing sets change.
 type SetView[T comparable] struct {
-	a    collections.Collection[T]
-	b    collections.Collection[T]
+	setA collections.Set[T]
+	setB collections.Set[T]
 	view int
 }
 
@@ -35,13 +36,14 @@ func (setView SetView[T]) Type() int {
 func (setView SetView[T]) Len() int {
 	switch setView.view {
 	case UNION:
-		return unionLen(setView.a, setView.b)
+		return unionLen[T](setView.setA, setView.setB)
 	case INTERSECTION:
-		return intersectionLen(setView.a, setView.b)
+		return intersectionLen[T](setView.setA, setView.setB)
 	case DIFFERENCE:
-		return differenceLen(setView.a, setView.b)
+		return differenceLen[T](setView.setA, setView.setB)
 	default:
-		panic("")
+		view := strings.ToTitle(strings.ToLower(fmt.Sprint(setView.view)))
+		panic(errors.UnsupportedOperation(view, "SetView"))
 	}
 }
 
@@ -145,15 +147,16 @@ func (setView SetView[T]) ForEach(f func(T)) {
 
 	switch setView.view {
 	case UNION:
-		unionForEach(setView.a, setView.b, f)
+		unionForEach[T](setView.setA, setView.setB, f)
 		return
 	case INTERSECTION:
-		intersectionForEach(setView.a, setView.b, f)
+		intersectionForEach[T](setView.setA, setView.setB, f)
 		return
 	case DIFFERENCE:
-		differenceForEach(setView.a, setView.b, f)
+		differenceForEach[T](setView.setA, setView.setB, f)
 	default:
-		panic("")
+		view := strings.ToTitle(strings.ToLower(fmt.Sprint(setView.view)))
+		panic(errors.UnsupportedOperation(view, "SetView"))
 	}
 
 }
@@ -196,70 +199,68 @@ func (setView SetView[T]) ToTreeSet(lessThan func(e1, e2 T) bool) *treeset.TreeS
 func (setView SetView[T]) Contains(e T) bool {
 	switch setView.view {
 	case UNION:
-		return setView.a.Contains(e) || setView.b.Contains(e)
+		return setView.setA.Contains(e) || setView.setB.Contains(e)
 
 	case INTERSECTION:
-		return setView.a.Contains(e) && setView.b.Contains(e)
+		return setView.setA.Contains(e) && setView.setB.Contains(e)
 
 	case DIFFERENCE:
-		return setView.a.Contains(e) && !setView.b.Contains(e)
+		return setView.setA.Contains(e) && !setView.setB.Contains(e)
 
 	default:
-		panic("")
+		view := strings.ToTitle(strings.ToLower(fmt.Sprint(setView.view)))
+		panic(errors.UnsupportedOperation(view, "SetView"))
 	}
 }
 
 // Iterator returns an iterator over the elements in the set view.
-func (setView SetView[T]) Iterator() collections.Iterator[T] {
+func (setView SetView[T]) Iterator() iterator.Iterator[T] {
 	return nil
 }
 
-// IsSet returns true if the given collection is a set.
-func IsSet[T comparable](c collections.Collection[T]) bool {
+// IsSet returns true if the given iterable is a set.
+func IsSet[T comparable](iterable iterable.Iterable[T]) bool {
 
-	if c == nil || reflect.ValueOf(c).IsNil() {
+	if iterable == nil {
 		return false
 	}
 
-	switch c.(type) {
+	switch iterable.(type) {
 	case *hashset.HashSet[T]:
 		return true
 	case *hashset.ImmutableHashSet[T]:
+		return true
+	case hashset.ImmutableHashSet[T]:
 		return true
 	case *linkedhashset.LinkedHashSet[T]:
 		return true
 	case *linkedhashset.ImmutableLinkedHashSet[T]:
 		return true
+	case linkedhashset.ImmutableLinkedHashSet[T]:
+		return true
 	case *treeset.TreeSet[T]:
 		return true
 	case *treeset.ImmutableTreeSet[T]:
+		return true
+	case treeset.ImmutableTreeSet[T]:
 		return true
 	default:
 		return false
 	}
 }
 
-// Union returns an unmodifiable view of the union of two sets. Will panic if any of the given arguments is not a set.
-func Union[T comparable](a collections.Collection[T], b collections.Collection[T]) SetView[T] {
-	if !IsSet(a) || !IsSet(b) {
-		panic("")
-	}
-	return SetView[T]{a: a, b: b, view: UNION}
+// Union returns an unmodifiable view of the union of two sets.
+func Union[T comparable](setA collections.Set[T], setB collections.Set[T]) SetView[T] {
+	return SetView[T]{setA: setA, setB: setB, view: UNION}
 
 }
 
-// Intersection returns an unmodifiable view of the intersection of two sets. Will panic if any of the given arguments is not a set.
-func Intersection[T comparable](a collections.Collection[T], b collections.Collection[T]) SetView[T] {
-	if !IsSet(a) || !IsSet(b) {
-		panic("")
-	}
-	return SetView[T]{a: a, b: b, view: INTERSECTION}
+// Intersection returns an unmodifiable view of the intersection of two sets.
+func Intersection[T comparable](setA collections.Set[T], setB collections.Set[T]) SetView[T] {
+	return SetView[T]{setA: setA, setB: setB, view: INTERSECTION}
 }
 
-// Difference returns an unmodifiable view of the difference of two sets. Will panic if any of the given arguments is not a set.
-func Difference[T comparable](a collections.Collection[T], b collections.Collection[T]) SetView[T] {
-	if !IsSet(a) || !IsSet(b) {
-		panic("")
-	}
-	return SetView[T]{a: a, b: b, view: DIFFERENCE}
+// Difference returns an unmodifiable view of the difference of two sets.
+func Difference[T comparable](setA collections.Set[T], setB collections.Set[T]) SetView[T] {
+	return SetView[T]{setA: setA, setB: setB, view: DIFFERENCE}
 }

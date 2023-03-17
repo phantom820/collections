@@ -3,7 +3,7 @@ package hashmap
 import (
 	"testing"
 
-	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/types/optional"
 	"github.com/phantom820/collections/types/pair"
 	"github.com/stretchr/testify/assert"
@@ -359,7 +359,7 @@ func TestForEach(t *testing.T) {
 
 func TestIterator(t *testing.T) {
 
-	iterate := func(it collections.Iterator[pair.Pair[string, int]]) []pair.Pair[string, int] {
+	iterate := func(it iterator.Iterator[pair.Pair[string, int]]) []pair.Pair[string, int] {
 		entries := make([]pair.Pair[string, int], 0)
 		for it.HasNext() {
 			entries = append(entries, it.Next())

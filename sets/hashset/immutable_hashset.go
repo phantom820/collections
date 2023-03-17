@@ -6,6 +6,8 @@ import (
 
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 )
 
 // ImmutableHashSet an immutable version of [HashSet].
@@ -21,6 +23,11 @@ func ImmutableOf[T comparable](elements ...T) ImmutableHashSet[T] {
 // Contains returns true if this set contains the specified element.
 func (set ImmutableHashSet[T]) Contains(e T) bool {
 	return set.hashSet.Contains(e)
+}
+
+// ContainsAll returns true if the set contains all of the elements of the specified iterable.
+func (set ImmutableHashSet[T]) ContainsAll(iterable iterable.Iterable[T]) bool {
+	return set.hashSet.ContainsAll(iterable)
 }
 
 // Len returns the number of elements in the set.
@@ -39,14 +46,14 @@ func (set ImmutableHashSet[T]) ForEach(f func(T)) {
 }
 
 // Iterator returns an iterator over the elements in the set.
-func (set ImmutableHashSet[T]) Iterator() collections.Iterator[T] {
+func (set ImmutableHashSet[T]) Iterator() iterator.Iterator[T] {
 	return set.hashSet.Iterator()
 }
 
 // Equals returns true if the set is equivalent to the given set. Two sets are equal if they are the same reference or have the same size and contain
 // the same elements.
-func (set ImmutableHashSet[T]) Equals(otherSet ImmutableHashSet[T]) bool {
-	return set.hashSet.Equals(&otherSet.hashSet)
+func (set ImmutableHashSet[T]) Equals(otherSet collections.Set[T]) bool {
+	return set.hashSet.Equals(otherSet)
 }
 
 // ToSlice returns a slice containing all the elements in the set.
@@ -81,7 +88,7 @@ func (set ImmutableHashSet[T]) RemoveIf(func(T) bool) bool {
 }
 
 // RemoveAll unsupported operation.
-func (set ImmutableHashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (set ImmutableHashSet[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("RemoveAll", "ImmutableHashSet"))
 }
 
@@ -101,7 +108,7 @@ func (set ImmutableHashSet[T]) Add(e T) bool {
 }
 
 // AddAll unsupported operation.
-func (set ImmutableHashSet[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (set ImmutableHashSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("AddAll", "ImmutableHashSet"))
 }
 

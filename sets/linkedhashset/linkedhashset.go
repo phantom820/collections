@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps/linkedhashmap"
 	"github.com/phantom820/collections/types/pair"
 )
@@ -35,7 +37,7 @@ func (set LinkedHashSet[T]) Add(e T) bool {
 }
 
 // AddAll adds all of the elements in the specified iterable to the set.
-func (set LinkedHashSet[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (set LinkedHashSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	n := set.linkedHashMap.Len()
 	it := iterable.Iterator()
 	for it.HasNext() {
@@ -73,7 +75,7 @@ func (set LinkedHashSet[T]) RetainAll(c collections.Collection[T]) bool {
 }
 
 // RemoveAll removes all of the set's elements that are also contained in the specified iterable.
-func (set LinkedHashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (set LinkedHashSet[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	n := set.linkedHashMap.Len()
 	it := iterable.Iterator()
 	for it.HasNext() {
@@ -83,7 +85,7 @@ func (set LinkedHashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
 }
 
 // RemoveSlice removes all of the set's elements that are also contained in the specified slice.
-func (set LinkedHashSet[T]) RemoveSlice(s []T) bool {
+func (set *LinkedHashSet[T]) RemoveSlice(s []T) bool {
 	n := set.linkedHashMap.Len()
 	for i := range s {
 		set.Remove(s[i])
@@ -92,13 +94,24 @@ func (set LinkedHashSet[T]) RemoveSlice(s []T) bool {
 }
 
 // Clear removes all of the elements from the set.
-func (set LinkedHashSet[T]) Clear() {
+func (set *LinkedHashSet[T]) Clear() {
 	set.linkedHashMap.Clear()
 }
 
 // Contains returns true if this set contains the specified element.
-func (set LinkedHashSet[T]) Contains(e T) bool {
+func (set *LinkedHashSet[T]) Contains(e T) bool {
 	return set.linkedHashMap.ContainsKey(e)
+}
+
+// ContainsAll returns true if the set contains all of the elements of the specified iterable.
+func (set *LinkedHashSet[T]) ContainsAll(iterable iterable.Iterable[T]) bool {
+	it := iterable.Iterator()
+	for it.HasNext() {
+		if !set.Contains(it.Next()) {
+			return false
+		}
+	}
+	return true
 }
 
 // Len returns the number of elements in the set.
@@ -113,7 +126,7 @@ func (set LinkedHashSet[T]) Empty() bool {
 
 // Equals returns true if the set is equivalent to the given set. Two sets are equal if they are the same reference or have the same size and contain
 // the same elements.
-func (set *LinkedHashSet[T]) Equals(otherSet *LinkedHashSet[T]) bool {
+func (set *LinkedHashSet[T]) Equals(otherSet collections.Set[T]) bool {
 	if set == otherSet {
 		return true
 	} else if set.Len() != otherSet.Len() {
@@ -137,22 +150,22 @@ func (set LinkedHashSet[T]) ForEach(f func(T)) {
 }
 
 // Iterator returns an iterator over the elements in the set.
-func (set *LinkedHashSet[T]) Iterator() collections.Iterator[T] {
-	return &iterator[T]{mapIterator: set.linkedHashMap.Iterator()}
+func (set *LinkedHashSet[T]) Iterator() iterator.Iterator[T] {
+	return &setIterator[T]{mapIterator: set.linkedHashMap.Iterator()}
 }
 
-// iterator implememantation for [LinkedHashSet].
-type iterator[T comparable] struct {
-	mapIterator collections.Iterator[pair.Pair[T, struct{}]]
+// setIterator implememantation for [LinkedHashSet].
+type setIterator[T comparable] struct {
+	mapIterator iterator.Iterator[pair.Pair[T, struct{}]]
 }
 
 // HasNext returns true if the iterator has more elements.
-func (it *iterator[T]) HasNext() bool {
+func (it *setIterator[T]) HasNext() bool {
 	return it.mapIterator.HasNext()
 }
 
 // Next returns the next element in the iterator.
-func (it iterator[T]) Next() T {
+func (it setIterator[T]) Next() T {
 	return it.mapIterator.Next().Key()
 }
 

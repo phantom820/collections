@@ -21,6 +21,53 @@ func TestImmutableContains(t *testing.T) {
 
 }
 
+func TestImmutableContainsAll(t *testing.T) {
+
+	type containsAllTest struct {
+		input    ImmutableHashSet[int]
+		elements []int
+		expected bool
+	}
+
+	containsAllTests := []containsAllTest{
+		{
+			input:    ImmutableOf(0, 4, 5),
+			elements: []int{},
+			expected: true,
+		},
+		{
+			input:    ImmutableOf(0, 4, 5),
+			elements: []int{1},
+			expected: false,
+		},
+		{
+			input:    ImmutableOf(0, 4, 5),
+			elements: []int{4, 5},
+			expected: true,
+		},
+		{
+			input:    ImmutableOf(0, 4, 5),
+			elements: []int{0, 4, 5},
+			expected: true,
+		},
+		{
+			input:    ImmutableOf(0, 4, 5),
+			elements: []int{3},
+			expected: false,
+		},
+		{
+			input:    ImmutableOf(0, 4, 5),
+			elements: []int{0, 4, 5, 8},
+			expected: false,
+		},
+	}
+
+	for _, test := range containsAllTests {
+		iterable := Of(test.elements...)
+		assert.Equal(t, test.expected, test.input.ContainsAll(&iterable))
+	}
+}
+
 func TestImmutableEquals(t *testing.T) {
 
 	assert.True(t, ImmutableOf[int]().Equals(ImmutableOf[int]()))

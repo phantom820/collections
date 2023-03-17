@@ -6,6 +6,8 @@ import (
 
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 )
 
 // ImmutableTreeSet an immutable version of [TreeSet].
@@ -26,6 +28,11 @@ func (set ImmutableTreeSet[T]) Contains(e T) bool {
 	return set.treeSet.Contains(e)
 }
 
+// ContainsAll returns true if the set contains all of the elements of the specified iterable.
+func (set ImmutableTreeSet[T]) ContainsAll(iterable iterable.Iterable[T]) bool {
+	return set.treeSet.ContainsAll(iterable)
+}
+
 // Len returns the number of elements in the set.
 func (set ImmutableTreeSet[T]) Len() int {
 	return set.treeSet.Len()
@@ -42,7 +49,7 @@ func (set ImmutableTreeSet[T]) ForEach(f func(T)) {
 }
 
 // Iterator returns an iterator over the elements in the set.
-func (set ImmutableTreeSet[T]) Iterator() collections.Iterator[T] {
+func (set ImmutableTreeSet[T]) Iterator() iterator.Iterator[T] {
 	return set.treeSet.Iterator()
 }
 
@@ -53,8 +60,8 @@ func (set ImmutableTreeSet[T]) ToSlice() []T {
 
 // Equals returns true if the set is equivalent to the given set. Two sets are equal if they are the same reference or have the same size and contain
 // the same elements.
-func (set ImmutableTreeSet[T]) Equals(otherSet ImmutableTreeSet[T]) bool {
-	return set.treeSet.Equals(&otherSet.treeSet)
+func (set ImmutableTreeSet[T]) Equals(otherSet collections.Set[T]) bool {
+	return set.treeSet.Equals(otherSet)
 }
 
 // String returns the string representation of the set.
@@ -84,7 +91,7 @@ func (set ImmutableTreeSet[T]) RemoveIf(func(T) bool) bool {
 }
 
 // RemoveAll unsupported operation.
-func (set ImmutableTreeSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (set ImmutableTreeSet[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("RemoveAll", "ImmutableTreeSet"))
 }
 
@@ -104,7 +111,7 @@ func (set ImmutableTreeSet[T]) Add(e T) bool {
 }
 
 // AddAll unsupported operation
-func (set ImmutableTreeSet[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (set ImmutableTreeSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("AddAll", "ImmutableTreeSet"))
 }
 

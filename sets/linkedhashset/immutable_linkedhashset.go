@@ -6,6 +6,8 @@ import (
 
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 )
 
 // ImmutableLinkedHashSet an immutable version of [LinkedHashSet].
@@ -21,6 +23,11 @@ func ImmutableOf[T comparable](elements ...T) ImmutableLinkedHashSet[T] {
 // Contains returns true if this set contains the specified element.
 func (set ImmutableLinkedHashSet[T]) Contains(e T) bool {
 	return set.linkedHashSet.Contains(e)
+}
+
+// ContainsAll returns true if the set contains all of the elements of the specified iterable.
+func (set ImmutableLinkedHashSet[T]) ContainsAll(iterable iterable.Iterable[T]) bool {
+	return set.linkedHashSet.ContainsAll(iterable)
 }
 
 // Len returns the number of elements in the set.
@@ -39,7 +46,7 @@ func (set ImmutableLinkedHashSet[T]) ForEach(f func(T)) {
 }
 
 // Iterator returns an iterator over the elements in the set.
-func (set ImmutableLinkedHashSet[T]) Iterator() collections.Iterator[T] {
+func (set ImmutableLinkedHashSet[T]) Iterator() iterator.Iterator[T] {
 	return set.linkedHashSet.Iterator()
 }
 
@@ -50,8 +57,8 @@ func (set ImmutableLinkedHashSet[T]) ToSlice() []T {
 
 // Equals returns true if the set is equivalent to the given set. Two sets are equal if they are the same reference or have the same size and contain
 // the same elements.
-func (set ImmutableLinkedHashSet[T]) Equals(otherSet ImmutableLinkedHashSet[T]) bool {
-	return set.linkedHashSet.Equals(&otherSet.linkedHashSet)
+func (set ImmutableLinkedHashSet[T]) Equals(otherSet collections.Set[T]) bool {
+	return set.linkedHashSet.Equals(otherSet)
 }
 
 // String returns the string representation of the set.
@@ -81,7 +88,7 @@ func (set ImmutableLinkedHashSet[T]) RemoveIf(func(T) bool) bool {
 }
 
 // RemoveAll unsupported operation.
-func (set ImmutableLinkedHashSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (set ImmutableLinkedHashSet[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("RemoveAll", "ImmutableLinkedHashSet"))
 }
 
@@ -101,7 +108,7 @@ func (set ImmutableLinkedHashSet[T]) Add(e T) bool {
 }
 
 // AddAll unsupported operation
-func (set ImmutableLinkedHashSet[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (set ImmutableLinkedHashSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("AddAll", "ImmutableLinkedHashSet"))
 }
 

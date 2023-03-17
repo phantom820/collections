@@ -5,9 +5,12 @@ import (
 
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/types/optional"
 )
 
-// ImmutableForwardList an immutable version of [ImmutableForwadList].
+// ImmutableForwardList an immutable version of [ForwadList].
 type ImmutableForwadList[T comparable] struct {
 	list ForwardList[T]
 }
@@ -24,7 +27,7 @@ func (list ImmutableForwadList[T]) AddSlice(s []T) bool {
 }
 
 // AddAll unsupported operation.
-func (list ImmutableForwadList[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (list ImmutableForwadList[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("AddAll", "ImmutableForwardList"))
 }
 
@@ -48,8 +51,8 @@ func (list ImmutableForwadList[T]) At(i int) T {
 	return list.list.At(i)
 }
 
-// IndexOf returns the index of the first occurrence of the specified element in the list or -1 if the list does not contain the element.
-func (list ImmutableForwadList[T]) IndexOf(e T) int {
+// IndexOf returns the index of the first occurrence of the specified element in the list.
+func (list ImmutableForwadList[T]) IndexOf(e T) optional.Optional[int] {
 	return list.list.IndexOf(e)
 }
 
@@ -89,7 +92,7 @@ func (list ImmutableForwadList[T]) RemoveIf(f func(T) bool) bool {
 }
 
 // RemoveAll unsupported operation
-func (list ImmutableForwadList[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (list ImmutableForwadList[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("RemoveAll", "ImmutableForwardList"))
 }
 
@@ -135,7 +138,7 @@ func (list ImmutableForwadList[T]) Equals(other collections.List[T]) bool {
 }
 
 // Iterator returns an iterator over the elements in the list.
-func (list ImmutableForwadList[T]) Iterator() collections.Iterator[T] {
+func (list ImmutableForwadList[T]) Iterator() iterator.Iterator[T] {
 	return list.list.Iterator()
 }
 
@@ -144,6 +147,7 @@ func (list ImmutableForwadList[T]) String() string {
 	return fmt.Sprint(list.ToSlice())
 }
 
+// Sort unsupported operation.
 func (list ImmutableForwadList[T]) Sort(less func(a, b T) bool) {
 	panic(errors.UnsupportedOperation("Sort", "ImmutableForwardList"))
 }

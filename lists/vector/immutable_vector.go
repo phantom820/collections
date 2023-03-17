@@ -5,6 +5,8 @@ import (
 
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 )
 
 // ImmutableVector an immutable version of [Vector].
@@ -48,7 +50,7 @@ func (list ImmutableVector[T]) ForEach(f func(T)) {
 }
 
 // Iterator returns an iterator over the elements in the list.
-func (list ImmutableVector[T]) Iterator() collections.Iterator[T] {
+func (list ImmutableVector[T]) Iterator() iterator.Iterator[T] {
 	return list.vector.Iterator()
 }
 
@@ -101,7 +103,7 @@ func (list ImmutableVector[T]) RemoveIf(func(T) bool) bool {
 }
 
 // RemoveAll unsupported operation.
-func (list ImmutableVector[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (list ImmutableVector[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	panic("RemoveAll")
 }
 
@@ -126,7 +128,7 @@ func (list ImmutableVector[T]) AddAt(i int, e T) {
 }
 
 // AddAll unsupported operation.
-func (list ImmutableVector[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (list ImmutableVector[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	panic(errors.UnsupportedOperation("AddAll", "ImmutableVector"))
 }
 

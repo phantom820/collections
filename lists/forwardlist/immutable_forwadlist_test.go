@@ -18,6 +18,7 @@ func TestImmutableContains(t *testing.T) {
 
 	assert.False(t, ImmutableOf[int]().Contains(1))
 	assert.True(t, ImmutableOf(1).Contains(1))
+	assert.False(t, ImmutableOf(1, 2).Contains(3))
 
 }
 
@@ -45,6 +46,7 @@ func TestImmutableSubList(t *testing.T) {
 	assert.Equal(t, 1, ImmutableOf(1, 2, 3, 4).SubList(1, 2).Len())
 	assert.Equal(t, []int{3, 4, 5, 6}, ImmutableOf(1, 2, 3, 4, 5, 6, 7).SubList(2, 6).ToSlice())
 	assert.Equal(t, 4, ImmutableOf(1, 2, 3, 4, 5, 6, 7).SubList(2, 6).Len())
+
 }
 
 func TestImmutableForEach(t *testing.T) {

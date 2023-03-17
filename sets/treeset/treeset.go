@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps/treemap"
 	"github.com/phantom820/collections/types/pair"
 )
@@ -42,7 +44,7 @@ func (set TreeSet[T]) Add(e T) bool {
 }
 
 // AddAll adds all of the elements in the specified iterable to the set.
-func (set TreeSet[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (set TreeSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	n := set.Len()
 	it := iterable.Iterator()
 	for it.HasNext() {
@@ -80,7 +82,7 @@ func (set TreeSet[T]) RetainAll(c collections.Collection[T]) bool {
 }
 
 // RemoveAll removes all of the set's elements that are also contained in the specified iterable.
-func (set TreeSet[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (set TreeSet[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	n := set.Len()
 	it := iterable.Iterator()
 	for it.HasNext() {
@@ -118,6 +120,17 @@ func (set TreeSet[T]) Contains(e T) bool {
 	return set.treeMap.ContainsKey(e)
 }
 
+// ContainsAll returns true if the set contains all of the elements of the specified iterable.
+func (set *TreeSet[T]) ContainsAll(iterable iterable.Iterable[T]) bool {
+	it := iterable.Iterator()
+	for it.HasNext() {
+		if !set.Contains(it.Next()) {
+			return false
+		}
+	}
+	return true
+}
+
 // Len returns the number of elements in the set.
 func (set TreeSet[T]) Len() int {
 	return set.treeMap.Len()
@@ -130,7 +143,7 @@ func (set TreeSet[T]) Empty() bool {
 
 // Equals returns true if the set is equivalent to the given set. Two sets are equal if they are the same reference or have the same size and contain
 // the same elements.
-func (set *TreeSet[T]) Equals(otherSet *TreeSet[T]) bool {
+func (set *TreeSet[T]) Equals(otherSet collections.Set[T]) bool {
 	if set == otherSet {
 		return true
 	} else if set.Len() != otherSet.Len() {
@@ -154,22 +167,22 @@ func (set TreeSet[T]) ForEach(f func(T)) {
 }
 
 // Iterator returns an iterator over the elements in the set.
-func (set *TreeSet[T]) Iterator() collections.Iterator[T] {
-	return &iterator[T]{mapIterator: set.treeMap.Iterator()}
+func (set *TreeSet[T]) Iterator() iterator.Iterator[T] {
+	return &setIterator[T]{mapIterator: set.treeMap.Iterator()}
 }
 
-// iterator implememantation for [HashSet].
-type iterator[T comparable] struct {
-	mapIterator collections.Iterator[pair.Pair[T, struct{}]]
+// setIterator implememantation for [HashSet].
+type setIterator[T comparable] struct {
+	mapIterator iterator.Iterator[pair.Pair[T, struct{}]]
 }
 
 // HasNext returns true if the iterator has more elements.
-func (it *iterator[T]) HasNext() bool {
+func (it *setIterator[T]) HasNext() bool {
 	return it.mapIterator.HasNext()
 }
 
 // Next returns the next element in the iterator.
-func (it iterator[T]) Next() T {
+func (it setIterator[T]) Next() T {
 	return it.mapIterator.Next().Key()
 }
 

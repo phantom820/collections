@@ -1,3 +1,4 @@
+// package vector defines a wrapper over standard slice with extended functionality.
 package vector
 
 import (
@@ -6,10 +7,12 @@ import (
 
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
-	"github.com/phantom820/collections/sets/hashset"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/sets"
 )
 
-// Vector a wrapper around a slice.
+// Vector an ordered collection backed by a slice.
 type Vector[T comparable] struct {
 	data []T
 }
@@ -38,7 +41,7 @@ func (list *Vector[T]) Len() int {
 }
 
 // AddAll adds all of the elements in the specified iterable to the list.
-func (list *Vector[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (list *Vector[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	it := iterable.Iterator()
 	for it.HasNext() {
 		list.data = append(list.data, it.Next())
@@ -196,18 +199,27 @@ func (list *Vector[T]) RemoveIf(f func(T) bool) bool {
 }
 
 // RemoveAll removes from the list all of its elements that are contained in the specified collection.
-func (list *Vector[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+func (list *Vector[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	if list.Empty() {
 		return false
+	} else if sets.IsSet(iterable) {
+		set := iterable.(collections.Set[T])
+		return list.RemoveIf(func(e T) bool {
+			return set.Contains(e)
+		})
 	}
-	// introduce a set so we can ensure the lookups fast, we only want to do a single linear pass in removing elements
-	// so the algorithm here is O(n) i.e 2 linear passes.
-	set := hashset.New[T]()
+	// Extra memory O(n) for map , time complexity to populate map O(n), worst case
+	// we remove at each instance assuming fixed cost k.
+	// k + k + k + k + ... + k = n*k  = O(n) (n is size of the list)
+	set := make(map[T]struct{})
 	it := iterable.Iterator()
 	for it.HasNext() {
-		set.Add(it.Next())
+		set[it.Next()] = struct{}{}
 	}
-	return list.RemoveIf(func(t T) bool { return set.Contains(t) })
+	return list.RemoveIf(func(t T) bool {
+		_, ok := set[t]
+		return ok
+	})
 }
 
 // RemoveSlice removes all of the list elements that are also contained in the specified slice.
@@ -215,11 +227,14 @@ func (list *Vector[T]) RemoveSlice(s []T) bool {
 	if list.Empty() {
 		return false
 	}
-	// introduce a set so we can make the lookups fast, also passing a collection here introduces
-	// uncertainty about performance of contains so we just need an iterable and enforce the set.
-	set := hashset.New[T]()
-	set.AddSlice(s)
-	return list.RemoveIf(func(t T) bool { return set.Contains(t) })
+	set := make(map[T]struct{})
+	for _, e := range s {
+		set[e] = struct{}{}
+	}
+	return list.RemoveIf(func(e T) bool {
+		_, ok := set[e]
+		return ok
+	})
 }
 
 // ImmutableCopy returns an immutable copy of the list.
@@ -310,12 +325,12 @@ func (list *Vector[T]) RemoveAt(i int) T {
 }
 
 // Iterator returns an iterator over the elements in the list.
-func (list *Vector[T]) Iterator() collections.Iterator[T] {
-	return &iterator[T]{initialized: false, initialize: func() []T { return list.data }, index: 0, data: nil}
+func (list *Vector[T]) Iterator() iterator.Iterator[T] {
+	return &listIterator[T]{initialized: false, initialize: func() []T { return list.data }, index: 0, data: nil}
 }
 
 // iterator implememantation for [Vector].
-type iterator[T comparable] struct {
+type listIterator[T comparable] struct {
 	initialized bool
 	initialize  func() []T
 	index       int
@@ -323,7 +338,7 @@ type iterator[T comparable] struct {
 }
 
 // HasNext returns true if the iterator has more elements.
-func (it *iterator[T]) HasNext() bool {
+func (it *listIterator[T]) HasNext() bool {
 	if !it.initialized {
 		it.data = it.initialize()
 		it.initialized = true
@@ -334,7 +349,7 @@ func (it *iterator[T]) HasNext() bool {
 }
 
 // Next returns the next element in the iterator.
-func (it *iterator[T]) Next() T {
+func (it *listIterator[T]) Next() T {
 	if !it.HasNext() {
 		panic(errors.NoSuchElement())
 	}
@@ -348,7 +363,7 @@ func (list Vector[T]) String() string {
 	return fmt.Sprint(list.data)
 }
 
-// Sort sorts the list using the given less function. if less(a,b) = true then a would be before b in a sortled list.
+// Sort sorts the list using the given less function. if less(a,b) = true then a would be before b in a sorted list.
 func (list *Vector[T]) Sort(less func(a, b T) bool) {
 	sort.Slice(list.data, func(i, j int) bool {
 		return less(list.data[i], list.data[j])

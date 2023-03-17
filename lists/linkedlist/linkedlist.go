@@ -9,8 +9,10 @@ import (
 
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterable"
+	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/forwardlist"
-	"github.com/phantom820/collections/sets/hashset"
+	"github.com/phantom820/collections/sets"
 )
 
 type node[T comparable] struct {
@@ -49,7 +51,7 @@ func (list *LinkedList[T]) AddSlice(s []T) bool {
 }
 
 // AddAll adds all of the elements in the specified iterable to the set.
-func (list *LinkedList[T]) AddAll(iterable collections.Iterable[T]) bool {
+func (list *LinkedList[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	it := iterable.Iterator()
 	for it.HasNext() {
 		list.Add(it.Next())
@@ -293,29 +295,46 @@ func (list *LinkedList[T]) RemoveIf(f func(T) bool) bool {
 	return n != list.len
 }
 
-// RemoveAll removes from the list all of its elements that are contained in the specified collection.
-func (list *LinkedList[T]) RemoveAll(iterable collections.Iterable[T]) bool {
+// RemoveAll removes from the list all of its elements that are contained in the specified tion.
+func (list *LinkedList[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 	if list.Empty() {
 		return false
+	} else if sets.IsSet(iterable) {
+		set := iterable.(collections.Set[T])
+		return list.RemoveIf(func(e T) bool {
+			return set.Contains(e)
+		})
 	}
-	// introduce a set so we can ensure the lookups fast, we only want to do a single linear pass in removing elements
-	// so the algorithm here is O(n) i.e 2 linear passes.
-	set := hashset.New[T]()
+	// Extra memory O(n) for map , time complexity to populate map O(n), worst case
+	// we remove at each instance assuming fixed cost k.
+	// k + k + k + k + ... + k = n*k  = O(n) (n is size of the list)
+	set := make(map[T]struct{})
 	it := iterable.Iterator()
 	for it.HasNext() {
-		set.Add(it.Next())
+		set[it.Next()] = struct{}{}
 	}
-	return list.RemoveIf(func(t T) bool { return set.Contains(t) })
+	return list.RemoveIf(func(e T) bool {
+		_, ok := set[e]
+		return ok
+	})
 }
 
-// RetainAll retains only the elements in the list that are contained in the specified collection.
+// RetainAll retains only the elements in the list that are contained in the specified slice.
 func (list *LinkedList[T]) RetainAll(c collections.Collection[T]) bool {
 	if list.Empty() {
 		return false
+	} else if sets.IsSet[T](c) {
+		return list.RemoveIf(func(t T) bool { return !c.Contains(t) })
 	}
-	// create a predicate that removes elements that are not in the passed collection.
-	// performance here is mainly affected by how the given collection performs with contains.
-	return list.RemoveIf(func(t T) bool { return !c.Contains(t) })
+	set := make(map[T]struct{})
+	it := c.Iterator()
+	for it.HasNext() {
+		set[it.Next()] = struct{}{}
+	}
+	return list.RemoveIf(func(e T) bool {
+		_, ok := set[e]
+		return !ok
+	})
 }
 
 // RemoveSlice removes all of the list elements that are also contained in the specified slice.
@@ -323,11 +342,14 @@ func (list *LinkedList[T]) RemoveSlice(s []T) bool {
 	if list.Empty() {
 		return false
 	}
-	// introduce a set so we can make the lookups fast, also passing a collection here introduces
-	// uncertainty about performance of contains so we just need an iterable and enforce the set.
-	set := hashset.New[T]()
-	set.AddSlice(s)
-	return list.RemoveIf(func(t T) bool { return set.Contains(t) })
+	set := make(map[T]struct{})
+	for _, e := range s {
+		set[e] = struct{}{}
+	}
+	return list.RemoveIf(func(e T) bool {
+		_, ok := set[e]
+		return ok
+	})
 }
 
 // ToSlice returns a slice containing the elements of the list.
@@ -393,7 +415,7 @@ func (list *LinkedList[T]) ImmutableCopy() forwardlist.ImmutableForwadList[T] {
 		forwardList.Add(e)
 	})
 	immutableList := forwardlist.ImmutableOf[T]()
-	// using reflection here to avoid an unnecessary memory allocations.
+	// using reflection here to avoid an unnecessary memory allocacollections.
 	field := reflect.ValueOf(&immutableList).Elem().FieldByName("list")
 	setUnexportedField(field, forwardList)
 	return immutableList
@@ -441,12 +463,12 @@ func (list *LinkedList[T]) IndexOf(e T) int {
 }
 
 // Iterator returns an iterator over the elements in the list.
-func (list *LinkedList[T]) Iterator() collections.Iterator[T] {
-	return &iterator[T]{initialized: false, initialize: func() (*node[T], int) { return list.head, list.len }}
+func (list *LinkedList[T]) Iterator() iterator.Iterator[T] {
+	return &listIterator[T]{initialized: false, initialize: func() (*node[T], int) { return list.head, list.len }}
 }
 
-// iterator implememantation for [ForwardList].
-type iterator[T comparable] struct {
+// listIterator implememantation for [LinkedList].
+type listIterator[T comparable] struct {
 	initialized bool
 	initialize  func() (*node[T], int)
 	node        *node[T]
@@ -455,7 +477,7 @@ type iterator[T comparable] struct {
 }
 
 // HasNext returns true if the iterator has more elements.
-func (it *iterator[T]) HasNext() bool {
+func (it *listIterator[T]) HasNext() bool {
 	if !it.initialized {
 		it.node, it.len = it.initialize()
 		it.initialized = true
@@ -466,7 +488,7 @@ func (it *iterator[T]) HasNext() bool {
 }
 
 // Next returns the next element in the iterator.
-func (it *iterator[T]) Next() T {
+func (it *listIterator[T]) Next() T {
 	if !it.HasNext() {
 		panic(errors.NoSuchElement())
 	}

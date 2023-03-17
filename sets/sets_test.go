@@ -19,7 +19,7 @@ func TestIsSet(t *testing.T) {
 
 	a := hashset.ImmutableOf[int]()
 	b := linkedhashset.ImmutableOf[int]()
-	c := treeset.ImmutableOf[int](func(e1, e2 int) bool { return e1 < e2 })
+	c := treeset.ImmutableOf(func(e1, e2 int) bool { return e1 < e2 })
 	isSetTests := []isSetTest{
 		{
 			input:    nil,
@@ -34,11 +34,11 @@ func TestIsSet(t *testing.T) {
 			expected: true,
 		},
 		{
-			input:    linkedhashset.New[int](),
+			input:    a,
 			expected: true,
 		},
 		{
-			input:    treeset.New(func(e1, e2 int) bool { return e1 < e2 }),
+			input:    linkedhashset.New[int](),
 			expected: true,
 		},
 		{
@@ -46,20 +46,32 @@ func TestIsSet(t *testing.T) {
 			expected: true,
 		},
 		{
+			input:    b,
+			expected: true,
+		},
+		{
+			input:    treeset.New(func(e1, e2 int) bool { return e1 < e2 }),
+			expected: true,
+		},
+		{
 			input:    &c,
+			expected: true,
+		},
+		{
+			input:    c,
 			expected: true,
 		},
 	}
 
 	for _, test := range isSetTests {
-		assert.Equal(t, test.expected, IsSet(test.input))
+		assert.Equal(t, test.expected, IsSet[int](test.input))
 	}
 }
 
 func TestUnion(t *testing.T) {
 
 	type unionTest struct {
-		inputs           func() (collections.Collection[int], collections.Collection[int])
+		inputs           func() (collections.Set[int], collections.Set[int])
 		element          int
 		expectedSlice    []int
 		expectedLen      int
@@ -68,7 +80,7 @@ func TestUnion(t *testing.T) {
 
 	unionTests := []unionTest{
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of[int](), linkedhashset.Of[int]()
 				return &a, &b
 			},
@@ -78,7 +90,7 @@ func TestUnion(t *testing.T) {
 			expectedContains: false,
 		},
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(4, 5, 6)
 				return &a, &b
 			},
@@ -88,7 +100,7 @@ func TestUnion(t *testing.T) {
 			expectedContains: true,
 		},
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of(1, 2, 3), treeset.Of(func(e1, e2 int) bool { return e1 > e2 }, 4, 5, 6)
 				return &a, &b
 			},
@@ -98,7 +110,7 @@ func TestUnion(t *testing.T) {
 			expectedContains: true,
 		},
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of(1, 2, 3, 4), linkedhashset.Of(4, 5, 6)
 				return &a, &b
 			},
@@ -121,7 +133,7 @@ func TestUnion(t *testing.T) {
 func TestDifference(t *testing.T) {
 
 	type differenceTest struct {
-		inputs           func() (collections.Collection[int], collections.Collection[int])
+		inputs           func() (collections.Set[int], collections.Set[int])
 		element          int
 		expectedSlice    []int
 		expectedLen      int
@@ -130,7 +142,7 @@ func TestDifference(t *testing.T) {
 
 	differenceTests := []differenceTest{
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of[int](), linkedhashset.Of[int]()
 				return &a, &b
 			},
@@ -141,7 +153,7 @@ func TestDifference(t *testing.T) {
 		},
 
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(4, 5, 6)
 				return &a, &b
 			},
@@ -151,7 +163,7 @@ func TestDifference(t *testing.T) {
 			expectedContains: true,
 		},
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of(1, 2, 3, 4), linkedhashset.Of(1, 2, 3)
 				return &a, &b
 			},
@@ -161,7 +173,7 @@ func TestDifference(t *testing.T) {
 			expectedContains: false,
 		},
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(1, 2, 3)
 				return &a, &b
 			},
@@ -184,7 +196,7 @@ func TestDifference(t *testing.T) {
 func TestIntersection(t *testing.T) {
 
 	type intersectionTest struct {
-		inputs           func() (collections.Collection[int], collections.Collection[int])
+		inputs           func() (collections.Set[int], collections.Set[int])
 		element          int
 		expectedSlice    []int
 		expectedLen      int
@@ -193,7 +205,7 @@ func TestIntersection(t *testing.T) {
 
 	intersectionTests := []intersectionTest{
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of[int](), linkedhashset.Of[int]()
 				return &a, &b
 			},
@@ -204,7 +216,7 @@ func TestIntersection(t *testing.T) {
 		},
 
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(4, 5, 6)
 				return &a, &b
 			},
@@ -214,7 +226,7 @@ func TestIntersection(t *testing.T) {
 			expectedContains: false,
 		},
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of(1, 2, 3, 4), linkedhashset.Of(1, 2, 5)
 				return &a, &b
 			},
@@ -224,7 +236,7 @@ func TestIntersection(t *testing.T) {
 			expectedContains: true,
 		},
 		{
-			inputs: func() (collections.Collection[int], collections.Collection[int]) {
+			inputs: func() (collections.Set[int], collections.Set[int]) {
 				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(8, 7, 6, 9, 11, 1, 3)
 				return &a, &b
 			},

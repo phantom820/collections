@@ -15,14 +15,6 @@ type ImmutableTreeSet[T comparable] struct {
 	treeSet TreeSet[T]
 }
 
-// ImmutableOf creates an immutable set with the specified elements. Elements are compared using the lessThan function which should satisfy.
-// e1 < e2 => lessThan(e1, e2) = true and lessThan(e2,e1) = false.
-// e1 = e2 => lessThan(e1,e2) = false and lessThan(e2,e1) = false.
-// e1 > e2 -> lessThan(e1,e2) = false and lessThan(e2,e1) = true.
-func ImmutableOf[T comparable](lessThan func(e1, e2 T) bool, elements ...T) ImmutableTreeSet[T] {
-	return ImmutableTreeSet[T]{Of(lessThan, elements...)}
-}
-
 // Contains returns true if this set contains the specified element.
 func (set ImmutableTreeSet[T]) Contains(e T) bool {
 	return set.treeSet.Contains(e)

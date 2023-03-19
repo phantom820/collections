@@ -15,12 +15,6 @@ type ImmutableForwadList[T comparable] struct {
 	list ForwardList[T]
 }
 
-// Of creates a list with the given elements.
-func ImmutableOf[T comparable](elements ...T) ImmutableForwadList[T] {
-	list := ImmutableForwadList[T]{Of(elements...)}
-	return list
-}
-
 // AddSlice unsupported operation.
 func (list ImmutableForwadList[T]) AddSlice(s []T) bool {
 	panic(errors.UnsupportedOperation("AddSlice", "ImmutableForwardList"))
@@ -125,7 +119,7 @@ func (list ImmutableForwadList[T]) SubList(start int, end int) ImmutableForwadLi
 	} else if start > end {
 		panic(errors.IndexBoundsOutOfRange(start, end))
 	} else if start == end {
-		return ImmutableOf[T]()
+		return Of[T]()
 	}
 	_, startNode := chaseIndex(list.list.head, start)
 	return ImmutableForwadList[T]{list: ForwardList[T]{head: startNode, tail: list.list.tail, len: end - start}}

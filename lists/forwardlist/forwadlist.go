@@ -1,4 +1,4 @@
-// package forwardlist defines singly linked lists with a tail pointer (mutable and immutable) representing ordered collections.
+// package forwardlist defines singly linked list with a tail pointer.
 package forwardlist
 
 import (
@@ -26,18 +26,22 @@ type ForwardList[T comparable] struct {
 	tail *node[T]
 }
 
-// New creates an empty list.
-func New[T comparable]() *ForwardList[T] {
-	return &ForwardList[T]{head: nil, len: 0}
-}
-
-// Of creates a list with the given elements.
-func Of[T comparable](elements ...T) ForwardList[T] {
+// New creates a mutable list with the given elements.
+func New[T comparable](elements ...T) *ForwardList[T] {
 	list := ForwardList[T]{}
 	for _, e := range elements {
 		list.addBack(e)
 	}
-	return list
+	return &list
+}
+
+// Of creates an immutable list with the given elements.
+func Of[T comparable](elements ...T) ImmutableForwadList[T] {
+	list := ForwardList[T]{}
+	for _, e := range elements {
+		list.addBack(e)
+	}
+	return ImmutableForwadList[T]{list: list}
 }
 
 // AddSlice adds all the elements in the slice to the list.
@@ -414,7 +418,7 @@ func (list *ForwardList[T]) SubList(start int, end int) *ForwardList[T] {
 
 // ImmutableCopy returns an immutable copy of the list.
 func (list *ForwardList[T]) ImmutableCopy() ImmutableForwadList[T] {
-	copy := Of[T]()
+	copy := ForwardList[T]{}
 	list.ForEach(func(e T) {
 		copy.Add(e)
 	})
@@ -423,11 +427,11 @@ func (list *ForwardList[T]) ImmutableCopy() ImmutableForwadList[T] {
 
 // Copy returns a copy of the list.
 func (list *ForwardList[T]) Copy() *ForwardList[T] {
-	copy := Of[T]()
+	copy := New[T]()
 	list.ForEach(func(e T) {
 		copy.Add(e)
 	})
-	return &copy
+	return copy
 }
 
 // Equals returns true if the list is equivalent to the given list. Two lists are equal if they have the same size

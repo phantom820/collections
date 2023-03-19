@@ -32,24 +32,28 @@ func New(code int, err error) Error {
 	return Error{code: code, error: err}
 }
 
+// IndexOutOfBounds returns an error indicating that a container has been indexed outside of its bounds.
 func IndexOutOfBounds(index int, length int) Error {
 	var buffer bytes.Buffer
 	indexOutOfBoundsTemplate.Execute(&buffer, map[string]int{"index": index, "length": length})
 	return New(IndexOutOfBoundsCode, errors.New(buffer.String()))
 }
 
+// IndexBoundsOutOfRange returns an error indicating misconfigured indexing.
 func IndexBoundsOutOfRange(start int, end int) Error {
 	var buffer bytes.Buffer
 	indexBoundsOutOfRangeTemplate.Execute(&buffer, map[string]int{"start": start, "end": end})
 	return New(IndexBoundsOutOfRangeCode, errors.New(buffer.String()))
 }
 
+// UnsupportedOperation returns an error indicating that a given operation is not supported on a given type.
 func UnsupportedOperation(operation string, _type string) Error {
 	var buffer bytes.Buffer
 	unsupportedOperationTemplate.Execute(&buffer, map[string]string{"operation": operation, "type": _type})
 	return New(UnsupportedOperationCode, errors.New(buffer.String()))
 }
 
+// NoSuchElement returns an error indicating a requested element is not present.
 func NoSuchElement() Error {
 	var buffer bytes.Buffer
 	noSuchElementTemplate.Execute(&buffer, nil)

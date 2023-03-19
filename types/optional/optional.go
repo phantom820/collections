@@ -1,3 +1,4 @@
+// package optional defines an optional type that can be used to represent value that may or may not be present.
 package optional
 
 import "fmt"

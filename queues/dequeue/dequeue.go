@@ -1,3 +1,4 @@
+// package dequeue defines an implementation of a double-ended queue that can be backed by a [Vector] or [LinkedList].
 package dequeue
 
 import (
@@ -16,26 +17,22 @@ type Dequeue[T comparable] struct {
 	list collections.List[T]
 }
 
-// ListDequeueOf creates a list based dequeue of the given elements.
-func ListDequeueOf[T comparable](elements ...T) Dequeue[T] {
-	list := linkedlist.Of(elements...)
-	return Dequeue[T]{list: &list}
+// NewVectorDequeue creates a [vector] based dequeue with the given elements.
+func NewVectorDequeue[T comparable](elements ...T) *Dequeue[T] {
+	dequeue := Dequeue[T]{list: vector.New[T]()}
+	for _, e := range elements {
+		dequeue.Add(e)
+	}
+	return &dequeue
 }
 
-// VectorDequeueOf creates a vector based dequeue of the given elements.
-func VectorDequeueOf[T comparable](elements ...T) Dequeue[T] {
-	list := vector.Of(elements...)
-	return Dequeue[T]{list: &list}
-}
-
-// NewVectorDequeue creates a [Vector] based dequeue.
-func NewVectorDequeue[T comparable]() *Dequeue[T] {
-	return &Dequeue[T]{list: vector.New[T]()}
-}
-
-// NewListDequeue creates a [LinkedList] based dequeue.
-func NewListDequeue[T comparable]() *Dequeue[T] {
-	return &Dequeue[T]{list: linkedlist.New[T]()}
+// NewListDequeue creates a [LinkedList] based dequeue with the given elements.
+func NewListDequeue[T comparable](elements ...T) *Dequeue[T] {
+	dequeue := Dequeue[T]{list: linkedlist.New[T]()}
+	for _, e := range elements {
+		dequeue.Add(e)
+	}
+	return &dequeue
 }
 
 // Add appends the specified element to the end of the dequeue.

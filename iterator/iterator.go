@@ -43,7 +43,7 @@ func (it *iterator[T]) Next() T {
 	return element
 }
 
-// Map return the iterator obtained from applying the function f to every element on the given iterator.
+// Map return the iterator obtained from applying the transformation function to every element on the given iterator.
 func Map[T, U comparable](it Iterator[T], f func(T) U) Iterator[U] {
 	elements := make([]U, 0, 8)
 	for it.HasNext() {
@@ -64,7 +64,7 @@ func Filter[T comparable](it Iterator[T], f func(T) bool) Iterator[T] {
 	return Of(elements...)
 }
 
-// Reduce apply binary operation between successive elements from the iterator, going from left to right.
+// Reduce reduces the elements of the iterator using the associative binary function and returns result as an option.
 func Reduce[T comparable](it Iterator[T], f func(x, y T) T) optional.Optional[T] {
 	if !it.HasNext() {
 		return optional.Empty[T]()
@@ -75,6 +75,14 @@ func Reduce[T comparable](it Iterator[T], f func(x, y T) T) optional.Optional[T]
 		x = f(x, y)
 	}
 	return optional.Of(x)
+}
+
+func ToSlice[T any](it Iterator[T]) []T {
+	data := make([]T, 0)
+	for it.HasNext() {
+		data = append(data, it.Next())
+	}
+	return data
 }
 
 // func Partition[T any](it Iterator[T], n int) [][]T {

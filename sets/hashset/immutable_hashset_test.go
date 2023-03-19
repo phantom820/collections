@@ -6,18 +6,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestImmutableOf(t *testing.T) {
+func TestOf(t *testing.T) {
 
-	assert.True(t, ImmutableOf[int]().Empty())
-	assert.False(t, ImmutableOf(1).Empty())
-	assert.Equal(t, 0, ImmutableOf[int]().Len())
+	assert.True(t, Of[int]().Empty())
+	assert.False(t, Of(1).Empty())
+	assert.Equal(t, 0, Of[int]().Len())
 
 }
 
 func TestImmutableContains(t *testing.T) {
 
-	assert.False(t, ImmutableOf[int]().Contains(1))
-	assert.True(t, ImmutableOf(1).Contains(1))
+	assert.False(t, Of[int]().Contains(1))
+	assert.True(t, Of(1).Contains(1))
 
 }
 
@@ -31,32 +31,32 @@ func TestImmutableContainsAll(t *testing.T) {
 
 	containsAllTests := []containsAllTest{
 		{
-			input:    ImmutableOf(0, 4, 5),
+			input:    Of(0, 4, 5),
 			elements: []int{},
 			expected: true,
 		},
 		{
-			input:    ImmutableOf(0, 4, 5),
+			input:    Of(0, 4, 5),
 			elements: []int{1},
 			expected: false,
 		},
 		{
-			input:    ImmutableOf(0, 4, 5),
+			input:    Of(0, 4, 5),
 			elements: []int{4, 5},
 			expected: true,
 		},
 		{
-			input:    ImmutableOf(0, 4, 5),
+			input:    Of(0, 4, 5),
 			elements: []int{0, 4, 5},
 			expected: true,
 		},
 		{
-			input:    ImmutableOf(0, 4, 5),
+			input:    Of(0, 4, 5),
 			elements: []int{3},
 			expected: false,
 		},
 		{
-			input:    ImmutableOf(0, 4, 5),
+			input:    Of(0, 4, 5),
 			elements: []int{0, 4, 5, 8},
 			expected: false,
 		},
@@ -70,17 +70,17 @@ func TestImmutableContainsAll(t *testing.T) {
 
 func TestImmutableEquals(t *testing.T) {
 
-	assert.True(t, ImmutableOf[int]().Equals(ImmutableOf[int]()))
-	assert.True(t, ImmutableOf(1).Equals(ImmutableOf(1)))
-	assert.True(t, ImmutableOf(2, 1).Equals(ImmutableOf(1, 2)))
-	assert.False(t, ImmutableOf(2, 1).Equals(ImmutableOf(2)))
-	assert.False(t, ImmutableOf[int]().Equals(ImmutableOf(2)))
+	assert.True(t, Of[int]().Equals(Of[int]()))
+	assert.True(t, Of(1).Equals(Of(1)))
+	assert.True(t, Of(2, 1).Equals(Of(1, 2)))
+	assert.False(t, Of(2, 1).Equals(Of(2)))
+	assert.False(t, Of[int]().Equals(Of(2)))
 
 }
 
 func TestImmutableForEach(t *testing.T) {
 
-	set := ImmutableOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	set := Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 	sum := 0
 	set.ForEach(func(i int) { sum = sum + i })
 	assert.Equal(t, 55, sum)
@@ -88,7 +88,7 @@ func TestImmutableForEach(t *testing.T) {
 
 func TestImmutableIterator(t *testing.T) {
 
-	set := ImmutableOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	set := Of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 	sum := 0
 	it := set.Iterator()
 	for it.HasNext() {
@@ -106,15 +106,15 @@ func TestImmutableToSlice(t *testing.T) {
 
 	toSliceTests := []toSliceTest{
 		{
-			input:    ImmutableOf[int](),
+			input:    Of[int](),
 			expected: []int{},
 		},
 		{
-			input:    ImmutableOf(1, 2, 3, 4),
+			input:    Of(1, 2, 3, 4),
 			expected: []int{1, 2, 3, 4},
 		},
 		{
-			input:    ImmutableOf(1, 2, 3, 4, 5),
+			input:    Of(1, 2, 3, 4, 5),
 			expected: []int{1, 2, 3, 4, 5},
 		},
 	}
@@ -126,6 +126,6 @@ func TestImmutableToSlice(t *testing.T) {
 
 func TestImmutableString(t *testing.T) {
 
-	assert.Equal(t, "{}", ImmutableOf[int]().String())
-	assert.Equal(t, "{1}", ImmutableOf(1).String())
+	assert.Equal(t, "{}", Of[int]().String())
+	assert.Equal(t, "{1}", Of(1).String())
 }

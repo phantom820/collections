@@ -1,4 +1,4 @@
-// package vector defines a wrapper over standard slice with extended functionality.
+// package vector defines a wrapper over a standard slice.
 package vector
 
 import (
@@ -10,23 +10,28 @@ import (
 	"github.com/phantom820/collections/iterable"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/sets"
+	"github.com/phantom820/collections/types/optional"
 )
 
-// Vector an ordered collection backed by a slice.
+// Vector a wrapper around a slice []T.
 type Vector[T comparable] struct {
 	data []T
 }
 
-// New creates an empty list.
-func New[T comparable]() *Vector[T] {
-	return &Vector[T]{data: make([]T, 0, 16)}
+// New creates a mutable list with the given elements.
+func New[T comparable](elements ...T) *Vector[T] {
+	list := Vector[T]{data: make([]T, 0)}
+	for _, e := range elements {
+		list.Add(e)
+	}
+	return &list
 }
 
-// Of creates a list with the given elements.
-func Of[T comparable](elements ...T) Vector[T] {
+// Of creates an immutable list with the given elements.
+func Of[T comparable](elements ...T) ImmutableVector[T] {
 	list := Vector[T]{data: make([]T, 0, len(elements))}
 	list.data = append(list.data, elements...)
-	return list
+	return ImmutableVector[T]{vector: list}
 }
 
 // Add appends the specified element to the end of the list.
@@ -118,9 +123,13 @@ func indexOf[T comparable](data []T, e T) int {
 	return index
 }
 
-// IndexOf returns the index of the first occurrence of the specified element in the list or -1 if the list does not contain the element.
-func (list *Vector[T]) IndexOf(e T) int {
-	return indexOf(list.data, e)
+// IndexOf returns the index of the first occurrence of the specified element in the list.
+func (list *Vector[T]) IndexOf(e T) optional.Optional[int] {
+	index := indexOf(list.data, e)
+	if index == -1 {
+		return optional.Empty[int]()
+	}
+	return optional.Of(index)
 }
 
 // removeAt removes the element at the specified index.
@@ -239,13 +248,13 @@ func (list *Vector[T]) RemoveSlice(s []T) bool {
 
 // ImmutableCopy returns an immutable copy of the list.
 func (list *Vector[T]) ImmutableCopy() ImmutableVector[T] {
-	return ImmutableOf(list.data...)
+	return Of(list.data...)
 }
 
 // Copy returns a copy of the list.
 func (list *Vector[T]) Copy() *Vector[T] {
-	copy := Of(list.data...)
-	return &copy
+	copy := New(list.data...)
+	return copy
 }
 
 // SubList returns a copy of the portion of the list between the specified start and end indices (exclusive).

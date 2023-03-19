@@ -513,7 +513,7 @@ func TestIterator(t *testing.T) {
 	h.Put("C", 3)
 
 	assert.Equal(t, []pair.Pair[string, int]{
-		pair.New("A", 1), pair.New("B", 2), pair.New("C", 3)}, iterate(h.Iterator()))
+		pair.Of("A", 1), pair.Of("B", 2), pair.Of("C", 3)}, iterate(h.Iterator()))
 
 	h = New[string, int](func(k1, k2 string) bool { return k1 < k2 })
 	h.Put("A", 1)
@@ -523,7 +523,7 @@ func TestIterator(t *testing.T) {
 	h.Put("F", 23)
 
 	assert.Equal(t, []pair.Pair[string, int]{
-		pair.New("A", 1), pair.New("B", 2), pair.New("C", 3), pair.New("F", 23)}, iterate(it))
+		pair.Of("A", 1), pair.Of("B", 2), pair.Of("C", 3), pair.Of("F", 23)}, iterate(it))
 
 }
 
@@ -536,4 +536,49 @@ func TestString(t *testing.T) {
 	m.Put("C", 3)
 	assert.Equal(t, "{A=1, B=2, C=3}", m.String())
 
+}
+
+func TestEquals(t *testing.T) {
+
+	type equalsTest struct {
+		a        *TreeMap[int, int]
+		b        *TreeMap[int, int]
+		expected bool
+	}
+
+	lessThan := func(i1, i2 int) bool { return i1 < i2 }
+	equalsTests := []equalsTest{
+		{
+			a:        New[int, int](lessThan),
+			b:        New[int, int](lessThan),
+			expected: true,
+		},
+		{
+			a:        New[int, int](lessThan),
+			b:        New(lessThan, pair.Of(1, 1)),
+			expected: false,
+		},
+		{
+			a:        New(lessThan, pair.Of(1, 2)),
+			b:        New(lessThan, pair.Of(1, 1)),
+			expected: false,
+		},
+		{
+			a:        New(lessThan, pair.Of(2, 1)),
+			b:        New(lessThan, pair.Of(1, 1)),
+			expected: false,
+		},
+		{
+			a:        New(lessThan, pair.Of(2, 2), pair.Of(1, 1)),
+			b:        New(lessThan, pair.Of(1, 1), pair.Of(2, 2)),
+			expected: true,
+		},
+	}
+
+	equals := func(i1, i2 int) bool { return i1 == i2 }
+	for _, test := range equalsTests {
+		assert.Equal(t, test.expected, test.a.Equals(test.b, equals))
+		assert.Equal(t, test.expected, test.b.Equals(test.a, equals))
+
+	}
 }

@@ -1,3 +1,4 @@
+// package linkedlist defines doubly linked list.
 package linkedlist
 
 import (
@@ -13,6 +14,7 @@ import (
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/lists/forwardlist"
 	"github.com/phantom820/collections/sets"
+	"github.com/phantom820/collections/types/optional"
 )
 
 type node[T comparable] struct {
@@ -28,18 +30,18 @@ type LinkedList[T comparable] struct {
 	tail *node[T]
 }
 
-// New creates an empty list.
-func New[T comparable]() *LinkedList[T] {
-	return &LinkedList[T]{head: nil, len: 0}
+// New creates a mutable list with the given elements.
+func New[T comparable](elements ...T) *LinkedList[T] {
+	list := LinkedList[T]{head: nil, len: 0}
+	for _, e := range elements {
+		list.Add(e)
+	}
+	return &list
 }
 
-// Of creates a list with the given elements.
-func Of[T comparable](elements ...T) LinkedList[T] {
-	list := LinkedList[T]{}
-	for _, e := range elements {
-		list.addBack(e)
-	}
-	return list
+// Of creates an immutable list with the given elements.
+func Of[T comparable](elements ...T) forwardlist.ImmutableForwadList[T] {
+	return forwardlist.Of(elements...)
 }
 
 // AddSlice adds all the elements in the slice to the list.
@@ -410,24 +412,26 @@ func setUnexportedField(field reflect.Value, value interface{}) {
 
 // ImmutableCopy returns an immutable copy of the list.
 func (list *LinkedList[T]) ImmutableCopy() forwardlist.ImmutableForwadList[T] {
-	forwardList := forwardlist.Of[T]()
+	if list.Empty() {
+		return forwardlist.Of[T]()
+	}
+	forwardList := forwardlist.New[T]()
 	list.ForEach(func(e T) {
 		forwardList.Add(e)
 	})
-	immutableList := forwardlist.ImmutableOf[T]()
-	// using reflection here to avoid an unnecessary memory allocacollections.
+	immutableList := forwardlist.Of[T]()
 	field := reflect.ValueOf(&immutableList).Elem().FieldByName("list")
-	setUnexportedField(field, forwardList)
+	setUnexportedField(field, *forwardList)
 	return immutableList
 }
 
 // Copy returns a copy of the list.
 func (list *LinkedList[T]) Copy() *LinkedList[T] {
-	copy := Of[T]()
+	copy := New[T]()
 	list.ForEach(func(e T) {
 		copy.Add(e)
 	})
-	return &copy
+	return copy
 }
 
 // Equals returns true if the list is equivalent to the given list. Two lists are equal if they have the same size
@@ -449,17 +453,17 @@ func (list *LinkedList[T]) Equals(other collections.List[T]) bool {
 
 }
 
-// IndexOf returns the index of the first occurrence of the specified element in the list or -1 if the list does not contain the element.
-func (list *LinkedList[T]) IndexOf(e T) int {
+// IndexOf returns the index of the first occurrence of the specified element in the list.
+func (list *LinkedList[T]) IndexOf(e T) optional.Optional[int] {
 	j := 0
 	it := list.Iterator()
 	for it.HasNext() {
 		if it.Next() == e {
-			return j
+			return optional.Of(j)
 		}
 		j++
 	}
-	return -1
+	return optional.Empty[int]()
 }
 
 // Iterator returns an iterator over the elements in the list.

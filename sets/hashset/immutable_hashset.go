@@ -15,11 +15,6 @@ type ImmutableHashSet[T comparable] struct {
 	hashSet HashSet[T]
 }
 
-// ImmutableOf creates an immutable set with the specified elements.
-func ImmutableOf[T comparable](elements ...T) ImmutableHashSet[T] {
-	return ImmutableHashSet[T]{Of(elements...)}
-}
-
 // Contains returns true if this set contains the specified element.
 func (set ImmutableHashSet[T]) Contains(e T) bool {
 	return set.hashSet.Contains(e)

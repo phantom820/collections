@@ -10,3 +10,18 @@ import (
 type Iterable[T any] interface {
 	Iterator() iterator.Iterator[T] // Returns a new iterator over all elements contained in the iterable.
 }
+
+// Of returns an iterable of the given elements.
+func Of[T any](elements ...T) Iterable[T] {
+	return &iterable[T]{iterator: iterator.Of(elements...)}
+}
+
+// iterable represents an iterable constructed from slice.
+type iterable[T any] struct {
+	iterator iterator.Iterator[T]
+}
+
+// Iterator returns iterator for the iterable.
+func (iterable *iterable[T]) Iterator() iterator.Iterator[T] {
+	return iterable.iterator
+}

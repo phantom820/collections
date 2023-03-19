@@ -1,11 +1,15 @@
+// package treemap defines a map implementation backed by a red black tree to keep entries in a sorted order.
 package treemap
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/maps/hashmap"
+	"github.com/phantom820/collections/maps/linkedhashmap"
 	"github.com/phantom820/collections/trees/rbt"
 	"github.com/phantom820/collections/types/optional"
 	"github.com/phantom820/collections/types/pair"
@@ -16,21 +20,24 @@ type TreeMap[K comparable, V any] struct {
 	tree *rbt.RedBlackTree[K, V]
 }
 
-// New creates an empty TreeMap. Keys are compared using the lessThan function which should satisfy.
+// New creates a map with the given key, value pairs. Keys are compared using the lessThan function which should satisfy.
 // k1 < k2 => lessThan(k1, k2) = true and lessThan(k2,k1) = false.
 // k1 = k2 => lessThan(k1,k2) = false and lessThan(k2,k1) = false.
 // k1 > k2 -> lessThan(k1,k2) = false and lessThan(k2,k1) = true.
-func New[K comparable, V any](lessThan func(k1, k2 K) bool) *TreeMap[K, V] {
-	return &TreeMap[K, V]{rbt.New[K, V](lessThan)}
+func New[K comparable, V any](lessThan func(k1, k2 K) bool, pairs ...pair.Pair[K, V]) *TreeMap[K, V] {
+	treeMap := TreeMap[K, V]{rbt.New[K, V](lessThan)}
+	for _, pair := range pairs {
+		treeMap.Put(pair.Key(), pair.Value())
+	}
+	return &treeMap
 }
 
-// Put associates the specified value with the specified key in the map. The previously mapped value is returned.
+// Put adds a new key/value pair to the map and optionally returns previously bound value.
 func (treeMap *TreeMap[K, V]) Put(key K, value V) optional.Optional[V] {
 	return treeMap.tree.Insert(key, value)
 }
 
-// PutIfAbsent associates the specified key with the given value if the key is not already mapped. Will return the
-// current value if present otherwise the zero value.
+// PutIfAbsent adds a new key/value pair to the map if the key is not already bounded and optionally returns bound value.
 func (treeMap *TreeMap[K, V]) PutIfAbsent(key K, value V) optional.Optional[V] {
 	if storedValue := treeMap.tree.Get(key); !storedValue.Empty() {
 		return storedValue
@@ -39,7 +46,7 @@ func (treeMap *TreeMap[K, V]) PutIfAbsent(key K, value V) optional.Optional[V] {
 	return optional.Empty[V]()
 }
 
-// Get returns the value to which the specified key is mapped to.
+// Get optionally returns the value associated with a key.
 func (treeMap *TreeMap[K, V]) Get(key K) optional.Optional[V] {
 	return treeMap.tree.Get(key)
 }
@@ -49,13 +56,14 @@ func (treeMap *TreeMap[K, V]) GetIf(f func(K) bool) []V {
 	return treeMap.tree.GetIf(f)
 }
 
-// Remove removes the mapping for the specified key from the map.
+// Remove removes a key from the map, returning the value associated previously with that key as an option.
 func (treeMap TreeMap[K, V]) Remove(key K) optional.Optional[V] {
 	return treeMap.tree.Delete(key)
 }
 
 // RemoveIf removes all the key, value mapping in which the key matches the given predicate.
-func (treeMap *TreeMap[K, V]) RemoveIf(f func(K) bool) {
+func (treeMap *TreeMap[K, V]) RemoveIf(f func(K) bool) bool {
+	n := treeMap.Len()
 	keysToRemove := make([]K, 0)
 	for _, key := range treeMap.tree.Keys() {
 		if f(key) {
@@ -66,6 +74,7 @@ func (treeMap *TreeMap[K, V]) RemoveIf(f func(K) bool) {
 	for _, key := range keysToRemove {
 		treeMap.tree.Delete(key)
 	}
+	return n != treeMap.Len()
 }
 
 // ContainsKey returns true if this map contains a mapping for the specified key.
@@ -166,4 +175,44 @@ func (treeMap *TreeMap[K, V]) String() string {
 	}
 	sb.WriteString("}")
 	return sb.String()
+}
+
+// Equals return true if the map is is equal to the given map. Two maps are equal if they contain the same
+// key, value pairs.
+func (treeMap TreeMap[K, V]) Equals(other collections.Map[K, V], equals func(V, V) bool) bool {
+	if treeMap.Len() != other.Len() {
+		return false
+	}
+
+	switch other.(type) {
+	case hashmap.HashMap[K, V], *hashmap.HashMap[K, V], *linkedhashmap.LinkedHashMap[K, V]:
+		{
+			it := treeMap.Iterator()
+			for it.HasNext() {
+				pair := it.Next()
+				result := other.Get(pair.Key())
+				if result.Empty() {
+					return false
+				} else if !equals(pair.Value(), result.Value()) {
+					return false
+				}
+			}
+			return true
+		}
+	default:
+		{
+			it := other.Iterator()
+			for it.HasNext() {
+				pair := it.Next()
+				result := treeMap.Get(pair.Key())
+				if result.Empty() {
+					return false
+				} else if !equals(pair.Value(), result.Value()) {
+					return false
+				}
+			}
+			return true
+		}
+	}
+
 }

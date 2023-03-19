@@ -17,9 +17,9 @@ func TestIsSet(t *testing.T) {
 		expected bool
 	}
 
-	a := hashset.ImmutableOf[int]()
-	b := linkedhashset.ImmutableOf[int]()
-	c := treeset.ImmutableOf(func(e1, e2 int) bool { return e1 < e2 })
+	a := hashset.Of[int]()
+	b := linkedhashset.Of[int]()
+	c := treeset.Of(func(e1, e2 int) bool { return e1 < e2 })
 	isSetTests := []isSetTest{
 		{
 			input:    nil,
@@ -46,7 +46,7 @@ func TestIsSet(t *testing.T) {
 			expected: true,
 		},
 		{
-			input:    b,
+			input:    &b,
 			expected: true,
 		},
 		{
@@ -58,7 +58,7 @@ func TestIsSet(t *testing.T) {
 			expected: true,
 		},
 		{
-			input:    c,
+			input:    &c,
 			expected: true,
 		},
 	}

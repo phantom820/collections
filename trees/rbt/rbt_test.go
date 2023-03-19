@@ -567,7 +567,7 @@ func TestNodes(t *testing.T) {
 				tree.Insert(3, 3)
 				return tree
 			},
-			expected: []pair.Pair[int, int]{pair.New(1, 1), pair.New(2, 2), pair.New(3, 3)},
+			expected: []pair.Pair[int, int]{pair.Of(1, 1), pair.Of(2, 2), pair.Of(3, 3)},
 		},
 		{
 			input: func() *RedBlackTree[int, int] {
@@ -578,7 +578,7 @@ func TestNodes(t *testing.T) {
 				tree.Insert(5, 22)
 				return tree
 			},
-			expected: []pair.Pair[int, int]{pair.New(1, 1), pair.New(2, 2), pair.New(3, 3), pair.New(5, 22)},
+			expected: []pair.Pair[int, int]{pair.Of(1, 1), pair.Of(2, 2), pair.Of(3, 3), pair.Of(5, 22)},
 		},
 	}
 

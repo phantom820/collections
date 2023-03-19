@@ -1,10 +1,11 @@
+// package sets defines common set functions such as Union, Difference and Intersection for arbitray input sets. These functions do not immediately yield a Set
+// but produce a SetView which can then be materialized to a specific Set.
 package sets
 
 import (
 	"fmt"
 	"strings"
 
-	// "github.com/phantom820/collections"
 	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterable"
@@ -14,6 +15,7 @@ import (
 	"github.com/phantom820/collections/sets/treeset"
 )
 
+// Codes indicating different view types for a SetView.
 const (
 	UNION        = 0
 	INTERSECTION = 1

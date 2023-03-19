@@ -1,9 +1,11 @@
+// package hashmap defines a wrapper around a standard map to provide extended functionality.
 package hashmap
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/types/optional"
@@ -13,12 +15,16 @@ import (
 // HashMap wrapper around a map[K]V.
 type HashMap[K comparable, V any] map[K]V
 
-// New creates an empty HashMap.
-func New[K comparable, V any]() HashMap[K, V] {
-	return make(map[K]V)
+// New creates a map with the given key, value pairs.
+func New[K comparable, V any](pairs ...pair.Pair[K, V]) HashMap[K, V] {
+	var hashMap HashMap[K, V] = make(map[K]V)
+	for _, pair := range pairs {
+		hashMap.Put(pair.Key(), pair.Value())
+	}
+	return hashMap
 }
 
-// Put associates the specified value with the specified key in the map. The previously mapped value is returned.
+// Put adds a new key/value pair to the map and optionally returns previously bound value.
 func (hashMap HashMap[K, V]) Put(key K, value V) optional.Optional[V] {
 	if storedValue, ok := hashMap[key]; ok {
 		hashMap[key] = value
@@ -28,8 +34,7 @@ func (hashMap HashMap[K, V]) Put(key K, value V) optional.Optional[V] {
 	return optional.Empty[V]()
 }
 
-// PutIfAbsent associates the specified key with the given value if the key is not already mapped. Will return the
-// current value.
+// PutIfAbsent adds a new key/value pair to the map if the key is not already bounded and optionally returns bound value.
 func (hashMap HashMap[K, V]) PutIfAbsent(key K, value V) optional.Optional[V] {
 	if storedValue, ok := hashMap[key]; ok {
 		return optional.Of(storedValue)
@@ -38,7 +43,7 @@ func (hashMap HashMap[K, V]) PutIfAbsent(key K, value V) optional.Optional[V] {
 	return optional.Empty[V]()
 }
 
-// Get returns the value to which the specified key is mapped, or the zero value if the key is not present.
+// Get optionally returns the value associated with a key.
 func (hashMap HashMap[K, V]) Get(key K) optional.Optional[V] {
 	if storedValue, ok := hashMap[key]; ok {
 		return optional.Of(storedValue)
@@ -57,7 +62,7 @@ func (hashMap HashMap[K, V]) GetIf(f func(K) bool) []V {
 	return values
 }
 
-// Remove removes the mapping for the specified key from the map if present.
+// Remove removes a key from the map, returning the value associated previously with that key as an option.
 func (hashMap HashMap[K, V]) Remove(key K) optional.Optional[V] {
 	if storedValue, ok := hashMap[key]; ok {
 		delete(hashMap, key)
@@ -67,7 +72,8 @@ func (hashMap HashMap[K, V]) Remove(key K) optional.Optional[V] {
 }
 
 // RemoveIf removes all the key, value mapping in which the key matches the given predicate.
-func (hashMap HashMap[K, V]) RemoveIf(f func(K) bool) {
+func (hashMap HashMap[K, V]) RemoveIf(f func(K) bool) bool {
+	n := hashMap.Len()
 	keysToRemove := make([]K, 0)
 	for key, _ := range hashMap {
 		if f(key) {
@@ -78,6 +84,8 @@ func (hashMap HashMap[K, V]) RemoveIf(f func(K) bool) {
 	for _, key := range keysToRemove {
 		delete(hashMap, key)
 	}
+	return n != hashMap.Len()
+
 }
 
 // ContainsKey returns true if this map contains a mapping for the specified key.
@@ -125,7 +133,7 @@ func (hashMap HashMap[K, V]) Values() []V {
 	return values
 }
 
-// Len returns the number of key, value mappings in the map.
+// Len returns the size of the map.
 func (hashMap HashMap[K, V]) Len() int {
 	return len(hashMap)
 }
@@ -162,7 +170,7 @@ func (it *mapIterator[K, V]) HasNext() bool {
 	} else if !it.initialized {
 		it.initialized = true
 		for key, value := range it.hashMap {
-			it.entries = append(it.entries, pair.New(key, value))
+			it.entries = append(it.entries, pair.Of(key, value))
 		}
 	}
 	return it.index < len(it.entries)
@@ -197,4 +205,23 @@ func (hashMap HashMap[K, V]) String() string {
 	}
 	sb.WriteString("}")
 	return sb.String()
+}
+
+// Equals return true if the map is is equal to the given map. Two maps are equal if they contain the same
+// key, value pairs.
+func (hashMap HashMap[K, V]) Equals(other collections.Map[K, V], equals func(V, V) bool) bool {
+	if hashMap.Len() != other.Len() {
+		return false
+	}
+	it := other.Iterator()
+	for it.HasNext() {
+		pair := it.Next()
+		result := hashMap.Get(pair.Key())
+		if result.Empty() {
+			return false
+		} else if !equals(pair.Value(), result.Value()) {
+			return false
+		}
+	}
+	return true
 }

@@ -1,9 +1,11 @@
+// package linkedhashmap defines a map implementation in which entries are iterated in the order they were inserted.
 package linkedhashmap
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/maps/hashmap"
@@ -29,12 +31,16 @@ type LinkedHashMap[K comparable, V any] struct {
 	tail    *node[K, V]
 }
 
-// New creates an empty LinkedHashMap.
-func New[K comparable, V any]() *LinkedHashMap[K, V] {
-	return &LinkedHashMap[K, V]{hashMap: hashmap.New[K, *node[K, V]]()}
+// New creates a map with the given key, value pairs.
+func New[K comparable, V any](pairs ...pair.Pair[K, V]) *LinkedHashMap[K, V] {
+	linkedHashMap := LinkedHashMap[K, V]{hashMap: hashmap.New[K, *node[K, V]]()}
+	for _, pair := range pairs {
+		linkedHashMap.Put(pair.Key(), pair.Value())
+	}
+	return &linkedHashMap
 }
 
-// Put associates the specified value with the specified key in the map. The previously mapped value is returned.
+// Put adds a new key/value pair to the map and optionally returns previously bound value.
 func (linkedHashMap *LinkedHashMap[K, V]) Put(key K, value V) optional.Optional[V] {
 	if linkedHashMap.Empty() {
 		node := newNode(key, value)
@@ -58,8 +64,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) Put(key K, value V) optional.Optional[
 	return optional.Empty[V]()
 }
 
-// PutIfAbsent associates the specified key with the given value if the key is not already mapped. Will return the
-// current value.
+// PutIfAbsent  adds a new key/value pair to the map if the key is not already bounded and optionally returns bound value.
 func (linkedHashMap *LinkedHashMap[K, V]) PutIfAbsent(key K, value V) optional.Optional[V] {
 	if storedValue, ok := linkedHashMap.hashMap[key]; ok {
 		return optional.Of(storedValue.value)
@@ -68,7 +73,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) PutIfAbsent(key K, value V) optional.O
 	return optional.Empty[V]()
 }
 
-// Get returns the value to which the specified key is mapped, or the zero value if the key is not present.
+// Get optionally returns the value associated with a key.
 func (linkedHashMap *LinkedHashMap[K, V]) Get(key K) optional.Optional[V] {
 	node := linkedHashMap.hashMap.Get(key)
 	if node.Empty() {
@@ -89,7 +94,7 @@ func (linkedHashMap LinkedHashMap[K, V]) GetIf(f func(K) bool) []V {
 	return values
 }
 
-// Remove removes the mapping for the specified key from the map if present
+// Remove removes a key from the map, returning the value associated previously with that key as an option.
 func (linkedHashMap *LinkedHashMap[K, V]) Remove(key K) optional.Optional[V] {
 	node, ok := linkedHashMap.hashMap[key]
 	delete(linkedHashMap.hashMap, key)
@@ -121,7 +126,8 @@ func (linkedHashMap *LinkedHashMap[K, V]) Remove(key K) optional.Optional[V] {
 }
 
 // RemoveIf removes all the key, value mapping in which the key matches the given predicate.
-func (linkedHashMap *LinkedHashMap[K, V]) RemoveIf(f func(K) bool) {
+func (linkedHashMap *LinkedHashMap[K, V]) RemoveIf(f func(K) bool) bool {
+	n := linkedHashMap.Len()
 	keysToRemove := make([]K, 0)
 	for curr := linkedHashMap.head; curr != nil; curr = curr.next {
 		if f(curr.key) {
@@ -132,7 +138,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) RemoveIf(f func(K) bool) {
 	for _, key := range keysToRemove {
 		linkedHashMap.Remove(key)
 	}
-
+	return n != linkedHashMap.Len()
 }
 
 // ContainsKey returns true if this map contains a mapping for the specified key.
@@ -179,7 +185,7 @@ func (linkedHashMap *LinkedHashMap[K, V]) Values() []V {
 	return values
 }
 
-// Len returns the number of key, value mappings in the map.
+// Len returns the size of the map.
 func (linkedHashMap *LinkedHashMap[K, V]) Len() int {
 	return len(linkedHashMap.hashMap)
 }
@@ -225,13 +231,13 @@ func (it *mapIterator[K, V]) Next() pair.Pair[K, V] {
 	if !it.HasNext() {
 		panic(errors.NoSuchElement())
 	}
-	entry := pair.New(it.head.key, it.head.value)
+	entry := pair.Of(it.head.key, it.head.value)
 	it.head = it.head.next
 	return entry
 }
 
 // String returns the string representation of the map.
-func (linkedHashMap LinkedHashMap[K, V]) String() string {
+func (linkedHashMap *LinkedHashMap[K, V]) String() string {
 	var sb strings.Builder
 	if linkedHashMap.Empty() {
 		return "{}"
@@ -243,4 +249,23 @@ func (linkedHashMap LinkedHashMap[K, V]) String() string {
 	}
 	sb.WriteString("}")
 	return sb.String()
+}
+
+// Equals return true if the map is is equal to the given map. Two maps are equal if they contain the same
+// key, value pairs.
+func (linkedHashMap *LinkedHashMap[K, V]) Equals(other collections.Map[K, V], equals func(V, V) bool) bool {
+	if linkedHashMap.Len() != other.Len() {
+		return false
+	}
+	it := other.Iterator()
+	for it.HasNext() {
+		pair := it.Next()
+		result := linkedHashMap.Get(pair.Key())
+		if result.Empty() {
+			return false
+		} else if !equals(pair.Value(), result.Value()) {
+			return false
+		}
+	}
+	return true
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewListDequeue(t *testing.T) {
+func TestNewNewListDequeue(t *testing.T) {
 
 	deq := NewListDequeue[int]()
 
@@ -35,23 +35,23 @@ func TestNewVectorDequeue(t *testing.T) {
 func TestOf(t *testing.T) {
 
 	dequeTests := []struct {
-		deq      Dequeue[int]
+		deq      *Dequeue[int]
 		expected []int
 	}{
 		{
-			deq:      VectorDequeueOf[int](),
+			deq:      NewVectorDequeue[int](),
 			expected: []int{},
 		},
 		{
-			deq:      ListDequeueOf[int](),
+			deq:      NewListDequeue[int](),
 			expected: []int{},
 		},
 		{
-			deq:      VectorDequeueOf[int](1, 2),
+			deq:      NewVectorDequeue[int](1, 2),
 			expected: []int{1, 2},
 		},
 		{
-			deq:      ListDequeueOf[int](1, 2),
+			deq:      NewListDequeue[int](1, 2),
 			expected: []int{1, 2},
 		},
 	}
@@ -65,31 +65,31 @@ func TestOf(t *testing.T) {
 func TestPeekFirst(t *testing.T) {
 
 	pekkFirstTests := []struct {
-		input    Dequeue[int]
+		input    *Dequeue[int]
 		expected optional.Optional[int]
 	}{
 		{
-			input:    ListDequeueOf[int](),
+			input:    NewListDequeue[int](),
 			expected: optional.Empty[int](),
 		},
 		{
-			input:    VectorDequeueOf[int](),
+			input:    NewVectorDequeue[int](),
 			expected: optional.Empty[int](),
 		},
 		{
-			input:    ListDequeueOf[int](1),
+			input:    NewListDequeue[int](1),
 			expected: optional.Of(1),
 		},
 		{
-			input:    VectorDequeueOf[int](1),
+			input:    NewVectorDequeue[int](1),
 			expected: optional.Of(1),
 		},
 		{
-			input:    ListDequeueOf[int](1, 2, 3),
+			input:    NewListDequeue[int](1, 2, 3),
 			expected: optional.Of(1),
 		},
 		{
-			input:    VectorDequeueOf[int](1, 2, 3),
+			input:    NewVectorDequeue[int](1, 2, 3),
 			expected: optional.Of(1),
 		},
 	}
@@ -102,31 +102,31 @@ func TestPeekFirst(t *testing.T) {
 func TestPeekLast(t *testing.T) {
 
 	peekFirstTests := []struct {
-		input    Dequeue[int]
+		input    *Dequeue[int]
 		expected optional.Optional[int]
 	}{
 		{
-			input:    ListDequeueOf[int](),
+			input:    NewListDequeue[int](),
 			expected: optional.Empty[int](),
 		},
 		{
-			input:    VectorDequeueOf[int](),
+			input:    NewVectorDequeue[int](),
 			expected: optional.Empty[int](),
 		},
 		{
-			input:    ListDequeueOf[int](1),
+			input:    NewListDequeue[int](1),
 			expected: optional.Of(1),
 		},
 		{
-			input:    VectorDequeueOf[int](1),
+			input:    NewVectorDequeue[int](1),
 			expected: optional.Of(1),
 		},
 		{
-			input:    ListDequeueOf[int](1, 2, 3),
+			input:    NewListDequeue[int](1, 2, 3),
 			expected: optional.Of(3),
 		},
 		{
-			input:    VectorDequeueOf[int](1, 2, 3),
+			input:    NewVectorDequeue[int](1, 2, 3),
 			expected: optional.Of(3),
 		},
 	}
@@ -139,31 +139,31 @@ func TestPeekLast(t *testing.T) {
 func TestRemoveFirst(t *testing.T) {
 
 	removeFirstTests := []struct {
-		input    Dequeue[int]
+		input    *Dequeue[int]
 		expected []int
 	}{
 		{
-			input:    ListDequeueOf[int](),
+			input:    NewListDequeue[int](),
 			expected: []int{},
 		},
 		{
-			input:    VectorDequeueOf[int](),
+			input:    NewVectorDequeue[int](),
 			expected: []int{},
 		},
 		{
-			input:    ListDequeueOf[int](1),
+			input:    NewListDequeue[int](1),
 			expected: []int{1},
 		},
 		{
-			input:    VectorDequeueOf[int](1),
+			input:    NewVectorDequeue[int](1),
 			expected: []int{1},
 		},
 		{
-			input:    ListDequeueOf[int](1, 2, 3),
+			input:    NewListDequeue[int](1, 2, 3),
 			expected: []int{1, 2, 3},
 		},
 		{
-			input:    VectorDequeueOf[int](1, 2, 3),
+			input:    NewVectorDequeue[int](1, 2, 3),
 			expected: []int{1, 2, 3},
 		},
 	}
@@ -179,31 +179,31 @@ func TestRemoveFirst(t *testing.T) {
 func TestRemoveLast(t *testing.T) {
 
 	removeLastTests := []struct {
-		input    Dequeue[int]
+		input    *Dequeue[int]
 		expected []int
 	}{
 		{
-			input:    ListDequeueOf[int](),
+			input:    NewListDequeue[int](),
 			expected: []int{},
 		},
 		{
-			input:    VectorDequeueOf[int](),
+			input:    NewVectorDequeue[int](),
 			expected: []int{},
 		},
 		{
-			input:    ListDequeueOf[int](1),
+			input:    NewListDequeue[int](1),
 			expected: []int{1},
 		},
 		{
-			input:    VectorDequeueOf[int](1),
+			input:    NewVectorDequeue[int](1),
 			expected: []int{1},
 		},
 		{
-			input:    ListDequeueOf[int](1, 2, 3),
+			input:    NewListDequeue[int](1, 2, 3),
 			expected: []int{3, 2, 1},
 		},
 		{
-			input:    VectorDequeueOf[int](1, 2, 3),
+			input:    NewVectorDequeue[int](1, 2, 3),
 			expected: []int{3, 2, 1},
 		},
 	}
@@ -219,27 +219,27 @@ func TestRemoveLast(t *testing.T) {
 func TestAddFirst(t *testing.T) {
 
 	addFirstTests := []struct {
-		input    Dequeue[int]
+		input    *Dequeue[int]
 		elements []int
 		expected []int
 	}{
 		{
-			input:    ListDequeueOf[int](),
+			input:    NewListDequeue[int](),
 			elements: []int{},
 			expected: []int{},
 		},
 		{
-			input:    VectorDequeueOf[int](),
+			input:    NewVectorDequeue[int](),
 			elements: []int{},
 			expected: []int{},
 		},
 		{
-			input:    ListDequeueOf[int](),
+			input:    NewListDequeue[int](),
 			elements: []int{1, 2, 3, 4, 5},
 			expected: []int{5, 4, 3, 2, 1},
 		},
 		{
-			input:    VectorDequeueOf[int](),
+			input:    NewVectorDequeue[int](),
 			elements: []int{1, 2, 3, 4, 5},
 			expected: []int{5, 4, 3, 2, 1},
 		},
@@ -257,27 +257,27 @@ func TestAddFirst(t *testing.T) {
 func TestAddLast(t *testing.T) {
 
 	addLastTests := []struct {
-		input    Dequeue[int]
+		input    *Dequeue[int]
 		elements []int
 		expected []int
 	}{
 		{
-			input:    ListDequeueOf[int](),
+			input:    NewListDequeue[int](),
 			elements: []int{},
 			expected: []int{},
 		},
 		{
-			input:    VectorDequeueOf[int](),
+			input:    NewVectorDequeue[int](),
 			elements: []int{},
 			expected: []int{},
 		},
 		{
-			input:    ListDequeueOf[int](),
+			input:    NewListDequeue[int](),
 			elements: []int{1, 2, 3, 4, 5},
 			expected: []int{1, 2, 3, 4, 5},
 		},
 		{
-			input:    VectorDequeueOf[int](),
+			input:    NewVectorDequeue[int](),
 			elements: []int{1, 2, 3, 4, 5},
 			expected: []int{1, 2, 3, 4, 5},
 		},

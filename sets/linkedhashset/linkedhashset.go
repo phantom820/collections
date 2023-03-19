@@ -1,3 +1,4 @@
+// package linkedhashset defines a set implementation that is backed by a [LinkedHashMap].
 package linkedhashset
 
 import (
@@ -16,18 +17,22 @@ type LinkedHashSet[T comparable] struct {
 	linkedHashMap *linkedhashmap.LinkedHashMap[T, struct{}]
 }
 
-// New creates an empty set.
-func New[T comparable]() *LinkedHashSet[T] {
-	return &LinkedHashSet[T]{linkedhashmap.New[T, struct{}]()}
+// New creates an immutable set with the given elements.
+func New[T comparable](elements ...T) *LinkedHashSet[T] {
+	set := LinkedHashSet[T]{linkedhashmap.New[T, struct{}]()}
+	for _, e := range elements {
+		set.Add(e)
+	}
+	return &set
 }
 
-// Of creates a set with the given elements.
-func Of[T comparable](elements ...T) LinkedHashSet[T] {
+// Of creates an immutable set with the given elements.
+func Of[T comparable](elements ...T) ImmutableLinkedHashSet[T] {
 	set := LinkedHashSet[T]{linkedhashmap.New[T, struct{}]()}
 	for i := range elements {
 		set.Add(elements[i])
 	}
-	return set
+	return ImmutableLinkedHashSet[T]{linkedHashSet: set}
 }
 
 // Add adds the specified element to the set if it is not already present.
@@ -183,7 +188,7 @@ func (set *LinkedHashSet[T]) ToSlice() []T {
 
 // ImmutableCopy returns an immutable copy of the set.
 func (set *LinkedHashSet[T]) ImmutableCopy() ImmutableLinkedHashSet[T] {
-	return ImmutableOf(set.ToSlice()...)
+	return Of(set.ToSlice()...)
 }
 
 // String returns the string representation of a set.

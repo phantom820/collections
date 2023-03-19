@@ -507,7 +507,7 @@ func (tree *RedBlackTree[K, V]) nodes(node *redBlackNode[K, V], nodes []pair.Pai
 	if node.left != tree.sentinel {
 		tree.nodes(node.left, nodes, index)
 	}
-	nodes[*index] = pair.New(node.key, node.value)
+	nodes[*index] = pair.Of(node.key, node.value)
 	*index++
 	if node.right != tree.sentinel {
 		tree.nodes(node.right, nodes, index)

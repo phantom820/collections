@@ -1,3 +1,4 @@
+// package hashset defines a set implementation that is backed by a [HashMap].
 package hashset
 
 import (
@@ -16,18 +17,22 @@ type HashSet[T comparable] struct {
 	hashmap hashmap.HashMap[T, struct{}]
 }
 
-// New creates an empty set.
-func New[T comparable]() *HashSet[T] {
-	return &HashSet[T]{hashmap.New[T, struct{}]()}
+// New creates a mutable set with the given elements.
+func New[T comparable](elements ...T) *HashSet[T] {
+	set := HashSet[T]{hashmap.New[T, struct{}]()}
+	for _, e := range elements {
+		set.Add(e)
+	}
+	return &set
 }
 
-// Of creates a set with the given elements.
-func Of[T comparable](elements ...T) HashSet[T] {
+// Of creates an immutable set with the given elements.
+func Of[T comparable](elements ...T) ImmutableHashSet[T] {
 	set := HashSet[T]{hashmap.New[T, struct{}]()}
 	for i := range elements {
 		set.Add(elements[i])
 	}
-	return set
+	return ImmutableHashSet[T]{hashSet: set}
 }
 
 // Add adds the specified element to this set if it is not already present.
@@ -181,7 +186,7 @@ func (set *HashSet[T]) ToSlice() []T {
 
 // ImmutableCopy returns an immutable copy of the set.
 func (set *HashSet[T]) ImmutableCopy() ImmutableHashSet[T] {
-	return ImmutableOf(set.ToSlice()...)
+	return Of(set.ToSlice()...)
 }
 
 // String returns the string representation of a set.

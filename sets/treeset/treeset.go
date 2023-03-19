@@ -1,3 +1,4 @@
+// package treeset defines a set implementation that is backed by a [TreeMap].
 package treeset
 
 import (
@@ -11,30 +12,34 @@ import (
 	"github.com/phantom820/collections/types/pair"
 )
 
-// LinkedHashSet implementation of a set backed by a [TreeMap].
+// TreeSet implementation of a set backed by a [TreeMap].
 type TreeSet[T comparable] struct {
 	treeMap  *treemap.TreeMap[T, struct{}]
 	lessThan func(e1, e2 T) bool
 }
 
-// New creates an empty set. Elements are compared using the lessThan function which should satisfy.
+// New creates a mutable set with the given elements. Elements are compared using the lessThan function which should satisfy.
 // e1 < e2 => lessThan(e1, e2) = true and lessThan(e2,e1) = false.
 // e1 = e2 => lessThan(e1,e2) = false and lessThan(e2,e1) = false.
 // e1 > e2 -> lessThan(e1,e2) = false and lessThan(e2,e1) = true.
-func New[T comparable](lessThan func(e1, e2 T) bool) *TreeSet[T] {
-	return &TreeSet[T]{lessThan: lessThan, treeMap: treemap.New[T, struct{}](lessThan)}
+func New[T comparable](lessThan func(e1, e2 T) bool, elements ...T) *TreeSet[T] {
+	set := TreeSet[T]{lessThan: lessThan, treeMap: treemap.New[T, struct{}](lessThan)}
+	for _, e := range elements {
+		set.Add(e)
+	}
+	return &set
 }
 
-// Of creates a set with the given elements. Elements are compared using the lessThan function which should satisfy.
+// Of creates an immutable set with the given elements. Elements are compared using the lessThan function which should satisfy.
 // e1 < e2 => lessThan(e1, e2) = true and lessThan(e2,e1) = false.
 // e1 = e2 => lessThan(e1,e2) = false and lessThan(e2,e1) = false.
 // e1 > e2 -> lessThan(e1,e2) = false and lessThan(e2,e1) = true.
-func Of[T comparable](lessThan func(e1, e2 T) bool, elements ...T) TreeSet[T] {
-	set := New(lessThan)
+func Of[T comparable](lessThan func(e1, e2 T) bool, elements ...T) ImmutableTreeSet[T] {
+	set := TreeSet[T]{lessThan: lessThan, treeMap: treemap.New[T, struct{}](lessThan)}
 	for i := range elements {
 		set.Add(elements[i])
 	}
-	return *set
+	return ImmutableTreeSet[T]{treeSet: set}
 }
 
 // Add adds the specified element to this set if it is not already present.
@@ -112,7 +117,7 @@ func (set TreeSet[T]) Clear() {
 
 // ImmutableCopy returns an immutable copy of the set.
 func (set *TreeSet[T]) ImmutableCopy() ImmutableTreeSet[T] {
-	return ImmutableOf(set.lessThan, set.ToSlice()...)
+	return Of(set.lessThan, set.ToSlice()...)
 }
 
 // Contains returns true if this set contains the specified element.

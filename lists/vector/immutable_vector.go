@@ -7,16 +7,12 @@ import (
 	"github.com/phantom820/collections/errors"
 	"github.com/phantom820/collections/iterable"
 	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/types/optional"
 )
 
 // ImmutableVector an immutable version of [Vector].
 type ImmutableVector[T comparable] struct {
 	vector Vector[T]
-}
-
-// ImmutableOf creates an immutable list with the specified elements.
-func ImmutableOf[T comparable](elements ...T) ImmutableVector[T] {
-	return ImmutableVector[T]{Of(elements...)}
 }
 
 // At returns the element at the specified position in the list.
@@ -30,7 +26,7 @@ func (list ImmutableVector[T]) Contains(e T) bool {
 }
 
 // IndexOf returns the index of the first occurrence of the specified element in the list or -1 if the list does not contain the element.
-func (list ImmutableVector[T]) IndexOf(e T) int {
+func (list ImmutableVector[T]) IndexOf(e T) optional.Optional[int] {
 	return list.vector.IndexOf(e)
 }
 
@@ -142,6 +138,7 @@ func (list ImmutableVector[T]) AddSlice(s []T) bool {
 	panic(errors.UnsupportedOperation("AddSlice", "ImmutableVector"))
 }
 
+// Sort unsupported operation.
 func (list ImmutableVector[T]) Sort(less func(a, b T) bool) {
 	panic(errors.UnsupportedOperation("Sort", "ImmutableVector"))
 }

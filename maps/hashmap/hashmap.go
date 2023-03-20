@@ -71,7 +71,7 @@ func (hashMap HashMap[K, V]) Remove(key K) optional.Optional[V] {
 	return optional.Empty[V]()
 }
 
-// RemoveIf removes all the key, value mapping in which the key matches the given predicate.
+// RemoveIf removes all the key, value mapping in which the key satisfies the given predicate.
 func (hashMap HashMap[K, V]) RemoveIf(f func(K) bool) bool {
 	n := hashMap.Len()
 	keysToRemove := make([]K, 0)
@@ -169,6 +169,7 @@ func (it *mapIterator[K, V]) HasNext() bool {
 		return false
 	} else if !it.initialized {
 		it.initialized = true
+		it.entries = make([]pair.Pair[K, V], 0, len(it.hashMap))
 		for key, value := range it.hashMap {
 			it.entries = append(it.entries, pair.Of(key, value))
 		}

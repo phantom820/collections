@@ -76,7 +76,25 @@ func (set *HashSet[T]) RemoveIf(f func(T) bool) bool {
 
 // RetainAll retains only the elements in the set that are contained in the specified collection.
 func (set *HashSet[T]) RetainAll(c collections.Collection[T]) bool {
-	return set.RemoveIf(func(e T) bool { return !c.Contains(e) })
+	switch c.(type) {
+	case collections.Set[T]:
+		return set.RemoveIf(func(e T) bool { return !c.Contains(e) })
+	default:
+		{
+			otherSet := make(map[T]struct{})
+			it := c.Iterator()
+			for it.HasNext() {
+				e := it.Next()
+				if _, ok := otherSet[e]; !ok {
+					otherSet[e] = struct{}{}
+				}
+			}
+			return set.RemoveIf(func(e T) bool {
+				_, ok := otherSet[e]
+				return !ok
+			})
+		}
+	}
 }
 
 // RemoveAll removes all of the set's elements that are also contained in the specified iterable.

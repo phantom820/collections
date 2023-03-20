@@ -24,7 +24,7 @@ func newNode[K comparable, V any](key K, value V) *node[K, V] {
 	return &node[K, V]{key: key, value: value}
 }
 
-// LinkedHashMap implementation of a map with a predicatble order of iteration.
+// LinkedHashMap implementation of a map with a predictable order of iteration.
 type LinkedHashMap[K comparable, V any] struct {
 	head    *node[K, V]
 	hashMap hashmap.HashMap[K, *node[K, V]]

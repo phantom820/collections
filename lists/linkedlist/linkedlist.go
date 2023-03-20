@@ -156,6 +156,11 @@ func at[T comparable](i int, start *node[T]) *node[T] {
 func (list *LinkedList[T]) At(i int) T {
 	if i < 0 || i >= list.Len() {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
+	} else if i == 0 {
+		n := list.head.element
+		return n
+	} else if i == list.len-1 {
+		return list.tail.element
 	}
 	node := at(i, list.head)
 	return node.element
@@ -165,6 +170,14 @@ func (list *LinkedList[T]) At(i int) T {
 func (list *LinkedList[T]) Set(i int, e T) T {
 	if i < 0 || i >= list.Len() {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
+	} else if i == 0 {
+		temp := list.head.element
+		list.head.element = e
+		return temp
+	} else if i == list.len-1 {
+		temp := list.tail.element
+		list.tail.element = e
+		return temp
 	}
 	node := at(i, list.head)
 	temp := node.element
@@ -230,9 +243,9 @@ func (list *LinkedList[T]) removeFront() T {
 // removeBack removes the back node from the list.
 func (list *LinkedList[T]) removeBack() T {
 	e := list.tail.element
-	// temp := list.tail
-	list.tail = list.tail.prev
-	// temp = nil
+	prev := list.tail.prev
+	prev.next = nil
+	list.tail = prev
 	list.len = int(math.Max(0, float64(list.len-1)))
 	return e
 }
@@ -247,9 +260,9 @@ func (list *LinkedList[T]) remove(curr *node[T]) {
 		return
 	}
 	prev := curr.prev
-	prev.next = curr.next
-	curr.next = nil
-	curr.prev = nil
+	next := curr.next
+	prev.next = next
+	next.prev = prev
 	curr = nil
 	list.len = int(math.Max(0, float64(list.len-1)))
 }

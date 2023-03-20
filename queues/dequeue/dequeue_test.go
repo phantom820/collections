@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewNewListDequeue(t *testing.T) {
+func TestNewListDequeue(t *testing.T) {
 
 	deq := NewListDequeue[int]()
 
@@ -32,7 +32,7 @@ func TestNewVectorDequeue(t *testing.T) {
 
 }
 
-func TestOf(t *testing.T) {
+func TestNew(t *testing.T) {
 
 	dequeTests := []struct {
 		deq      *Dequeue[int]
@@ -47,11 +47,11 @@ func TestOf(t *testing.T) {
 			expected: []int{},
 		},
 		{
-			deq:      NewVectorDequeue[int](1, 2),
+			deq:      NewVectorDequeue(1, 2),
 			expected: []int{1, 2},
 		},
 		{
-			deq:      NewListDequeue[int](1, 2),
+			deq:      NewListDequeue(1, 2),
 			expected: []int{1, 2},
 		},
 	}

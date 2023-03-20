@@ -32,20 +32,21 @@ import (
 
 type Map[K comparable, V any] interface {
 	iterable.Iterable[pair.Pair[K, V]]
-	ContainsKey(k K) bool
-	ContainsValue(v V, f func(V, V) bool) bool
-	ForEach(f func(K, V))
-	Clear()
-	Get(k K) optional.Optional[V]
-	GetIf(f func(K) bool) []V
-	Put(k K, v V) optional.Optional[V]
-	PutIfAbsent(k K, v V) optional.Optional[V]
-	Len() int
-	Remove(k K) optional.Optional[V]
-	RemoveIf(f func(K) bool) bool
-	Keys() []K
+	ContainsKey(k K) bool                      // Returns true if the map contains a mapping for the given key.
+	ContainsValue(v V, f func(V, V) bool) bool // Returns true if any key in the map is mapped to the value.
+	ForEach(f func(K, V))                      // Perform the action f for each key, value pair in the map.
+	Clear()                                    // Clears the contents of the map.
+	Get(k K) optional.Optional[V]              // Optionally returns the value associated with a key.
+	GetIf(f func(K) bool) []V                  // Returns all values with keys that satisfy the given predicate.
+	Put(k K, v V) optional.Optional[V]         // Adds a new key/value pair to this map and optionally returns previously bound value.
+	PutIfAbsent(k K, v V) optional.Optional[V] // Adds a new key/value pair to the map if the key is not already bounded and optionally returns bound value.
+	Len() int                                  // Returns the size of the map.
+	Remove(k K) optional.Optional[V]           // Removes a key from the map, returning the value associated previously with that key as an option.
+	RemoveIf(f func(K) bool) bool              // Removes all the key, value mapping in which the key satisfies the given predicate.
+	Keys() []K                                 // Keys
 	Values() []V
 	Empty() bool
+	Equals(m Map[K, V], equals func(V, V) bool) bool
 }
 
 type Collection[T comparable] interface {
@@ -74,6 +75,16 @@ type List[T comparable] interface {
 	RemoveAt(i int) T
 	Equals(list List[T]) bool
 	Sort(less func(a, b T) bool)
+}
+
+type Queue[T comparable] interface {
+	Collection[T]
+	AddFirst(e T) optional.Optional[T]
+	AddLast(e T) optional.Optional[T]
+	PeekFirst() optional.Optional[T]
+	PeekLast() optional.Optional[T]
+	RemoveFirst() optional.Optional[T]
+	RemoveLast() optional.Optional[T]
 }
 
 type Set[T comparable] interface {

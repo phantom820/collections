@@ -43,13 +43,13 @@ func Of[T comparable](lessThan func(e1, e2 T) bool, elements ...T) ImmutableTree
 }
 
 // Add adds the specified element to this set if it is not already present.
-func (set TreeSet[T]) Add(e T) bool {
+func (set *TreeSet[T]) Add(e T) bool {
 	value := set.treeMap.Put(e, struct{}{})
 	return value.Empty()
 }
 
 // AddAll adds all of the elements in the specified iterable to the set.
-func (set TreeSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
+func (set *TreeSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
 	n := set.Len()
 	it := iterable.Iterator()
 	for it.HasNext() {
@@ -59,7 +59,7 @@ func (set TreeSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
 }
 
 // AddSlice adds all the elements in the slice to the set.
-func (set TreeSet[T]) AddSlice(s []T) bool {
+func (set *TreeSet[T]) AddSlice(s []T) bool {
 	n := set.Len()
 	for _, value := range s {
 		set.Add(value)
@@ -68,7 +68,7 @@ func (set TreeSet[T]) AddSlice(s []T) bool {
 }
 
 // Remove removes the specified element from this set if it is present.
-func (set TreeSet[T]) Remove(e T) bool {
+func (set *TreeSet[T]) Remove(e T) bool {
 	n := set.Len()
 	set.treeMap.Remove(e)
 	return n != set.Len()
@@ -82,8 +82,27 @@ func (set TreeSet[T]) RemoveIf(f func(T) bool) bool {
 }
 
 // RetainAll retains only the elements in the set that are contained in the specified collection.
-func (set TreeSet[T]) RetainAll(c collections.Collection[T]) bool {
-	return set.RemoveIf(func(e T) bool { return !c.Contains(e) })
+func (set *TreeSet[T]) RetainAll(c collections.Collection[T]) bool {
+	switch c.(type) {
+	case collections.Set[T]:
+		return set.RemoveIf(func(e T) bool { return !c.Contains(e) })
+	default:
+		{
+			otherSet := make(map[T]struct{})
+			it := c.Iterator()
+			for it.HasNext() {
+				e := it.Next()
+				if _, ok := otherSet[e]; !ok {
+					otherSet[e] = struct{}{}
+				}
+			}
+			return set.RemoveIf(func(e T) bool {
+				_, ok := otherSet[e]
+				return !ok
+			})
+		}
+	}
+
 }
 
 // RemoveAll removes all of the set's elements that are also contained in the specified iterable.

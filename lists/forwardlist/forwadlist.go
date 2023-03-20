@@ -153,6 +153,10 @@ func at[T comparable](i int, start *node[T]) *node[T] {
 func (list *ForwardList[T]) At(i int) T {
 	if i < 0 || i >= list.Len() {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
+	} else if i == 0 {
+		return list.head.element
+	} else if i == list.len-1 {
+		return list.tail.element
 	}
 	node := at(i, list.head)
 	return node.element
@@ -162,6 +166,14 @@ func (list *ForwardList[T]) At(i int) T {
 func (list *ForwardList[T]) Set(i int, e T) T {
 	if i < 0 || i >= list.Len() {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
+	} else if i == 0 {
+		temp := list.head.element
+		list.head.element = e
+		return temp
+	} else if i == list.len-1 {
+		temp := list.tail.element
+		list.tail.element = e
+		return temp
 	}
 	node := at(i, list.head)
 	temp := node.element

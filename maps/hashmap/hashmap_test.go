@@ -3,6 +3,7 @@ package hashmap
 import (
 	"testing"
 
+	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/iterator"
 	"github.com/phantom820/collections/types/optional"
 	"github.com/phantom820/collections/types/pair"
@@ -393,7 +394,7 @@ func TestEquals(t *testing.T) {
 
 	type equalsTest struct {
 		a        HashMap[int, int]
-		b        HashMap[int, int]
+		b        collections.Map[int, int]
 		expected bool
 	}
 
@@ -422,6 +423,11 @@ func TestEquals(t *testing.T) {
 			a:        New(pair.Of(2, 2), pair.Of(1, 1)),
 			b:        New(pair.Of(1, 1), pair.Of(2, 2)),
 			expected: true,
+		},
+		{
+			a:        New(pair.Of(2, 2), pair.Of(1, 1)),
+			b:        New(pair.Of(1, 2), pair.Of(2, 2)),
+			expected: false,
 		},
 	}
 

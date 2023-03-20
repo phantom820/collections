@@ -57,7 +57,7 @@ func (treeMap *TreeMap[K, V]) GetIf(f func(K) bool) []V {
 }
 
 // Remove removes a key from the map, returning the value associated previously with that key as an option.
-func (treeMap TreeMap[K, V]) Remove(key K) optional.Optional[V] {
+func (treeMap *TreeMap[K, V]) Remove(key K) optional.Optional[V] {
 	return treeMap.tree.Delete(key)
 }
 

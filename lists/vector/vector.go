@@ -277,10 +277,18 @@ func (list *Vector[T]) SubList(start int, end int) *Vector[T] {
 func (list *Vector[T]) RetainAll(c collections.Collection[T]) bool {
 	if list.Empty() {
 		return false
+	} else if sets.IsSet[T](c) {
+		return list.RemoveIf(func(t T) bool { return !c.Contains(t) })
 	}
-	// create a predicate that removes elements that are not in the passed collection.
-	// performance here is mainly affected by how the given collection performs with contains.
-	return list.RemoveIf(func(t T) bool { return !c.Contains(t) })
+	set := make(map[T]struct{})
+	it := c.Iterator()
+	for it.HasNext() {
+		set[it.Next()] = struct{}{}
+	}
+	return list.RemoveIf(func(e T) bool {
+		_, ok := set[e]
+		return !ok
+	})
 }
 
 // ForEach performs the given action for each element of the list.

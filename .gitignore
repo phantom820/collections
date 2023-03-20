@@ -1,3 +1,7 @@
 *.out
 *.txt
 *.html
+*.ipynb_checkpoints
+*.csv
+*.ipynb
+*.png

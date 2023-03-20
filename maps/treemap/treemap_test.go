@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/maps/hashmap"
+	"github.com/phantom820/collections/maps/linkedhashmap"
 	"github.com/phantom820/collections/types/optional"
 	"github.com/phantom820/collections/types/pair"
 	"github.com/stretchr/testify/assert"
@@ -542,7 +545,7 @@ func TestEquals(t *testing.T) {
 
 	type equalsTest struct {
 		a        *TreeMap[int, int]
-		b        *TreeMap[int, int]
+		b        collections.Map[int, int]
 		expected bool
 	}
 
@@ -572,6 +575,26 @@ func TestEquals(t *testing.T) {
 			a:        New(lessThan, pair.Of(2, 2), pair.Of(1, 1)),
 			b:        New(lessThan, pair.Of(1, 1), pair.Of(2, 2)),
 			expected: true,
+		},
+		{
+			a:        New(lessThan, pair.Of(2, 2), pair.Of(1, 1)),
+			b:        hashmap.New(pair.Of(1, 1), pair.Of(2, 2)),
+			expected: true,
+		},
+		{
+			a:        New(lessThan, pair.Of(2, 2)),
+			b:        hashmap.New(pair.Of(1, 1)),
+			expected: false,
+		},
+		{
+			a:        New(lessThan, pair.Of(2, 2), pair.Of(1, 1)),
+			b:        linkedhashmap.New(pair.Of(1, 1), pair.Of(2, 2)),
+			expected: true,
+		},
+		{
+			a:        New(lessThan, pair.Of(2, 1), pair.Of(1, 2)),
+			b:        linkedhashmap.New(pair.Of(1, 1), pair.Of(2, 2)),
+			expected: false,
 		},
 	}
 

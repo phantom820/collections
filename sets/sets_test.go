@@ -260,9 +260,9 @@ func TestToHashSet(t *testing.T) {
 
 	a := hashset.Of(1, 2, 3, 4)
 	b := linkedhashset.Of(5, 6, 7, 8)
-	c := Union[int](&a, &b).ToHashSet()
+	c := Union[int](&a, &b)
 
-	assert.ElementsMatch(t, []int{1, 2, 3, 4, 5, 6, 7, 8}, c.ToSlice())
+	assert.ElementsMatch(t, []int{1, 2, 3, 4, 5, 6, 7, 8}, c.ToHashSet().ToSlice())
 
 }
 
@@ -270,9 +270,9 @@ func TestToLinkedHashSet(t *testing.T) {
 
 	a := hashset.Of(1, 2, 3, 4)
 	b := linkedhashset.Of(5, 6, 7, 8)
-	c := Union[int](&a, &b).ToLinkedHashSet()
+	c := Union[int](&a, &b)
 
-	assert.ElementsMatch(t, []int{1, 2, 3, 4, 5, 6, 7, 8}, c.ToSlice())
+	assert.ElementsMatch(t, []int{1, 2, 3, 4, 5, 6, 7, 8}, c.ToLinkedHashSet().ToSlice())
 
 }
 
@@ -280,8 +280,8 @@ func TestToTreeSet(t *testing.T) {
 
 	a := hashset.Of(1, 2, 3, 4)
 	b := linkedhashset.Of(5, 6, 7, 8)
-	c := Union[int](&a, &b).ToTreeSet(func(e1, e2 int) bool { return e1 >= e2 })
+	c := Union[int](&a, &b)
 
-	assert.Equal(t, []int{8, 7, 6, 5, 4, 3, 2, 1}, c.ToSlice())
+	assert.Equal(t, []int{8, 7, 6, 5, 4, 3, 2, 1}, c.ToTreeSet(func(e1, e2 int) bool { return e1 >= e2 }).ToSlice())
 
 }

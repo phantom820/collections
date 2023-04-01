@@ -22,6 +22,8 @@ const (
 	DIFFERENCE   = 2
 )
 
+type KeySet[T comparable] map[T]struct{}
+
 // SetView an unmodifiable view of a set which is backed by other sets, this view will change as the backing sets change.
 type SetView[T comparable] struct {
 	setA collections.Set[T]
@@ -30,12 +32,12 @@ type SetView[T comparable] struct {
 }
 
 // Type return the type of set view (union, intersection , ...)
-func (setView SetView[T]) Type() int {
+func (setView *SetView[T]) Type() int {
 	return setView.view
 }
 
 // Len returns the number of elements in the set. This needs to be calculated based on the backing sets of the set view.
-func (setView SetView[T]) Len() int {
+func (setView *SetView[T]) Len() int {
 	switch setView.view {
 	case UNION:
 		return unionLen[T](setView.setA, setView.setB)
@@ -96,7 +98,7 @@ func differenceLen[T comparable](a collections.Collection[T], b collections.Coll
 }
 
 // Empty returns true if the set contains no elements. This needs to be calculated based on the backing sets.
-func (setView SetView[T]) Empty() bool {
+func (setView *SetView[T]) Empty() bool {
 	return setView.Len() == 0
 }
 
@@ -145,7 +147,7 @@ func differenceForEach[T comparable](a collections.Collection[T], b collections.
 }
 
 // ForEach performs the given action for each element of the set view.
-func (setView SetView[T]) ForEach(f func(T)) {
+func (setView *SetView[T]) ForEach(f func(T)) {
 
 	switch setView.view {
 	case UNION:
@@ -164,14 +166,14 @@ func (setView SetView[T]) ForEach(f func(T)) {
 }
 
 // ToSlice returns a slice containing all the elements in the set view.
-func (setView SetView[T]) ToSlice() []T {
+func (setView *SetView[T]) ToSlice() []T {
 	slice := make([]T, 0)
 	setView.ForEach(func(t T) { slice = append(slice, t) })
 	return slice
 }
 
 // ToHashSet returns a [HashSet] with all the elements from the set view.
-func (setView SetView[T]) ToHashSet() *hashset.HashSet[T] {
+func (setView *SetView[T]) ToHashSet() *hashset.HashSet[T] {
 	set := hashset.New[T]()
 	setView.ForEach(func(t T) {
 		set.Add(t)
@@ -180,7 +182,7 @@ func (setView SetView[T]) ToHashSet() *hashset.HashSet[T] {
 }
 
 // ToLinkedHashSet returns a [LinkedHashSet] with all the elements from the set view.
-func (setView SetView[T]) ToLinkedHashSet() *linkedhashset.LinkedHashSet[T] {
+func (setView *SetView[T]) ToLinkedHashSet() *linkedhashset.LinkedHashSet[T] {
 	set := linkedhashset.New[T]()
 	setView.ForEach(func(t T) {
 		set.Add(t)

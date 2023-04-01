@@ -79,9 +79,14 @@ type List[T comparable] interface {
 
 type Queue[T comparable] interface {
 	Collection[T]
-	AddFirst(e T) optional.Optional[T]
 	AddLast(e T) optional.Optional[T]
 	PeekFirst() optional.Optional[T]
+	RemoveFirst() optional.Optional[T]
+}
+
+type Dequeue[T comparable] interface {
+	Queue[T]
+	AddFirst(e T) optional.Optional[T]
 	PeekLast() optional.Optional[T]
 	RemoveFirst() optional.Optional[T]
 	RemoveLast() optional.Optional[T]

@@ -3,6 +3,8 @@ package hashset
 import (
 	"testing"
 
+	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/queues/vectordequeue"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -429,7 +431,7 @@ func TestRetainAll(t *testing.T) {
 
 	type retainAllTest struct {
 		a        *HashSet[int]
-		b        *HashSet[int]
+		b        collections.Collection[int]
 		expected []int
 	}
 
@@ -447,6 +449,11 @@ func TestRetainAll(t *testing.T) {
 		{
 			a:        New(1, 2, 3, 4, 5),
 			b:        New(9, 1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        vectordequeue.New(9, 1, 2, 3, 4, 5),
 			expected: []int{1, 2, 3, 4, 5},
 		},
 	}

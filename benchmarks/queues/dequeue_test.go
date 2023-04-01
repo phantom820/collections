@@ -1,4 +1,4 @@
-package queues_benchmarks
+package dequeue_benchmarks
 
 import (
 	"fmt"
@@ -6,12 +6,13 @@ import (
 	"testing"
 
 	"github.com/phantom820/collections"
-	"github.com/phantom820/collections/queues/dequeue"
+	"github.com/phantom820/collections/queues/listdequeue"
+	"github.com/phantom820/collections/queues/vectordequeue"
 )
 
 // go test -bench=./... -benchmem -benchtime=5x github.com/phantom820/collections/benchmarks/queues
 const (
-	size = 30000
+	size = 1000000
 )
 
 var (
@@ -19,7 +20,7 @@ var (
 )
 
 type constructor struct {
-	new  func(element ...int) collections.Queue[int]
+	new  func(element ...int) collections.Dequeue[int]
 	name string
 }
 
@@ -31,16 +32,16 @@ func generateData(size int) []int {
 	return data
 }
 
-func BenchmarkAddFront(b *testing.B) {
+func BenchmarkAddFirst(b *testing.B) {
 
 	constructors := []constructor{
 		{
 			name: "ListDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewListDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return listdequeue.New(elements...) },
 		},
 		{
 			name: "VectorDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewVectorDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return vectordequeue.New(elements...) },
 		},
 	}
 
@@ -65,11 +66,11 @@ func BenchmarkPeekFirst(b *testing.B) {
 	constructors := []constructor{
 		{
 			name: "ListDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewListDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return listdequeue.New(elements...) },
 		},
 		{
 			name: "VectorDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewVectorDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return vectordequeue.New(elements...) },
 		},
 	}
 
@@ -89,11 +90,11 @@ func BenchmarkRemoveFirst(b *testing.B) {
 	constructors := []constructor{
 		{
 			name: "ListDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewListDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return listdequeue.New(elements...) },
 		},
 		{
 			name: "VectorDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewVectorDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return vectordequeue.New(elements...) },
 		},
 	}
 
@@ -113,11 +114,11 @@ func BenchmarkAddLast(b *testing.B) {
 	constructors := []constructor{
 		{
 			name: "ListDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewListDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return listdequeue.New(elements...) },
 		},
 		{
 			name: "VectorDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewVectorDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return vectordequeue.New(elements...) },
 		},
 	}
 
@@ -142,11 +143,11 @@ func BenchmarkPeekLast(b *testing.B) {
 	constructors := []constructor{
 		{
 			name: "ListDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewListDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return listdequeue.New(elements...) },
 		},
 		{
 			name: "VectorDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewVectorDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return vectordequeue.New(elements...) },
 		},
 	}
 
@@ -166,11 +167,11 @@ func BenchmarkRemoveLast(b *testing.B) {
 	constructors := []constructor{
 		{
 			name: "ListDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewListDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return listdequeue.New(elements...) },
 		},
 		{
 			name: "VectorDequeue",
-			new:  func(elements ...int) collections.Queue[int] { return dequeue.NewVectorDequeue(elements...) },
+			new:  func(elements ...int) collections.Dequeue[int] { return vectordequeue.New(elements...) },
 		},
 	}
 

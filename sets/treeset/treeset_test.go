@@ -3,6 +3,8 @@ package treeset
 import (
 	"testing"
 
+	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/queues/vectordequeue"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -335,7 +337,7 @@ func TestRetainAll(t *testing.T) {
 
 	type retainAllTest struct {
 		a        *TreeSet[int]
-		b        *TreeSet[int]
+		b        collections.Collection[int]
 		expected *TreeSet[int]
 	}
 
@@ -353,6 +355,11 @@ func TestRetainAll(t *testing.T) {
 		{
 			a:        New(lessThanInt, 1, 2, 3, 4, 5),
 			b:        New(lessThanInt, 9, 1, 2, 3, 4, 5),
+			expected: New(lessThanInt, 1, 2, 3, 4, 5),
+		},
+		{
+			a:        New(lessThanInt, 1, 2, 3, 4, 5),
+			b:        vectordequeue.New(9, 1, 2, 3, 4, 5),
 			expected: New(lessThanInt, 1, 2, 3, 4, 5),
 		},
 	}

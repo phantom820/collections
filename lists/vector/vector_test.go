@@ -1,12 +1,29 @@
 package vector
 
 import (
+	"math/rand"
 	"testing"
+	"time"
 
+	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/sets/hashset"
 	"github.com/phantom820/collections/types/optional"
 	"github.com/stretchr/testify/assert"
 )
+
+func data(n int) []int {
+	data := make([]int, n)
+	for i := range data {
+		data[i] = rand.Intn(n)
+	}
+	return data
+}
+
+func shuffle(data []int) {
+	rand.NewSource(time.Now().UnixNano())
+	rand.Shuffle(len(data), func(i, j int) { data[i], data[j] = data[j], data[i] })
+}
 
 func TestNew(t *testing.T) {
 
@@ -32,8 +49,8 @@ func TestAdd(t *testing.T) {
 		},
 		{
 			input:    New[int](),
-			elements: []int{1, 2, 3},
-			expected: []int{1, 2, 3},
+			elements: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			expected: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 		},
 	}
 
@@ -169,6 +186,17 @@ func TestRemove(t *testing.T) {
 			len:      len(test.input.data),
 		})
 	}
+
+	// Bulk removal of elements.
+	data := data(1000)
+	list := New[int]()
+
+	shuffle(data)
+
+	for _, e := range data {
+		list.Remove(e)
+	}
+	assert.Equal(t, []int{}, list.ToSlice())
 
 }
 
@@ -506,7 +534,7 @@ func TestRetainAll(t *testing.T) {
 
 	type retainAllTest struct {
 		a        *Vector[int]
-		b        *Vector[int]
+		b        collections.Collection[int]
 		expected []int
 	}
 
@@ -530,6 +558,11 @@ func TestRetainAll(t *testing.T) {
 			a:        New[int](),
 			b:        New(9, 1, 2, 3, 4, 5),
 			expected: []int{},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        hashset.New(9, 1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
 		},
 	}
 
@@ -572,7 +605,7 @@ func TestRemoveAll(t *testing.T) {
 
 	type removeAllTest struct {
 		a        *Vector[int]
-		b        *Vector[int]
+		b        collections.Collection[int]
 		expected []int
 	}
 
@@ -595,6 +628,11 @@ func TestRemoveAll(t *testing.T) {
 		{
 			a:        New(1, 2, 3, 4, 5),
 			b:        New(9, 1, 2, 3, 4, 5),
+			expected: []int{},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        hashset.New(9, 1, 2, 3, 4, 5),
 			expected: []int{},
 		},
 	}

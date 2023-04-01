@@ -335,6 +335,14 @@ func (list *Vector[T]) Equals(other collections.List[T]) bool {
 func (list *Vector[T]) RemoveAt(i int) T {
 	if i < 0 || i >= list.Len() {
 		panic(errors.IndexOutOfBounds(i, list.Len()))
+	} else if i == 0 {
+		temp := list.data[i]
+		list.data = list.data[1:]
+		return temp
+	} else if i == list.Len()-1 {
+		temp := list.data[i]
+		list.data = list.data[:list.Len()-1]
+		return temp
 	}
 	temp := list.data[i]
 	list.data = removeAt(list.data, i)

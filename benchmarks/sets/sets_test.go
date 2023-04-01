@@ -14,7 +14,6 @@ import (
 )
 
 // go test -bench=./... -benchmem -benchtime=5x github.com/phantom820/collections/benchmarks/sets
-// go test -bench=./... -benchmem -benchtime=5x github.com/phantom820/collections/benchmarks/lists
 const (
 	size = 1000000
 	m    = 500000

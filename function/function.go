@@ -16,7 +16,7 @@ import (
 )
 
 // View represents a proxy for a base collection that is being transformed to derive another collectio. A view
-// is materialized when it is then converted to a specific collection.
+// is materialized when it is converted to a specific collection.
 type View[T comparable] interface {
 	iterable.Iterable[T]
 	ForEach(f func(T))

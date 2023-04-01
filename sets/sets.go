@@ -22,8 +22,6 @@ const (
 	DIFFERENCE   = 2
 )
 
-type KeySet[T comparable] map[T]struct{}
-
 // SetView an unmodifiable view of a set which is backed by other sets, this view will change as the backing sets change.
 type SetView[T comparable] struct {
 	setA collections.Set[T]
@@ -191,7 +189,7 @@ func (setView *SetView[T]) ToLinkedHashSet() *linkedhashset.LinkedHashSet[T] {
 }
 
 // ToTreeSet returns a [TreeSet] with all the elements from the set view.
-func (setView SetView[T]) ToTreeSet(lessThan func(e1, e2 T) bool) *treeset.TreeSet[T] {
+func (setView *SetView[T]) ToTreeSet(lessThan func(e1, e2 T) bool) *treeset.TreeSet[T] {
 	set := treeset.New(lessThan)
 	setView.ForEach(func(t T) {
 		set.Add(t)
@@ -200,7 +198,7 @@ func (setView SetView[T]) ToTreeSet(lessThan func(e1, e2 T) bool) *treeset.TreeS
 }
 
 // Contains returns true if the set view contains the specified element.
-func (setView SetView[T]) Contains(e T) bool {
+func (setView *SetView[T]) Contains(e T) bool {
 	switch setView.view {
 	case UNION:
 		return setView.setA.Contains(e) || setView.setB.Contains(e)
@@ -218,7 +216,7 @@ func (setView SetView[T]) Contains(e T) bool {
 }
 
 // Iterator returns an iterator over the elements in the set view.
-func (setView SetView[T]) Iterator() iterator.Iterator[T] {
+func (setView *SetView[T]) Iterator() iterator.Iterator[T] {
 	return nil
 }
 

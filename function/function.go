@@ -19,17 +19,17 @@ import (
 // is materialized when it is converted to a specific collection.
 type View[T comparable] interface {
 	iterable.Iterable[T]
-	ForEach(f func(T))
-	Filter(f func(T) bool) View[T]
-	Reduce(f func(x, y T) T) optional.Optional[T]
-	Map(f func(T) T) View[T]
-	ToVector() *vector.Vector[T]
-	ToSlice() []T
-	ToHashSet() *hashset.HashSet[T]
-	ToLinkedHashSet() *linkedhashset.LinkedHashSet[T]
-	ToTreeSet(lessThan func(k1, k2 T) bool) *treeset.TreeSet[T]
-	ToLinkedList() *linkedlist.LinkedList[T]
-	ToForwardList() *forwardlist.ForwardList[T]
+	ForEach(f func(T))                                          // Performs the given action on each element in the view.
+	Filter(f func(T) bool) View[T]                              // Returns a view with all elements that satisfy the given predicate.
+	Reduce(f func(x, y T) T) optional.Optional[T]               // Reduces the elements of the view using the associative binary function and returns result as an option.
+	Map(f func(T) T) View[T]                                    // Returns the view obtained from applying the transformation function to every element of the view.
+	ToVector() *vector.Vector[T]                                // Materializes the view to a [Vector].
+	ToSlice() []T                                               // Materializes the view to a slice.
+	ToHashSet() *hashset.HashSet[T]                             // Materializes the view to a [HashSet].
+	ToLinkedHashSet() *linkedhashset.LinkedHashSet[T]           // Materializes the view to a [LinkedHashSet].
+	ToTreeSet(lessThan func(k1, k2 T) bool) *treeset.TreeSet[T] // Materializes the view to a [TreeSet].
+	ToLinkedList() *linkedlist.LinkedList[T]                    // Materializes the view to a [LinkedList].
+	ToForwardList() *forwardlist.ForwardList[T]                 // Materializes the view to a [ForwardList].
 }
 
 // view represents a proxy of a collection that is being transformed.
@@ -50,7 +50,7 @@ func (view *view[T]) ForEach(f func(T)) {
 	}
 }
 
-// Map return the view obtained from applying the transformation function to every element of the view.
+// Map returns the view obtained from applying the transformation function to every element of the view.
 func (_view *view[T]) Map(f func(T) T) View[T] {
 	return &view[T]{
 		iterator: func() iterator.Iterator[T] {

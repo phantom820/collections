@@ -11,7 +11,6 @@ import (
 	"github.com/phantom820/collections/lists/vector"
 )
 
-// go test -bench=./... -benchmem -benchtime=5x github.com/phantom820/collections/benchmarks/lists
 const (
 	size = 1000000
 	m    = 500000

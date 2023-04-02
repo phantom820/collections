@@ -217,9 +217,7 @@ func (list *Vector[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
 			return set.Contains(e)
 		})
 	}
-	// Extra memory O(n) for map , time complexity to populate map O(n), worst case
-	// we remove at each instance assuming fixed cost k.
-	// k + k + k + k + ... + k = n*k  = O(n) (n is size of the list)
+
 	set := make(map[T]struct{})
 	it := iterable.Iterator()
 	for it.HasNext() {

@@ -10,7 +10,6 @@ import (
 	"github.com/phantom820/collections/queues/vectordequeue"
 )
 
-// go test -bench=./... -benchmem -benchtime=5x github.com/phantom820/collections/benchmarks/queues
 const (
 	size = 1000000
 )

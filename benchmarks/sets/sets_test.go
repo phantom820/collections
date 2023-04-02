@@ -13,7 +13,6 @@ import (
 	"github.com/phantom820/collections/sets/treeset"
 )
 
-// go test -bench=./... -benchmem -benchtime=5x github.com/phantom820/collections/benchmarks/sets
 const (
 	size = 1000000
 	m    = 500000

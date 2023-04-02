@@ -1,360 +1,457 @@
 package treeset
 
 import (
-	"fmt"
-	"strconv"
 	"testing"
 
-	"github.com/phantom820/collections/errors"
-	"github.com/phantom820/collections/lists/list"
-	"github.com/phantom820/collections/testutils"
-	"github.com/phantom820/collections/types"
+	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/queues/vectordequeue"
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	lessThan    = func(k1, k2 string) bool { return k1 < k2 }
+	lessThanInt = func(k1, k2 int) bool { return k1 < k2 }
+)
+
+func TestNew(t *testing.T) {
+
+	set := New(lessThan)
+	assert.NotNil(t, set)
+	assert.True(t, set.Empty())
+	assert.Equal(t, 0, set.Len())
+}
+
 func TestAdd(t *testing.T) {
 
-	s := New[types.Int]()
-	assert.Equal(t, true, s.Empty())
-
-	// Case 1 : Add with no args.
-	assert.Equal(t, false, s.Add())
-
-	// Case 2 : Add to an empty set.
-	s.Add(1)
-	assert.Equal(t, 1, s.Len())
-	assert.Equal(t, false, s.Add(1))
-	assert.Equal(t, 1, s.Len())
-	s.Add(2)
-	assert.Equal(t, 2, s.Len())
-	assert.Equal(t, true, s.Contains(1))
-	assert.Equal(t, true, s.Contains(2))
-
-	// Case 3 : Add multiple elements from another iterable.
-	s = New[types.Int]()
-	l := list.New[types.Int]()
-	for i := 0; i < 10; i++ {
-		l.Add(types.Int(i))
+	type addTest struct {
+		input    []string
+		expected *TreeSet[string]
 	}
 
-	s.AddAll(l)
-	assert.Equal(t, l.Len(), s.Len())
-
-	// should contain all the added elements
-	it := l.Iterator()
-	for it.HasNext() {
-		assert.Equal(t, true, s.Contains(it.Next()))
+	addTests := []addTest{
+		{
+			input:    []string{},
+			expected: New(lessThan),
+		},
+		{
+			input:    []string{"A", "A", "B"},
+			expected: New(lessThan, "A", "B"),
+		},
 	}
 
-	// Case 4 : Adding a slice should work accordingly.
-	s.Clear()
-
-	sl := []types.Int{1, 1, 2, 3, 4, 5}
-	s.Add(sl...)
-
-	sm := []types.Int{1, 2, 3, 4, 5}
-	assert.Equal(t, true, testutils.EqualSlices(sm, s.Collect()))
-
-	// Case 5 : Clear and add a vast colelction of values
-	s.Clear()
-	slice := []types.Int{}
-	for i := 50; i >= 0; i-- {
-		s.Add(types.Int(i))
-		slice = append(slice, types.Int(50-i))
+	f := func(values []string) TreeSet[string] {
+		set := New(lessThan)
+		for _, value := range values {
+			set.Add(value)
+		}
+		return *set
 	}
-	assert.Equal(t, true, testutils.EqualSlices(slice, s.Collect()))
 
+	for _, test := range addTests {
+		assert.Equal(t, test.expected.treeMap.Keys(), f(test.input).treeMap.Keys())
+	}
 }
 
-func TestIterator(t *testing.T) {
+func TestAddSlice(t *testing.T) {
 
-	s := New[types.Int]()
-
-	// Case 1 : Next on iterator for an empty set should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
-			}
-		}()
-		it := s.Iterator()
-		it.Next()
-	})
-	s.Add(1, 2, 3, 4, 5)
-
-	a := s.Collect()
-	b := make([]types.Int, 0)
-	it := s.Iterator()
-	for it.HasNext() {
-		b = append(b, it.Next())
+	type addSliceTest struct {
+		input    []string
+		expected *TreeSet[string]
 	}
 
-	assert.Equal(t, true, testutils.EqualSlices(a, b))
-
-	s.Clear()
-	assert.Equal(t, true, s.Empty())
-
-}
-
-func TestIteratorConcurrentModification(t *testing.T) {
-
-	s := New[types.String]()
-	for i := 1; i <= 20; i++ {
-		s.Add(types.String(strconv.Itoa(i)))
+	addSliceTests := []addSliceTest{
+		{
+			input:    []string{},
+			expected: New(lessThan),
+		},
+		{
+			input:    []string{"A", "A", "B"},
+			expected: New(lessThan, "A", "B"),
+		},
 	}
 
-	// Recovery for concurrent modifications.
-	recovery := func() {
-		if r := recover(); r != nil {
-			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
-		}
+	for _, test := range addSliceTests {
+		set := New(lessThan)
+		set.AddSlice(test.input)
+		assert.Equal(t, test.expected.treeMap.Keys(), set.treeMap.Keys())
 	}
-	// Case 1 : Put.
-	it := s.Iterator()
-	t.Run("Add while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.Add(types.String("D"))
-			it.Next()
-		}
-	})
-	// Case 2 : Remove.
-	it = s.Iterator()
-	t.Run("Remove while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.Remove(types.String("D"))
-			it.Next()
-		}
-	})
-	// Case 3 : RemoveIf.
-	it = s.Iterator()
-	t.Run("RemoveIf while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.RemoveIf(func(element types.String) bool { return element == "" })
-			it.Next()
-		}
-	})
-	// Case 3 : RetainAll.
-	it = s.Iterator()
-	t.Run("RetainAll while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.RetainAll(New[types.String]())
-			it.Next()
-		}
-	})
-	// Case 4 : Clear.
-	it = s.Iterator()
-	t.Run("Clear while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			s.Clear()
-			it.Next()
-		}
-	})
 
 }
 
 func TestRemove(t *testing.T) {
 
-	s := New[types.Int]()
-
-	assert.Equal(t, false, s.Remove(1))
-	s.Add(1)
-	assert.Equal(t, true, s.Remove(1))
-	assert.Equal(t, 0, s.Len())
-
-	l := list.New[types.Int]()
-	for i := 1; i <= 10; i++ {
-		s.Add(types.Int(i))
-		l.Add(types.Int(i))
+	type removeTest struct {
+		input           string
+		expectedSet     *TreeSet[string]
+		expectedBoolean bool
 	}
 
-	assert.Equal(t, 10, s.Len())
-	s.RemoveAll(l)
-	assert.Equal(t, 0, s.Len())
+	removeTests := []removeTest{
+		{
+			input:           "",
+			expectedSet:     New(lessThan, "A", "B", "C"),
+			expectedBoolean: false,
+		},
+		{
+			input:           "A",
+			expectedSet:     New(lessThan, "B", "C"),
+			expectedBoolean: true,
+		},
+	}
+
+	for _, test := range removeTests {
+		set := New(lessThan, "A", "B", "C")
+		assert.Equal(t, test.expectedBoolean, set.Remove(test.input))
+		assert.Equal(t, test.expectedSet.treeMap.Keys(), set.treeMap.Keys())
+	}
 
 }
 
 func TestRemoveIf(t *testing.T) {
 
-	s := New[types.Int]()
-
-	// Case 1 : RemoveIf on an empty set.
-	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
-
-	// Case 2 : RemoveIf on a set with elements but none satisfy predicates.
-	for i := 1; i <= 2000; i++ {
-		s.Add(types.Int(i))
-	}
-	assert.Equal(t, false, s.RemoveIf(func(element types.Int) bool { return element > 2000 }))
-
-	// Case 3 : RemoveIf on a set with elements and some satisfy predicate.
-	assert.Equal(t, true, s.RemoveIf(func(element types.Int) bool { return element%2 == 0 }))
-	assert.Equal(t, 1000, s.Len())
-
-}
-
-// TestUnion covers tests for Union operation.
-func TestUnion(t *testing.T) {
-
-	a := New[types.Int]()
-	b := New[types.Int]()
-
-	// Case 1 : Union of empty sets should return empty.
-	c := a.Union(b)
-	assert.Equal(t, true, c.Empty())
-
-	// Case 2 : Union of populatet set and empty set should return popuilated set.
-	a.Add(1, 2, 3)
-	c = a.Union(b)
-	assert.Equal(t, true, c.Equals(a))
-
-	// Case 3 : Union of populated sets.
-	b.Add(1, 2, 4, 5, 6)
-	d := New[types.Int](1, 2, 3, 4, 5, 6)
-
-	assert.Equal(t, true, d.Equals(a.Union(b)))
-}
-
-// TestIntersection covers tests for Intersection operation.
-func TestIntersection(t *testing.T) {
-
-	a := New[types.Int]()
-	b := New[types.Int]()
-
-	// Case 1 : Intersection of empty sets should return empty.
-	c := a.Intersection(b)
-	assert.Equal(t, true, c.Empty())
-
-	// Case 2 : Intersection of populated set and empty set should return empty set.
-	a.Add(1, 2, 3)
-	c = a.Intersection(b)
-	assert.Equal(t, true, c.Empty())
-
-	// Case 3 : Intersection of populated sets.
-	b.Add(1, 2, 4, 5, 6)
-	d := New[types.Int](1, 2)
-
-	assert.Equal(t, true, d.Equals(a.Intersection(b)))
-	assert.Equal(t, true, d.Equals(b.Intersection(a)))
-
-}
-
-func TestMap(t *testing.T) {
-
-	s := New[types.Int]()
-	for i := 0; i < 6; i++ {
-		s.Add(types.Int(i))
-	}
-	other := s.Map(func(e types.Int) types.Int { return e + 10 })
-
-	a := []types.Int{10, 11, 12, 13, 14, 15}
-	b := other.Collect()
-
-	assert.Equal(t, true, testutils.EqualSlices(a, b))
-
-}
-
-func TestFilter(t *testing.T) {
-
-	s := New[types.Int]()
-
-	for i := 0; i < 6; i++ {
-		s.Add(types.Int(i))
+	type removeIfTest struct {
+		input           *TreeSet[int]
+		expectedBoolean bool
+		expectedSet     *TreeSet[int]
 	}
 
-	c := []types.Int{0, 2, 4}
-	other := s.Filter(func(e types.Int) bool { return e%2 == 0 })
-	d := other.Collect()
+	removeIfTests := []removeIfTest{
+		{
+			input:           New(lessThanInt),
+			expectedBoolean: false,
+			expectedSet:     New(lessThanInt),
+		},
+		{
+			input:           New(lessThanInt, 2),
+			expectedBoolean: false,
+			expectedSet:     New(lessThanInt, 2),
+		},
+		{
+			input:           New(lessThanInt, 1, 2, 3, 4, 5),
+			expectedBoolean: true,
+			expectedSet:     New(lessThanInt, 2, 4),
+		},
+	}
 
-	assert.Equal(t, true, testutils.EqualSlices(c, d))
+	f := func(x int) bool {
+		return x%2 != 0
+	}
+
+	for _, test := range removeIfTests {
+		test.input.RemoveIf(f)
+		assert.Equal(t, test.expectedSet.treeMap.Keys(), test.input.treeMap.Keys())
+	}
+}
+
+func TestRemoveSlice(t *testing.T) {
+
+	type removeSliceTest struct {
+		input           *TreeSet[int]
+		slice           []int
+		expectedBoolean bool
+		expectedSet     *TreeSet[int]
+	}
+
+	removeSliceTests := []removeSliceTest{
+		{
+			input:           New(lessThanInt),
+			slice:           []int{},
+			expectedBoolean: false,
+			expectedSet:     New(lessThanInt),
+		},
+		{
+			input:           New(lessThanInt, 2),
+			slice:           []int{3},
+			expectedBoolean: false,
+			expectedSet:     New(lessThanInt, 2),
+		},
+		{
+			input:           New(lessThanInt, 1, 2, 3, 4, 5),
+			slice:           []int{2, 3, 1, 4},
+			expectedBoolean: true,
+			expectedSet:     New(lessThanInt, 5),
+		},
+	}
+
+	for _, test := range removeSliceTests {
+		test.input.RemoveSlice(test.slice)
+		assert.Equal(t, test.expectedSet.treeMap.Keys(), test.input.treeMap.Keys())
+	}
+}
+
+func TestClear(t *testing.T) {
+
+	set := New(lessThanInt, 1, 2, 3, 4, 5)
+	set.Clear()
+
+	assert.NotNil(t, set)
+	assert.True(t, set.Empty())
 
 }
 
-// TestEquals covers tests for Equals.
-func TestEquals(t *testing.T) {
+func TestContains(t *testing.T) {
 
-	s := New[types.Int]()
-	other := New[types.Int]()
-	assert.Equal(t, true, s.Equals(s))
-	assert.Equal(t, true, s.Equals(other)) // Two empty sets are equal.
+	type containsTest struct {
+		input    *TreeSet[int]
+		element  int
+		expected bool
+	}
 
-	s.Add(1)
-	assert.Equal(t, false, s.Equals(other))
-	other.Add(1)
-	assert.Equal(t, true, s.Equals(other))
-	s.Add(2)
-	other.Add(3)
-	assert.Equal(t, false, s.Equals(other))
+	containsTests := []containsTest{
+		{
+			input:    New(lessThanInt, 0, 4, 5),
+			element:  1,
+			expected: false,
+		},
+		{
+			input:    New(lessThanInt, 0, 4, 5),
+			element:  2,
+			expected: false,
+		},
+		{
+			input:    New(lessThanInt, 0, 4, 5),
+			element:  4,
+			expected: true,
+		},
+	}
+
+	for _, test := range containsTests {
+		assert.Equal(t, test.expected, test.input.Contains(test.element))
+	}
+}
+
+func TestContainsAll(t *testing.T) {
+
+	type containsAllTest struct {
+		input    *TreeSet[int]
+		elements []int
+		expected bool
+	}
+
+	containsAllTests := []containsAllTest{
+		{
+			input:    New(lessThanInt, 0, 4, 5),
+			elements: []int{},
+			expected: true,
+		},
+		{
+			input:    New(lessThanInt, 0, 4, 5),
+			elements: []int{1},
+			expected: false,
+		},
+		{
+			input:    New(lessThanInt, 0, 4, 5),
+			elements: []int{4, 5},
+			expected: true,
+		},
+		{
+			input:    New(lessThanInt, 0, 4, 5),
+			elements: []int{0, 4, 5},
+			expected: true,
+		},
+		{
+			input:    New(lessThanInt, 0, 4, 5),
+			elements: []int{3},
+			expected: false,
+		},
+		{
+			input:    New(lessThanInt, 0, 4, 5),
+			elements: []int{0, 4, 5, 8},
+			expected: false,
+		},
+	}
+
+	for _, test := range containsAllTests {
+		iterable := New(lessThanInt, test.elements...)
+		assert.Equal(t, test.expected, test.input.ContainsAll(iterable))
+	}
+}
+
+func TestAddAll(t *testing.T) {
+
+	type addAllTest struct {
+		a        *TreeSet[int]
+		b        *TreeSet[int]
+		expected *TreeSet[int]
+	}
+
+	addAllTests := []addAllTest{
+		{
+			a:        New(lessThanInt),
+			b:        New(lessThanInt, 1, 2, 3, 4, 5),
+			expected: New(lessThanInt, 1, 2, 3, 4, 5),
+		},
+		{
+			a:        New(lessThanInt, 1, 2),
+			b:        New(lessThanInt, 9, 11, 12),
+			expected: New(lessThanInt, 1, 2, 9, 11, 12),
+		},
+	}
+
+	for _, test := range addAllTests {
+		test.a.AddAll(test.b)
+		assert.Equal(t, test.expected.treeMap.Keys(), test.a.treeMap.Keys())
+	}
 
 }
 
-// TestString covers tests for String.
-func TestString(t *testing.T) {
+func TestRemoveAll(t *testing.T) {
 
-	s := New[types.Int]()
+	type removeAllTest struct {
+		a        *TreeSet[int]
+		b        *TreeSet[int]
+		expected *TreeSet[int]
+	}
 
-	assert.Equal(t, "{}", fmt.Sprint(s))
-	s.Add(1)
-	assert.Equal(t, "{1}", fmt.Sprint(s))
+	removeAllTests := []removeAllTest{
+		{
+			a:        New(lessThanInt),
+			b:        New(lessThanInt),
+			expected: New(lessThanInt),
+		},
+		{
+			a:        New(lessThanInt, 1, 2, 3, 4, 5),
+			b:        New(lessThanInt),
+			expected: New(lessThanInt, 1, 2, 3, 4, 5),
+		},
+		{
+			a:        New(lessThanInt, 1, 2, 3, 4, 5),
+			b:        New(lessThanInt, 9, 1, 2),
+			expected: New(lessThanInt, 3, 4, 5),
+		},
+		{
+			a:        New(lessThanInt, 1, 2, 3, 4, 5),
+			b:        New(lessThanInt, 9, 1, 2, 3, 4, 5),
+			expected: New(lessThanInt),
+		},
+	}
+
+	for _, test := range removeAllTests {
+		test.a.RemoveAll(test.b)
+		assert.Equal(t, test.expected.treeMap.Keys(), test.a.treeMap.Keys())
+	}
 
 }
 
 func TestRetainAll(t *testing.T) {
 
-	a := New[types.Int](1, 2, 3, 4)
-	b := New[types.Int](2, 4, 7, 8, 9)
+	type retainAllTest struct {
+		a        *TreeSet[int]
+		b        collections.Collection[int]
+		expected *TreeSet[int]
+	}
 
-	a.RetainAll(b)
-	assert.Equal(t, 2, a.Len())
+	retainAllTests := []retainAllTest{
+		{
+			a:        New(lessThanInt, 1, 2, 3, 4, 5),
+			b:        New(lessThanInt),
+			expected: New(lessThanInt),
+		},
+		{
+			a:        New(lessThanInt, 1, 2, 3, 4, 5),
+			b:        New(lessThanInt, 9, 1, 2),
+			expected: New(lessThanInt, 1, 2),
+		},
+		{
+			a:        New(lessThanInt, 1, 2, 3, 4, 5),
+			b:        New(lessThanInt, 9, 1, 2, 3, 4, 5),
+			expected: New(lessThanInt, 1, 2, 3, 4, 5),
+		},
+		{
+			a:        New(lessThanInt, 1, 2, 3, 4, 5),
+			b:        vectordequeue.New(9, 1, 2, 3, 4, 5),
+			expected: New(lessThanInt, 1, 2, 3, 4, 5),
+		},
+	}
+
+	for _, test := range retainAllTests {
+		test.a.RetainAll(test.b)
+		assert.Equal(t, test.expected.treeMap.Keys(), test.a.treeMap.Keys())
+	}
 
 }
 
-func TestLeftSubset(t *testing.T) {
+func TestForEach(t *testing.T) {
 
-	s := New[types.Int](1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	set := New(lessThanInt, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	sum := 0
 
-	// Case 1 : LeftSubset non inclusive.
-	subset := s.LeftSubset(4, false)
-	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3}, subset.Collect()))
+	set.ForEach(func(i int) { sum = sum + i })
 
-	// Case 2 : LeftSubset inclusive.
-	subset = s.LeftSubset(4, true)
-	assert.Equal(t, true, testutils.EqualSlices([]types.Int{1, 2, 3, 4}, subset.Collect()))
+	assert.Equal(t, 55, sum)
+}
+
+func TestEquals(t *testing.T) {
+
+	type equalsTest struct {
+		a        *TreeSet[int]
+		b        *TreeSet[int]
+		expected bool
+	}
+
+	equalsTests := []equalsTest{
+		{
+			a:        New(lessThanInt),
+			b:        New(lessThanInt),
+			expected: true,
+		},
+		{
+			a:        New(lessThanInt, 1, 2),
+			b:        New(lessThanInt),
+			expected: false,
+		},
+		{
+			a:        New(lessThanInt, 1, 2),
+			b:        New(lessThanInt, 2, 1),
+			expected: true,
+		},
+		{
+			a:        New(lessThanInt, 1, 2, 3),
+			b:        New(lessThanInt, 10, 12, 14),
+			expected: false,
+		},
+	}
+
+	for _, test := range equalsTests {
+		assert.Equal(t, test.expected, test.a.Equals(test.b))
+		assert.Equal(t, test.expected, test.b.Equals(test.a))
+
+	}
+
+	identity := New(lessThanInt)
+	assert.True(t, identity.Equals(identity))
 
 }
 
-func TestRightSubset(t *testing.T) {
+func TestToSlice(t *testing.T) {
 
-	s := New[types.Int](1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	type toSliceTest struct {
+		input    *TreeSet[int]
+		expected []int
+	}
 
-	// Case 1 : RightSubset non inclusive.
-	subset := s.RightSubset(4, false)
-	assert.Equal(t, true, testutils.EqualSlices([]types.Int{5, 6, 7, 8, 9, 10}, subset.Collect()))
+	toSliceTests := []toSliceTest{
+		{
+			input:    New[int](lessThanInt),
+			expected: []int{},
+		},
+		{
+			input:    New(lessThanInt, 1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    New(lessThanInt, 1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+	}
 
-	// Case 2 : RightSubset inclusive.
-	subset = s.RightSubset(4, true)
-	assert.Equal(t, true, testutils.EqualSlices([]types.Int{4, 5, 6, 7, 8, 9, 10}, subset.Collect()))
-
+	for _, test := range toSliceTests {
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
 }
 
-func TestSubset(t *testing.T) {
+func TestString(t *testing.T) {
 
-	s := New[types.Int](1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-
-	// Case 1 : Subset with open ends.
-	subset := s.Subset(2, false, 6, false)
-	assert.Equal(t, true, testutils.EqualSlices([]types.Int{3, 4, 5}, subset.Collect()))
-
-	// Case 2 : Subset with left closed end and right open.
-	subset = s.Subset(2, true, 6, false)
-	assert.Equal(t, true, testutils.EqualSlices([]types.Int{2, 3, 4, 5}, subset.Collect()))
-
-	// Case 3 : Subset with left open end and right closed.
-	subset = s.Subset(2, false, 6, true)
-	assert.Equal(t, true, testutils.EqualSlices([]types.Int{3, 4, 5, 6}, subset.Collect()))
-
+	assert.Equal(t, "{}", New(lessThanInt).String())
+	assert.Equal(t, "{1, 2, 3}", New(lessThanInt, 1, 2, 3).String())
 }

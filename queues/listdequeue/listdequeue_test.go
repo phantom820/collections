@@ -1,192 +1,370 @@
 package listdequeue
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/phantom820/collections/errors"
-	"github.com/phantom820/collections/lists/forwardlist"
-	"github.com/phantom820/collections/testutils"
-	"github.com/phantom820/collections/types"
-
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/lists/linkedlist"
+	"github.com/phantom820/collections/types/optional"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAdd(t *testing.T) {
+func data(n int) []int {
+	data := make([]int, n)
+	for i := range data {
+		data[i] = i + 1
+	}
+	return data
+}
 
-	q := New[types.Int]()
+func TestNew(t *testing.T) {
 
-	// Case 1 : Add with no alements
-	assert.Equal(t, false, q.Add())
-	assert.Equal(t, true, q.Empty())
+	deq := New[int]()
 
-	// Case 2 : Add individual elements.
-	q.Add(1)
-	assert.Equal(t, false, q.Empty())
-	assert.Equal(t, 1, q.Len())
-	assert.Equal(t, true, q.Contains(1))
-	q.Add(2)
-	assert.Equal(t, true, q.Contains(2))
+	assert.NotNil(t, deq)
+	assert.NotNil(t, deq.list)
+	_, ok := deq.list.(*linkedlist.LinkedList[int])
+	assert.True(t, ok)
+	assert.True(t, deq.Empty())
+}
 
-	l := forwardlist.New[types.Int](3, 4, 5, 6, 7, 8, 9, 10)
+func TestPeekFirst(t *testing.T) {
 
-	// Case 3 : Add a number of elements at once.
-	q.AddAll(l)
-	assert.Equal(t, 10, q.Len())
+	pekkFirstTests := []struct {
+		input    *ListDequeue[int]
+		expected optional.Optional[int]
+	}{
+		{
+			input:    New[int](),
+			expected: optional.Empty[int](),
+		},
+		{
+			input:    New(1),
+			expected: optional.Of(1),
+		},
+		{
+			input:    New(1, 2, 3),
+			expected: optional.Of(1),
+		},
+	}
 
-	// Case 4 : Adding a slice should work accordingly
-	q.Clear()
+	for _, test := range pekkFirstTests {
+		assert.Equal(t, test.expected, test.input.PeekFirst())
+	}
+}
 
-	s := []types.Int{1, 2, 3, 4}
-	q.Add(s...)
+func TestPeekLast(t *testing.T) {
 
-	assert.Equal(t, true, testutils.EqualSlices(s, q.Collect()))
+	peekFirstTests := []struct {
+		input    *ListDequeue[int]
+		expected optional.Optional[int]
+	}{
+		{
+			input:    New[int](),
+			expected: optional.Empty[int](),
+		},
+		{
+			input:    New(1),
+			expected: optional.Of(1),
+		},
+		{
+			input:    New(1, 2, 3),
+			expected: optional.Of(3),
+		},
+	}
+
+	for _, test := range peekFirstTests {
+		assert.Equal(t, test.expected, test.input.PeekLast())
+	}
+}
+
+func TestAddFirst(t *testing.T) {
+
+	addFirstTests := []struct {
+		input    *ListDequeue[int]
+		elements []int
+		expected []int
+	}{
+		{
+			input:    New[int](),
+			elements: []int{},
+			expected: []int{},
+		},
+		{
+			input:    New[int](),
+			elements: []int{1, 2, 3, 4, 5},
+			expected: []int{5, 4, 3, 2, 1},
+		},
+	}
+
+	for _, test := range addFirstTests {
+		for _, e := range test.elements {
+			test.input.AddFirst(e)
+		}
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
 
 }
 
-func TestFront(t *testing.T) {
+func TestAddLast(t *testing.T) {
 
-	q := New[types.Int]()
+	addLastTests := []struct {
+		input    *ListDequeue[int]
+		elements []int
+		expected []int
+	}{
+		{
+			input:    New[int](),
+			elements: []int{},
+			expected: []int{},
+		},
+		{
+			input:    New[int](),
+			elements: []int{1, 2, 3, 4, 5},
+			expected: []int{1, 2, 3, 4, 5},
+		},
+	}
 
-	// Case 1 : Front on an empty queue should paanic
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
-			}
-		}()
-		q.Front()
-	})
+	for _, test := range addLastTests {
+		for _, e := range test.elements {
+			test.input.AddLast(e)
+		}
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
 
-	// Case 2 : Front and RemoveFront should behave accordingly.
-	q.Add(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+}
 
-	assert.Equal(t, types.Int(1), q.Front())
-	assert.Equal(t, types.Int(1), q.RemoveFront())
-	assert.Equal(t, types.Int(2), q.RemoveFront())
-	assert.Equal(t, types.Int(3), q.RemoveFront())
+func TestRemoveFirst(t *testing.T) {
 
-	q.Clear()
-	assert.Equal(t, true, q.Empty())
+	queue := New[int]()
+	data := data(1000)
 
-	// Case 3 : RemoveFront should panic on an empty queue
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
-			}
-		}()
-		q.RemoveFront()
-	})
+	for _, e := range data {
+		queue.AddLast(e)
+	}
 
+	for _, e := range data {
+		assert.Equal(t, e, queue.RemoveFirst().Value())
+	}
+
+	assert.True(t, queue.Empty())
+
+}
+
+func TestRemoveLast(t *testing.T) {
+
+	queue := New[int]()
+	data := data(1000)
+
+	for _, e := range data {
+		queue.AddFirst(e)
+	}
+
+	for _, e := range data {
+		assert.Equal(t, e, queue.RemoveLast().Value())
+	}
+
+	assert.True(t, queue.Empty())
+	assert.Equal(t, optional.Empty[int](), queue.RemoveFirst())
+
+}
+
+func TestContains(t *testing.T) {
+
+	type containsTest struct {
+		input    *ListDequeue[int]
+		element  int
+		expected bool
+	}
+
+	containsTests := []containsTest{
+		{
+			input:    New(0, 4, 5),
+			element:  1,
+			expected: false,
+		},
+		{
+			input:    New(0, 4, 5),
+			element:  2,
+			expected: false,
+		},
+		{
+			input:    New(0, 4, 5),
+			element:  4,
+			expected: true,
+		},
+		{
+			input:    New[int](),
+			element:  4,
+			expected: false,
+		},
+	}
+
+	for _, test := range containsTests {
+		assert.Equal(t, test.expected, test.input.Contains(test.element))
+	}
 }
 
 func TestIterator(t *testing.T) {
 
-	q := New[types.Int]()
-
-	// Case 1 : Next on empty queue should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
-			}
-		}()
-		it := q.Iterator()
-		it.Next()
-	})
-
-	// Case 2 : Iterator should work accordingly on populated queue.
-	q.Add(1, 2, 3, 4, 5)
-
-	a := q.Collect()
-	b := make([]types.Int, 0)
-
-	it := q.Iterator()
-	for it.HasNext() {
-		b = append(b, it.Next())
+	type iteratorTest struct {
+		input    *ListDequeue[int]
+		expected []int
 	}
 
-	assert.Equal(t, true, testutils.EqualSlices(a, b))
+	iteratorTests := []iteratorTest{
+		{
+			input:    New[int](),
+			expected: []int{},
+		},
+		{
+			input:    New(1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    New(1),
+			expected: []int{1},
+		},
+	}
+
+	iterate := func(it iterator.Iterator[int]) []int {
+		data := make([]int, 0)
+		for it.HasNext() {
+			data = append(data, it.Next())
+		}
+		return data
+	}
+
+	for _, test := range iteratorTests {
+		assert.Equal(t, test.expected, iterate(test.input.Iterator()))
+	}
+}
+
+func TestAddSlice(t *testing.T) {
+
+	type addSliceTest struct {
+		input    *ListDequeue[int]
+		elements []int
+		expected []int
+	}
+
+	addSliceTests := []addSliceTest{
+		{
+			input:    New[int](),
+			elements: []int{1},
+			expected: []int{1},
+		},
+		{
+			input:    New[int](),
+			elements: []int{1, 2, 3},
+			expected: []int{1, 2, 3},
+		},
+	}
+
+	for _, test := range addSliceTests {
+		test.input.AddSlice(test.elements)
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
 
 }
 
-func TestRemove(t *testing.T) {
+func TestAddAll(t *testing.T) {
 
-	q := New[types.Int]()
+	type addAllTest struct {
+		a        *ListDequeue[int]
+		b        *ListDequeue[int]
+		expected []int
+	}
 
-	// Case 1 : Removing from empty.
-	assert.Equal(t, false, q.Remove(22))
+	addAllTests := []addAllTest{
+		{
+			a:        New[int](),
+			b:        New(1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			a:        New(1, 2),
+			b:        New(9, 11, 12),
+			expected: []int{1, 2, 9, 11, 12},
+		},
+	}
 
-	// Case 2 : Removing from poplated.
-	q.Add(1, 2, 4, 5)
-	assert.Equal(t, true, q.Remove(5))
+	for _, test := range addAllTests {
+		test.a.AddAll(test.b)
+		assert.Equal(t, test.expected, test.a.ToSlice())
+	}
 
-	l := forwardlist.New[types.Int](1, 2)
+}
 
-	// Case 3 : Removing multiple elements at once.
-	q.RemoveAll(l)
-	assert.Equal(t, 1, q.Len())
+func TestClear(t *testing.T) {
+
+	queue := New(1, 2, 3, 4, 5)
+	queue.Clear()
+
+	assert.NotNil(t, queue)
+	assert.True(t, queue.Empty())
+
+}
+
+func TestForEach(t *testing.T) {
+
+	// Empty dequeue.
+	queue := New[int]()
+	sum := 0
+	queue.ForEach(func(i int) { sum = sum + i })
+	assert.Equal(t, 0, sum)
+
+	// Dequeue with elements.
+	queue = New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	sum = 0
+	queue.ForEach(func(i int) { sum = sum + i })
+	assert.Equal(t, 55, sum)
 
 }
 
 func TestString(t *testing.T) {
 
-	q := New[types.Int](1, 2, 3)
-	assert.Equal(t, "[1 2 3]", fmt.Sprint(q))
-
+	assert.Equal(t, "[]", New[int]().String())
+	assert.Equal(t, "[1]", New(1).String())
+	assert.Equal(t, "[1 2]", New(1, 2).String())
 }
 
-func TestBack(t *testing.T) {
+func TestEquals(t *testing.T) {
 
-	q := New[types.Int]()
+	type equalsTest struct {
+		a        *ListDequeue[int]
+		b        *ListDequeue[int]
+		expected bool
+	}
 
-	// Case 1 : Back on an empty queue should paanic
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
-			}
-		}()
-		q.Back()
-	})
+	equalsTests := []equalsTest{
+		{
+			a:        New[int](),
+			b:        New[int](),
+			expected: true,
+		},
+		{
+			a:        New(1, 2),
+			b:        New[int](),
+			expected: false,
+		},
+		{
+			a:        New(1, 2),
+			b:        New(1, 2),
+			expected: true,
+		},
+		{
+			a:        New(1, 2, 3),
+			b:        New(10, 12, 14),
+			expected: false,
+		},
+	}
 
-	// Case 2 : Back and RemoveBack should behave accordingly.
-	q.Add(1, 2, 3, 4, 5)
+	for _, test := range equalsTests {
+		assert.True(t, test.a.Equals(test.a))
+		assert.Equal(t, test.expected, test.a.Equals(test.b))
+		assert.Equal(t, test.expected, test.b.Equals(test.a))
 
-	assert.Equal(t, types.Int(5), q.Back())
-	assert.Equal(t, types.Int(5), q.RemoveBack())
-	assert.Equal(t, types.Int(4), q.Back())
-	assert.Equal(t, types.Int(4), q.RemoveBack())
-
-	q.Clear()
-	assert.Equal(t, true, q.Empty())
-
-	// Case 3 : RemoveFront should panic on an empty queue
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
-			}
-		}()
-		q.RemoveBack()
-	})
-
-}
-
-func TestAddFront(t *testing.T) {
-
-	q := New[types.Int]()
-
-	// Case 1: Add front for an empty dequeue.
-	q.AddFront(23)
-	assert.Equal(t, types.Int(23), q.Front())
-
-	// Case 2 : Add front to already populated dequeue.
-	q.AddFront(1)
-	assert.Equal(t, types.Int(1), q.Front())
-
-	q.AddFront(1, 2, 3)
-	assert.Equal(t, types.Int(3), q.Front())
+	}
 
 }

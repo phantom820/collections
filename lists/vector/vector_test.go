@@ -1,544 +1,846 @@
 package vector
 
 import (
-	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
-	"github.com/phantom820/collections/errors"
-	"github.com/phantom820/collections/lists/forwardlist"
-	"github.com/phantom820/collections/testutils"
-	"github.com/phantom820/collections/types"
-
+	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/sets/hashset"
+	"github.com/phantom820/collections/types/optional"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddFront(t *testing.T) {
-
-	l := New[types.Int]()
-
-	// Case 1 : Front on an empty list should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
-			}
-		}()
-		l.Front()
-	})
-
-	// Case 2 : Add front to an empty list.
-	assert.Equal(t, true, l.Empty())
-	l.AddFront(1)
-	assert.Equal(t, 1, l.Len())
-	assert.Equal(t, types.Int(1), l.Front())
-
-	// Case 3 : Add front to a populated list.
-	l.AddFront(2)
-	assert.Equal(t, 2, l.Len())
-	assert.Equal(t, types.Int(2), l.Front())
-
+func data(n int) []int {
+	data := make([]int, n)
+	for i := range data {
+		data[i] = rand.Intn(n)
+	}
+	return data
 }
 
+func shuffle(data []int) {
+	rand.NewSource(time.Now().UnixNano())
+	rand.Shuffle(len(data), func(i, j int) { data[i], data[j] = data[j], data[i] })
+}
+
+func TestNew(t *testing.T) {
+
+	list := New[string]()
+	assert.NotNil(t, list)
+	assert.True(t, list.Empty())
+	assert.Equal(t, 0, list.Len())
+
+}
 func TestAdd(t *testing.T) {
 
-	v := New[types.Int]()
-
-	// Case 1 : Add individual elements.
-	assert.Equal(t, true, v.Empty())
-	v.Add(1)
-	assert.Equal(t, false, v.Empty())
-	assert.Equal(t, 1, v.Len())
-	assert.Equal(t, true, v.Contains(1))
-	v.Add(2)
-	assert.Equal(t, true, v.Contains(2))
-
-	l := forwardlist.New[types.Int](3, 4, 5, 6, 7, 8, 9, 10)
-
-	// Case 2 : Add a number of elements at once.
-	v.AddAll(l)
-	assert.Equal(t, 10, v.Len())
-
-	// Case 3 : Adding a slice should work accordingly
-	v.Clear()
-	s := []types.Int{1, 2, 3, 4}
-	v.Add(s...)
-
-	assert.ElementsMatch(t, s, v.Collect())
-
-}
-
-func TestIterator(t *testing.T) {
-
-	v := New[types.Int]()
-
-	// Case 1 : Next on empty vector should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
-			}
-		}()
-		it := v.Iterator()
-		it.Next()
-	})
-
-	// Case 2 : Iterator should work accordingly on populated queue.
-	v.Add(1, 2, 3, 4, 5)
-
-	a := v.Collect()
-	b := make([]types.Int, 0)
-
-	it := v.Iterator()
-	for it.HasNext() {
-		b = append(b, it.Next())
-	}
-	assert.ElementsMatch(t, a, b)
-
-}
-
-func TestIteratorConcurrentModification(t *testing.T) {
-
-	v := New[types.String]()
-	for i := 1; i <= 20; i++ {
-		v.Add(types.String(fmt.Sprint(i)))
+	type addTest struct {
+		input    *Vector[int]
+		elements []int
+		expected []int
 	}
 
-	// Recovery for concurrent modifications.
-	recovery := func() {
-		if r := recover(); r != nil {
-			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
-		}
+	addTests := []addTest{
+		{
+			input:    New[int](),
+			elements: []int{1},
+			expected: []int{1},
+		},
+		{
+			input:    New[int](),
+			elements: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			expected: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+		},
 	}
-	// Case 1 : Add.
-	it := v.Iterator()
-	t.Run("Add while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			v.Add(types.String("D"))
-			it.Next()
+
+	for _, test := range addTests {
+		for _, element := range test.elements {
+			test.input.Add(element)
 		}
-	})
-	// Case 2 : AddFront.
-	it = v.Iterator()
-	t.Run("AddFront while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			v.AddFront(types.String("D"))
-			it.Next()
-		}
-	})
-	// Case 3 : RemoveFront.
-	it = v.Iterator()
-	t.Run("RemoveFront while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			v.RemoveFront()
-			it.Next()
-		}
-	})
-	// Case 4 : RemoveBack.
-	it = v.Iterator()
-	t.Run("RemoveBack while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			v.RemoveBack()
-			it.Next()
-		}
-	})
-	// Case 5 : Remove.
-	it = v.Iterator()
-	t.Run("Remove while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			v.Remove()
-			it.Next()
-		}
-	})
-	// Case 6 : RemoveAt.
-	it = v.Iterator()
-	t.Run("RemoveAt while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			v.RemoveAt(0)
-			it.Next()
-		}
-	})
-	// Case 7 : Swap.
-	it = v.Iterator()
-	t.Run("Swap while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			v.Swap(0, 1)
-			it.Next()
-		}
-	})
-	// Case 8 : Reverse.
-	it = v.Iterator()
-	t.Run("Reverse while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			v.Reverse()
-			it.Next()
-		}
-	})
-	// Case 9 : Clear.
-	it = v.Iterator()
-	t.Run("Clear while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			v.Clear()
-			it.Next()
-		}
-	})
-	// Case 10 : Sort.
-	it = v.Iterator()
-	t.Run("Sort while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			Sort(v)
-			it.Next()
-		}
-	})
-	// Case 11 : SortBy.
-	it = v.Iterator()
-	t.Run("SortBy while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			SortBy(v, func(a, b types.String) bool { return a < b })
-			it.Next()
-		}
-	})
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
 }
 
-func TestRemove(t *testing.T) {
+func TestAddSlice(t *testing.T) {
 
-	v := New[types.Int]()
+	type addSliceTest struct {
+		input    *Vector[int]
+		elements []int
+		expected []int
+	}
 
-	// Case 1 : Removing from empty.
-	assert.Equal(t, false, v.Remove(22))
+	addSliceTests := []addSliceTest{
+		{
+			input:    New[int](),
+			elements: []int{1},
+			expected: []int{1},
+		},
+		{
+			input:    New[int](),
+			elements: []int{1, 2, 3},
+			expected: []int{1, 2, 3},
+		},
+	}
 
-	// Case 2 : Removing from poplated.
-	v.Add(1, 2, 4, 5)
-
-	assert.Equal(t, true, v.Remove(5))
-	assert.Equal(t, false, v.Contains(5))
-
-	// Case 3 : Removing multiple elements at once.
-	l := forwardlist.New[types.Int](1, 2)
-	v.RemoveAll(l)
-	assert.Equal(t, 1, v.Len())
-
-}
-
-func TestSwap(t *testing.T) {
-
-	l := New[types.Int]()
-
-	// Case 1 : Swapping out of bounds should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
-			}
-		}()
-		l.Swap(-1, 0)
-	})
-
-	// Case 2 : Swapping at legal index.
-	l.Add(2, 3, 4, 5, 10)
-
-	l.Swap(0, 1)
-	assert.Equal(t, types.Int(3), l.Front())
-	l.Swap(2, 3)
-	l.Swap(1, 0)
-	assert.Equal(t, types.Int(5), l.At(2))
-	l.Swap(0, l.Len()-1)
-	assert.Equal(t, types.Int(10), l.At(0))
-	l.Swap(l.Len()-1, 0)
-	assert.Equal(t, types.Int(10), l.At(l.Len()-1))
-
-}
-
-func TestReverse(t *testing.T) {
-
-	l := New[types.Int](1, 2, 3)
-
-	// Case 1 : Reverse a list with odd number of elements.
-	l.Reverse()
-	assert.Equal(t, true, testutils.EqualSlices([]types.Int{3, 2, 1}, l.Collect()))
-	assert.Equal(t, types.Int(3), l.Front())
-	assert.Equal(t, types.Int(1), l.Back())
-
-	// Case 2 : Reverse a list with an even number of elements.
-	l.Add(4, 5, 6)
-	l.Reverse()
-	assert.Equal(t, true, testutils.EqualSlices([]types.Int{6, 5, 4, 1, 2, 3}, l.Collect()))
-	assert.Equal(t, types.Int(6), l.Front())
-	assert.Equal(t, types.Int(3), l.Back())
+	for _, test := range addSliceTests {
+		test.input.AddSlice(test.elements)
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
 
 }
 
 func TestAddAt(t *testing.T) {
 
-	v := New[types.Int]()
+	type addAtTest struct {
+		input    *Vector[int]
+		index    int
+		value    int
+		expected []int
+	}
 
-	// Case 1 : Next on empty vector should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
-			}
-		}()
-		v.AddAt(0, 0)
-	})
+	addAtTests := []addAtTest{
+		{
+			input:    New(1),
+			index:    0,
+			value:    -1,
+			expected: []int{-1, 1},
+		},
+		{
+			input:    New(1, 2, 3),
+			index:    1,
+			value:    -2,
+			expected: []int{1, -2, 2, 3},
+		},
+		{
+			input:    New(1, 2, 3),
+			index:    2,
+			value:    4,
+			expected: []int{1, 2, 3, 4},
+		},
+	}
 
-	// Case 2 : Should work accordinglt in valid indices.
-	v.Add(1, 2, 3)
-	v.AddAt(0, -1)
-	assert.Equal(t, types.Int(-1), v.data[0])
-	v.AddAt(v.Len()-1, 22)
-	assert.Equal(t, types.Int(22), v.data[v.Len()-2])
-	v.AddAt(2, 23)
-	assert.Equal(t, types.Int(23), v.At(2))
+	for _, test := range addAtTests {
+		test.input.AddAt(test.index, test.value)
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
+}
+
+func TestRemove(t *testing.T) {
+
+	type output struct {
+		elements []int
+		len      int
+		modified bool
+	}
+
+	type removeTest struct {
+		input    *Vector[int]
+		element  int
+		expected output
+	}
+
+	removeTests := []removeTest{
+		{
+			input:   New[int](),
+			element: 1,
+			expected: output{
+				elements: []int{},
+				len:      0,
+				modified: false,
+			},
+		},
+		{
+			input:   New(1, 2, 3, 4),
+			element: 1,
+			expected: output{
+				elements: []int{2, 3, 4},
+				len:      3,
+				modified: true,
+			},
+		},
+		{
+			input:   New(1, 2, 3, 4),
+			element: 2,
+			expected: output{
+				elements: []int{1, 3, 4},
+				len:      3,
+				modified: true,
+			},
+		},
+		{
+			input:   New(1, 2, 3, 4),
+			element: 4,
+			expected: output{
+				elements: []int{1, 2, 3},
+				len:      3,
+				modified: true,
+			},
+		},
+	}
+
+	for _, test := range removeTests {
+		assert.Equal(t, test.expected, output{
+			modified: test.input.Remove(test.element),
+			elements: test.input.ToSlice(),
+			len:      len(test.input.data),
+		})
+	}
+
+	// Bulk removal of elements.
+	data := data(1000)
+	list := New[int]()
+
+	shuffle(data)
+
+	for _, e := range data {
+		list.Remove(e)
+	}
+	assert.Equal(t, []int{}, list.ToSlice())
 
 }
 
 func TestRemoveAt(t *testing.T) {
 
-	v := New[types.Int]()
+	type output struct {
+		elements []int
+		len      int
+		element  int
+	}
 
-	// Case 1 : RemoveAt on empty list should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
-			}
-		}()
-		v.RemoveAt(0)
-	})
+	type removeAtTest struct {
+		input    *Vector[int]
+		index    int
+		expected output
+	}
 
-	// Case 2 : Should work accordinglt in valid indices.
-	v.Add(1, 2, 3, 5, 6)
-	assert.Equal(t, types.Int(1), v.RemoveAt(0))
-	assert.Equal(t, types.Int(2), v.data[0])
+	removeAtTests := []removeAtTest{
+		{
+			input: New(1, 2, 3, 4),
+			index: 0,
+			expected: output{
+				elements: []int{2, 3, 4},
+				len:      3,
+				element:  1,
+			},
+		},
+		{
+			input: New(1, 2, 3, 4),
+			index: 2,
+			expected: output{
+				elements: []int{1, 2, 4},
+				len:      3,
+				element:  3,
+			},
+		},
+		{
+			input: New(1, 2, 3, 4),
+			index: 3,
+			expected: output{
+				elements: []int{1, 2, 3},
+				len:      3,
+				element:  4,
+			},
+		},
+	}
+
+	for _, test := range removeAtTests {
+		assert.Equal(t, test.expected, output{
+			element:  test.input.RemoveAt(test.index),
+			elements: test.input.ToSlice(),
+			len:      len(test.input.data),
+		})
+	}
 
 }
 
-func TestEquals(t *testing.T) {
+func TestRemoveIf(t *testing.T) {
 
-	v := New[types.Int]()
-	other := New[types.Int]()
+	type output struct {
+		elements []int
+		len      int
+		modified bool
+	}
 
-	// Case 1 : A list is equal to its self.
-	assert.Equal(t, true, v.Equals(v))
+	type removeIfTest struct {
+		input     *Vector[int]
+		predicate func(int) bool
+		expected  output
+	}
 
-	// Case 2 : 2 empty vectors are equal.
-	assert.Equal(t, true, v.Equals(other))
+	removeIfTests := []removeIfTest{
+		{
+			input:     New[int](),
+			predicate: func(i int) bool { return true },
+			expected: output{
+				elements: []int{},
+				len:      0,
+				modified: false,
+			},
+		},
+		{
+			input:     New(1, 2, 3, 4),
+			predicate: func(i int) bool { return i%2 != 0 },
+			expected: output{
+				elements: []int{2, 4},
+				len:      2,
+				modified: true,
+			},
+		},
+		{
+			input:     New(1, 2, 3, 4),
+			predicate: func(i int) bool { return i != 0 },
+			expected: output{
+				elements: []int{},
+				len:      0,
+				modified: true,
+			},
+		},
+		{
+			input:     New(1, 2, 3, 4),
+			predicate: func(i int) bool { return i == 4 },
+			expected: output{
+				elements: []int{1, 2, 3},
+				len:      3,
+				modified: true,
+			},
+		},
+	}
 
-	// Case 3 : vectors of unequal sizes should not be equal.
-	other.Add(1, 2, 3, 4, 5)
-	assert.Equal(t, false, v.Equals(other))
+	for _, test := range removeIfTests {
+		assert.Equal(t, test.expected,
+			output{
+				modified: test.input.RemoveIf(test.predicate),
+				elements: test.input.ToSlice(),
+				len:      len(test.input.data),
+			},
+		)
+	}
+}
 
-	// Case 4 : vectors of equal sizes but different elements should not be equal.
-	v.Add(2, 3, 4, 5, 6)
-	assert.Equal(t, false, v.Equals(other))
-	v.Clear()
+func TestRemoveSlice(t *testing.T) {
 
-	// Case 5 : vectors with same size and elements should be equal.
-	v.Add(1, 2, 3, 4, 5)
-	assert.Equal(t, true, other.Equals(v))
+	type output struct {
+		elements []int
+		len      int
+		modified bool
+	}
+
+	type removeSliceTest struct {
+		input    *Vector[int]
+		slice    []int
+		expected output
+	}
+
+	removeSliceTests := []removeSliceTest{
+		{
+			input: New[int](),
+			slice: []int{1},
+			expected: output{
+				elements: []int{},
+				len:      0,
+				modified: false,
+			},
+		},
+		{
+			input: New(1, 2, 3, 4),
+			slice: []int{1},
+			expected: output{
+				elements: []int{2, 3, 4},
+				len:      3,
+				modified: true,
+			},
+		},
+		{
+			input: New(1, 2, 3, 4),
+			slice: []int{1, 2},
+			expected: output{
+				elements: []int{3, 4},
+				len:      2,
+				modified: true,
+			},
+		},
+		{
+			input: New(1, 2, 3, 4),
+			slice: []int{1, 2, 3, 4},
+			expected: output{
+				elements: []int{},
+				len:      0,
+				modified: true,
+			},
+		},
+	}
+
+	for _, test := range removeSliceTests {
+		assert.Equal(t, test.expected, output{
+			modified: test.input.RemoveSlice(test.slice),
+			elements: test.input.ToSlice(),
+			len:      len(test.input.data),
+		})
+	}
+}
+
+func TestClear(t *testing.T) {
+
+	list := New(1, 2, 3, 4, 5)
+	list.Clear()
+
+	assert.NotNil(t, list)
+	assert.True(t, list.Empty())
+	assert.NotNil(t, list.data)
 
 }
 
 func TestIndexOf(t *testing.T) {
 
-	l := New[types.Int](1, 4, 3, 4, 5, 6)
+	type indexOfTest struct {
+		input    *Vector[int]
+		expected optional.Optional[int]
+	}
 
-	// Case 1 : Should return -1.
-	assert.Equal(t, -1, l.IndexOf(0))
+	indexOfTests := []indexOfTest{
+		{
+			input:    New[int](),
+			expected: optional.Empty[int](),
+		},
+		{
+			input:    New(1, 2, 3, 4),
+			expected: optional.Of(0),
+		},
+		{
+			input:    New(0, 2, 1, 4),
+			expected: optional.Of(2),
+		},
+		{
+			input:    New(0, 1, 1, 4),
+			expected: optional.Of(1),
+		},
+	}
 
-	// Case 2 : Should return the right index for present element.
-	assert.Equal(t, 1, l.IndexOf(4))
-	assert.Equal(t, 2, l.IndexOf(3))
-
-}
-
-func TestAt(t *testing.T) {
-
-	v := New[types.Int]()
-
-	// Case 1 : At on empty vector should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
-			}
-		}()
-		v.At(0)
-	})
-
-	v.Add(1, 2, 3, 4)
-
-	assert.Equal(t, types.Int(2), v.At(1))
-	assert.Equal(t, types.Int(3), v.At(2))
-
+	for _, test := range indexOfTests {
+		assert.Equal(t, test.expected, test.input.IndexOf(1))
+	}
 }
 
 func TestSet(t *testing.T) {
 
-	v := New[types.Int]()
+	type setTest struct {
+		input    *Vector[int]
+		index    int
+		value    int
+		expected []int
+	}
 
-	// Case 1 : Set on empty vector should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.IndexOutOfBounds, r.(errors.Error).Code())
-			}
-		}()
-		v.Set(0, 0)
-	})
+	setTests := []setTest{
+		{
+			input:    New(1),
+			index:    0,
+			value:    -1,
+			expected: []int{-1},
+		},
+		{
+			input:    New(1, 2, 3),
+			index:    1,
+			value:    -2,
+			expected: []int{1, -2, 3},
+		},
+		{
+			input:    New(1, 2, 3),
+			index:    2,
+			value:    4,
+			expected: []int{1, 2, 4},
+		},
+	}
 
-	v.Add(1, 2, 3)
-	v.Set(1, -4)
-	assert.Equal(t, types.Int(-4), v.At(1))
-	v.Set(v.Len()-1, -5)
-	assert.Equal(t, types.Int(-5), v.At(v.Len()-1))
+	for _, test := range setTests {
+		test.input.Set(test.index, test.value)
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
+}
+
+func TestContains(t *testing.T) {
+
+	type containsTest struct {
+		input    *Vector[int]
+		element  int
+		expected bool
+	}
+
+	containsTests := []containsTest{
+		{
+			input:    New(0, 4, 5),
+			element:  1,
+			expected: false,
+		},
+		{
+			input:    New(0, 4, 5),
+			element:  2,
+			expected: false,
+		},
+		{
+			input:    New(0, 4, 5),
+			element:  4,
+			expected: true,
+		},
+	}
+
+	for _, test := range containsTests {
+		assert.Equal(t, test.expected, test.input.Contains(test.element))
+	}
+}
+
+func TestAt(t *testing.T) {
+
+	type atTest struct {
+		input    *Vector[int]
+		index    int
+		expected int
+	}
+
+	atTests := []atTest{
+		{
+			input:    New(1, 2, 3, 4),
+			index:    0,
+			expected: 1,
+		},
+		{
+			input:    New(1, 2, 3, 4),
+			index:    3,
+			expected: 4,
+		},
+		{
+			input:    New(1, 2, 3, 4),
+			index:    1,
+			expected: 2,
+		},
+	}
+
+	for _, test := range atTests {
+		assert.Equal(t, test.expected, test.input.At(test.index))
+	}
+}
+
+func TestForEach(t *testing.T) {
+
+	list := New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	sum := 0
+
+	list.ForEach(func(i int) { sum = sum + i })
+
+	assert.Equal(t, 55, sum)
+}
+
+func TestRetainAll(t *testing.T) {
+
+	type retainAllTest struct {
+		a        *Vector[int]
+		b        collections.Collection[int]
+		expected []int
+	}
+
+	retainAllTests := []retainAllTest{
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        New[int](),
+			expected: []int{},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        New(9, 1, 2),
+			expected: []int{1, 2},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        New(9, 1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			a:        New[int](),
+			b:        New(9, 1, 2, 3, 4, 5),
+			expected: []int{},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        hashset.New(9, 1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+	}
+
+	for _, test := range retainAllTests {
+		test.a.RetainAll(test.b)
+		assert.Equal(t, test.expected, test.a.ToSlice())
+	}
 
 }
 
-func TestMap(t *testing.T) {
+func TestAddAll(t *testing.T) {
 
-	v := New[types.Int](0, 1, 2, 3, 4, 5)
+	type addAllTest struct {
+		a        *Vector[int]
+		b        *Vector[int]
+		expected []int
+	}
 
-	// Case 1 : Map to a new vector.
-	other := v.Map(func(e types.Int) types.Int { return e + 10 })
+	addAllTests := []addAllTest{
+		{
+			a:        New[int](),
+			b:        New(1, 2, 3, 4, 5),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			a:        New(1, 2),
+			b:        New(9, 11, 12),
+			expected: []int{1, 2, 9, 11, 12},
+		},
+	}
 
-	a := []types.Int{10, 11, 12, 13, 14, 15}
-	b := other.Collect()
-	assert.ElementsMatch(t, a, b)
+	for _, test := range addAllTests {
+		test.a.AddAll(test.b)
+		assert.Equal(t, test.expected, test.a.ToSlice())
+	}
+
 }
 
-func TestFilter(t *testing.T) {
+func TestRemoveAll(t *testing.T) {
 
-	v := New[types.Int](0, 1, 2, 3, 4, 5)
+	type removeAllTest struct {
+		a        *Vector[int]
+		b        collections.Collection[int]
+		expected []int
+	}
 
-	// Case 2 : Filter to create new vector.
-	c := []types.Int{0, 2, 4}
-	other := v.Filter(func(e types.Int) bool { return e%2 == 0 })
-	d := other.Collect()
-	assert.ElementsMatch(t, c, d)
+	removeAllTests := []removeAllTest{
+		{
+			a:        New[int](),
+			b:        New[int](),
+			expected: []int{},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        New[int](),
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        New(9, 1, 2),
+			expected: []int{3, 4, 5},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        New(9, 1, 2, 3, 4, 5),
+			expected: []int{},
+		},
+		{
+			a:        New(1, 2, 3, 4, 5),
+			b:        hashset.New(9, 1, 2, 3, 4, 5),
+			expected: []int{},
+		},
+	}
 
+	for _, test := range removeAllTests {
+		test.a.RemoveAll(test.b)
+		assert.Equal(t, test.expected, test.a.ToSlice())
+	}
+
+}
+
+func TestEquals(t *testing.T) {
+
+	type equalsTest struct {
+		a        *Vector[int]
+		b        *Vector[int]
+		expected bool
+	}
+
+	equalsTests := []equalsTest{
+		{
+			a:        New[int](),
+			b:        New[int](),
+			expected: true,
+		},
+		{
+			a:        New(1, 2),
+			b:        New[int](),
+			expected: false,
+		},
+		{
+			a:        New(1, 2),
+			b:        New(1, 2),
+			expected: true,
+		},
+		{
+			a:        New(1, 2, 3),
+			b:        New(10, 12, 14),
+			expected: false,
+		},
+	}
+
+	for _, test := range equalsTests {
+		assert.True(t, test.a.Equals(test.a))
+		assert.Equal(t, test.expected, test.a.Equals(test.b))
+		assert.Equal(t, test.expected, test.b.Equals(test.a))
+
+	}
+
+}
+
+func TestSubList(t *testing.T) {
+
+	type subListTest struct {
+		input      *Vector[int]
+		start, end int
+		expected   []int
+	}
+
+	subListTests := []subListTest{
+		{
+			input:    New(1),
+			start:    0,
+			end:      0,
+			expected: []int{},
+		},
+		{
+			input:    New(1, 2),
+			start:    0,
+			end:      1,
+			expected: []int{1},
+		},
+		{
+			input:    New(1, 2, 3, 4, 5),
+			start:    0,
+			end:      4,
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    New(1, 2, 3, 4, 5),
+			start:    1,
+			end:      4,
+			expected: []int{2, 3, 4},
+		},
+		{
+			input:    New(1, 2, 3, 4, 5),
+			start:    0,
+			end:      5,
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			input:    New(1, 2, 3, 4, 5),
+			start:    2,
+			end:      5,
+			expected: []int{3, 4, 5},
+		},
+	}
+
+	for _, test := range subListTests {
+		assert.Equal(t, test.expected, test.input.SubList(test.start, test.end).ToSlice())
+	}
+}
+
+func TestIterator(t *testing.T) {
+
+	type iteratorTest struct {
+		input    *Vector[int]
+		expected []int
+	}
+
+	iteratorTests := []iteratorTest{
+		{
+			input:    New[int](),
+			expected: []int{},
+		},
+		{
+			input:    New(1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			input:    New(1),
+			expected: []int{1},
+		},
+	}
+
+	iterate := func(it iterator.Iterator[int]) []int {
+		data := make([]int, 0)
+		for it.HasNext() {
+			data = append(data, it.Next())
+		}
+		return data
+	}
+
+	for _, test := range iteratorTests {
+		assert.Equal(t, test.expected, iterate(test.input.Iterator()))
+	}
 }
 
 func TestString(t *testing.T) {
 
-	v := New[types.Int](1, 2, 3)
-	assert.Equal(t, "[1 2 3]", fmt.Sprint(v))
-
+	assert.Equal(t, "[]", New[int]().String())
+	assert.Equal(t, "[1]", New(1).String())
+	assert.Equal(t, "[1 2]", New(1, 2).String())
 }
 
 func TestSort(t *testing.T) {
 
-	v := New[types.Int]()
+	type sortTest struct {
+		input    *Vector[int]
+		less     func(int, int) bool
+		expected []int
+	}
 
-	// Case 1 : Sorting an empty vector does nothing.
-	Sort(v)
-	assert.Equal(t, true, v.Empty())
+	sortTests := []sortTest{
+		{
+			input:    New[int](),
+			less:     func(i1, i2 int) bool { return i1 < i2 },
+			expected: []int{},
+		},
+		{
+			input:    New(2, 1, 4),
+			less:     func(i1, i2 int) bool { return i1 < i2 },
+			expected: []int{1, 2, 4},
+		},
+		{
+			input:    New(1, 2, 3, 5, 4),
+			less:     func(i1, i2 int) bool { return i1 < i2 },
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			input:    New(5, 4, 3, 2, 1),
+			less:     func(i1, i2 int) bool { return i1 <= i2 },
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			input:    New(1, 2, 3, 4, 5),
+			less:     func(i1, i2 int) bool { return i1 >= i2 },
+			expected: []int{5, 4, 3, 2, 1},
+		},
+	}
 
-	// Case 2 : Sorting a vector with elements.
-	v.Add(-10, 20, 0, 5, 4, 3, 2, 1)
-	sorted := []types.Int{-10, 0, 1, 2, 3, 4, 5, 20}
-	Sort(v)
-	assert.ElementsMatch(t, sorted, v.Collect())
-
-	// Try adding to sorted vector to see if nothing broke.
-	v.Add(100)
-	assert.ElementsMatch(t, append(sorted, 100), v.Collect())
-	v.AddAt(0, 200)
-	assert.ElementsMatch(t, append([]types.Int{200}, append(sorted, 100)...), v.Collect())
-
-	// Case 2 : Sorting an already sorted vector.
-	v.Clear()
-	v.Add(-10, 0, 1, 2, 3, 4, 5, 20)
-	Sort(v)
-	assert.ElementsMatch(t, sorted, v.Collect())
-
-}
-
-func TestRemoveFront(t *testing.T) {
-
-	l := New[types.Int]()
-
-	// Case 1 : Removing front from empty list should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
-			}
-		}()
-		l.RemoveFront()
-	})
-
-	// Case 2 : Removing front from list with elements.
-	l.Add(22, 23, 234)
-
-	assert.Equal(t, types.Int(22), l.RemoveFront())
-	assert.Equal(t, types.Int(23), l.RemoveFront())
-	assert.Equal(t, types.Int(234), l.RemoveFront())
+	for _, test := range sortTests {
+		test.input.Sort(test.less)
+		assert.Equal(t, test.expected, test.input.ToSlice())
+	}
 
 }
 
-func TestRemoveBack(t *testing.T) {
+func TestCopy(t *testing.T) {
 
-	l := New[types.Int]()
+	type copyTest struct {
+		input    *Vector[int]
+		expected []int
+	}
 
-	// Case 1 : Removing back from empty list should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoSuchElement, r.(errors.Error).Code())
-			}
-		}()
-		l.RemoveBack()
-	})
+	copyTests := []copyTest{
+		{
+			input:    New[int](),
+			expected: []int{},
+		},
+		{
+			input:    New(1, 2, 3, 4),
+			expected: []int{1, 2, 3, 4},
+		},
+	}
 
-	// Case 2 : Remove back from list with elements.
-	l.Add(22, 23, 234, -2)
-
-	assert.Equal(t, types.Int(-2), l.RemoveBack())
-	assert.Equal(t, l.Len(), 3)
-	assert.Equal(t, types.Int(234), l.RemoveBack())
-	assert.Equal(t, l.Len(), 2)
-	assert.Equal(t, types.Int(23), l.RemoveBack())
-	assert.Equal(t, l.Len(), 1)
-	assert.Equal(t, types.Int(22), l.RemoveBack())
-
-}
-
-func TestSortBy(t *testing.T) {
-
-	v := New[types.Int]()
-
-	// Case 1 : Sorting an empty vector does nothing.
-	SortBy(v, func(a, b types.Int) bool { return a < b })
-	assert.Equal(t, true, v.Empty())
-
-	// Case 2 : Sorting a vector with elements.
-	v.Add(-10, 20, 0, 5, 4, 3, 2, 1)
-	sorted := []types.Int{20, 5, 4, 3, 2, 1, 0, -10}
-	SortBy(v, func(a, b types.Int) bool { return a > b })
-	assert.ElementsMatch(t, sorted, v.Collect())
-
-	// Try adding to sorted vector to see if nothing broke.
-	v.Add(100)
-	assert.ElementsMatch(t, append(sorted, 100), v.Collect())
-	v.AddAt(0, 200)
-	assert.ElementsMatch(t, append([]types.Int{200}, append(sorted, 100)...), v.Collect())
-
-	// Case 2 : Sorting an already sorted vector.
-	v.Clear()
-	v.Add(-10, 0, 1, 2, 3, 4, 5, 20)
-	SortBy(v, func(a, b types.Int) bool { return a < b })
-	assert.ElementsMatch(t, sorted, v.Collect())
-
+	for _, test := range copyTests {
+		assert.Equal(t, test.expected, test.input.Copy().ToSlice())
+		assert.Equal(t, test.expected, test.input.ImmutableCopy().ToSlice())
+	}
 }

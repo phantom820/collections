@@ -1,137 +1,161 @@
-// Package listdequeue provides a singly linked list (with tail pointer) based implementation of a double ended queue.
+// package listdequeue defines an implementation of a double-ended queue that is backed by [LinkedList].
 package listdequeue
 
 import (
 	"fmt"
 
-	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/iterable"
 	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/lists/list"
-
-	"github.com/phantom820/collections/types"
+	"github.com/phantom820/collections/lists/linkedlist"
+	"github.com/phantom820/collections/types/optional"
 )
 
-// ListDequeue a list based implementation of a queue.
-type ListDequeue[T types.Equitable[T]] struct {
-	list *list.List[T]
+// ListDequeue a double ended queue.
+type ListDequeue[T comparable] struct {
+	list collections.List[T]
 }
 
-// New creates a list based queue with the specified elements. If no specified elements an empty queue is returned.
-func New[T types.Equitable[T]](elements ...T) *ListDequeue[T] {
-	queue := ListDequeue[T]{list: list.New[T]()}
-	queue.Add(elements...)
-	return &queue
-}
-
-// Add adds elements to the back of the queue.
-func (queue *ListDequeue[T]) Add(elements ...T) bool {
-	if len(elements) == 0 {
-		return false
-	}
+// New creates a [LinkedList] based dequeue with the given elements.
+func New[T comparable](elements ...T) *ListDequeue[T] {
+	dequeue := ListDequeue[T]{list: linkedlist.New[T]()}
 	for _, e := range elements {
-		queue.list.Add(e)
+		dequeue.Add(e)
 	}
-	return true
+	return &dequeue
 }
 
-// Add adds elements to the front of the queue.
-func (queue *ListDequeue[T]) AddFront(elements ...T) bool {
-	n := queue.Len()
-	for _, e := range elements {
-		queue.list.AddFront(e)
+// Add appends the specified element to the end of the dequeue.
+func (dequeue *ListDequeue[T]) Add(e T) bool {
+	return dequeue.list.Add(e)
+}
+
+// AddFirst inserts the given element at the front of the dequeue, returns the previous front element.
+func (dequeue *ListDequeue[T]) AddFirst(e T) optional.Optional[T] {
+	front := dequeue.PeekFirst()
+	dequeue.list.AddAt(0, e)
+	return front
+}
+
+// AddLast inserts the given element at the back the dequeue, returns the previous last element.
+func (dequeue *ListDequeue[T]) AddLast(e T) optional.Optional[T] {
+	last := dequeue.PeekLast()
+	dequeue.list.Add(e)
+	return last
+}
+
+// Len returns the number of elements in the dequeue.
+func (dequeue *ListDequeue[T]) Len() int {
+	return dequeue.list.Len()
+}
+
+// AddAll adds all of the elements in the specified iterable to the dequeue.
+func (dequeue *ListDequeue[T]) AddAll(iterable iterable.Iterable[T]) bool {
+	return dequeue.list.AddAll(iterable)
+}
+
+// AddSlice adds all the elements in the slice to the dequeue.
+func (dequeue *ListDequeue[T]) AddSlice(s []T) bool {
+	return dequeue.list.AddSlice(s)
+}
+
+// PeekFirst retrieves, but does not remove, the first element of this dequeue.
+func (dequeue *ListDequeue[T]) PeekFirst() optional.Optional[T] {
+	if dequeue.Empty() {
+		return optional.Empty[T]()
 	}
-	return (n != queue.Len())
+	return optional.Of(dequeue.list.At(0))
 }
 
-// AddAll adds the elements from some iterable elements to the back of the queue.
-func (queue *ListDequeue[T]) AddAll(elements iterator.Iterable[T]) {
-	it := elements.Iterator()
-	for it.HasNext() {
-		queue.Add(it.Next())
+// PeekLast retrieves, but does not remove, the last element of this dequeue.
+func (dequeue *ListDequeue[T]) PeekLast() optional.Optional[T] {
+	if dequeue.Empty() {
+		return optional.Empty[T]()
 	}
+	return optional.Of(dequeue.list.At(dequeue.Len() - 1))
 }
 
-// Remove removes the elements from the queue.
-func (queue *ListDequeue[T]) Remove(elements ...T) bool {
-	return queue.list.Remove(elements...)
+// Contains returns true if the list contains the specified element.
+func (dequeue *ListDequeue[T]) Contains(e T) bool {
+	return dequeue.list.Contains(e)
 }
 
-// Clear removes all elements in the queue.
-func (queue *ListDequeue[T]) Clear() {
-	queue.list.Clear()
+// RemoveFirst retrieves and removes the first element of the dequeue.
+func (dequeue *ListDequeue[T]) RemoveFirst() optional.Optional[T] {
+	if dequeue.Empty() {
+		return optional.Empty[T]()
+	}
+	return optional.Of(dequeue.list.RemoveAt(0))
 }
 
-// Collect converts queue into a slice.
-func (queue *ListDequeue[T]) Collect() []T {
-	return queue.list.Collect()
+// RemoveLast retrieves and removes the last element of the dequeue.
+func (dequeue *ListDequeue[T]) RemoveLast() optional.Optional[T] {
+	if dequeue.Empty() {
+		return optional.Empty[T]()
+	}
+	return optional.Of(dequeue.list.RemoveAt(dequeue.Len() - 1))
 }
 
-// Contains checks if the element is in the queue.
-func (queue *ListDequeue[T]) Contains(element T) bool {
-	return queue.list.Contains(element)
+// Clear removes all of the elements from the dequeue.
+func (dequeue *ListDequeue[T]) Clear() {
+	dequeue.list.Clear()
 }
 
-// Empty checks if the queue is empty.
-func (queue *ListDequeue[T]) Empty() bool {
-	return queue.list.Empty()
+// Empty returns true if the dequeue contains no elements.
+func (dequeue *ListDequeue[T]) Empty() bool {
+	return dequeue.list.Len() == 0
 }
 
-// Front returns the front element of the queue without removing it.
-func (queue *ListDequeue[T]) Front() T {
-	defer func() {
-		if r := recover(); r != nil {
-			panic(errors.ErrNoSuchElement(queue.Len()))
-		}
-	}()
-	return queue.list.Front()
+// Remove removes the first occurrence of the specified element from the dequeue.
+func (dequeue *ListDequeue[T]) Remove(e T) bool {
+	return dequeue.list.Remove(e)
 }
 
-// Back returns the back element of the queue without removing it.
-func (queue *ListDequeue[T]) Back() T {
-	defer func() {
-		if r := recover(); r != nil {
-			panic(errors.ErrNoSuchElement(queue.Len()))
-		}
-	}()
-	return queue.list.Back()
+// RemoveIf removes all of the elements of the dequeue that satisfy the given predicate.
+func (dequeue *ListDequeue[T]) RemoveIf(f func(T) bool) bool {
+	return dequeue.list.RemoveIf(f)
 }
 
-// Iterator returns an iterator for iterating through queue.
-func (queue *ListDequeue[T]) Iterator() iterator.Iterator[T] {
-	return queue.list.Iterator()
+// RemoveAll removes from the dequeue all of its elements that are contained in the specified collection.
+func (dequeue *ListDequeue[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
+	return dequeue.list.RemoveAll(iterable)
 }
 
-// Len returns the size of the queue.
-func (queue *ListDequeue[T]) Len() int {
-	return queue.list.Len()
+// RemoveSlice removes all of the dequeue elements that are also contained in the specified slice.
+func (dequeue *ListDequeue[T]) RemoveSlice(s []T) bool {
+	return dequeue.list.RemoveSlice(s)
 }
 
-// RemoveAll removes all the elements from some iterable elements that are in the queue.
-func (queue *ListDequeue[T]) RemoveAll(elements iterator.Iterable[T]) {
-	queue.list.RemoveAll(elements)
+// RetainAll retains only the elements in the dequeue that are contained in the specified collection.
+func (dequeue *ListDequeue[T]) RetainAll(c collections.Collection[T]) bool {
+	return dequeue.list.RetainAll(c)
 }
 
-// RemoveFront removes and returns the front element of the queue. Wil panic if no such element.
-func (queue *ListDequeue[T]) RemoveFront() T {
-	defer func() {
-		if r := recover(); r != nil {
-			panic(errors.ErrNoSuchElement(queue.Len()))
-		}
-	}()
-	return queue.list.RemoveFront()
+// ForEach performs the given action for each element of the dequeue.
+func (dequeue *ListDequeue[T]) ForEach(f func(T)) {
+	dequeue.list.ForEach(f)
 }
 
-// RemoveBack removes and returns the back element of the queue. Wil panic if no such element.
-func (queue *ListDequeue[T]) RemoveBack() T {
-	defer func() {
-		if r := recover(); r != nil {
-			panic(errors.ErrNoSuchElement(queue.Len()))
-		}
-	}()
-	return queue.list.RemoveBack()
+// ToSlice returns a slice containing the elements of the dequeue.
+func (dequeue *ListDequeue[T]) ToSlice() []T {
+	return dequeue.list.ToSlice()
 }
 
-// String for printing the queue.
-func (queue *ListDequeue[T]) String() string {
-	return fmt.Sprint(queue.list)
+// Equals returns true if the list is equivalent to the given list. Two dequeues are equal if they have the same size
+// and contain the same elements in the same order.
+func (dequeue *ListDequeue[T]) Equals(other *ListDequeue[T]) bool {
+	if dequeue == other {
+		return true
+	}
+	return dequeue.list.Equals(other.list)
+}
+
+// Iterator returns an iterator over the elements in the dequeue.
+func (dequeue *ListDequeue[T]) Iterator() iterator.Iterator[T] {
+	return dequeue.list.Iterator()
+}
+
+// String returns the string representation of the dequeue.
+func (dequeue ListDequeue[T]) String() string {
+	return fmt.Sprint(dequeue.list)
 }

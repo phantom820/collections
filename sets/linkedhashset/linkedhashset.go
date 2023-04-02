@@ -1,4 +1,4 @@
-// Package linkedhashset provides an implementation of a set that keeps track of the insertion order of elements.
+// package linkedhashset defines a set implementation that is backed by a [LinkedHashMap].
 package linkedhashset
 
 import (
@@ -6,248 +6,221 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
-	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterable"
 	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/maps/linkedhashmap"
-	"github.com/phantom820/collections/types"
+	"github.com/phantom820/collections/types/pair"
 )
 
-// LinkedHashSet an implementation of a set based on a LinkedHashMap.
-type LinkedHashSet[T types.Hashable[T]] struct {
-	data          *linkedhashmap.LinkedHashMap[T, bool]
-	modifications int
+// LinkedHashSet implementation of a set backed by a [LinkedHashMap].
+type LinkedHashSet[T comparable] struct {
+	linkedHashMap *linkedhashmap.LinkedHashMap[T, struct{}]
 }
 
-// New creates a LinkedHashSet with the specified elements, if there none an empty set is returned.
-func New[T types.Hashable[T]](elements ...T) *LinkedHashSet[T] {
-	data := linkedhashmap.New[T, bool]()
-	set := LinkedHashSet[T]{data: data}
-	set.Add(elements...)
+// New creates an immutable set with the given elements.
+func New[T comparable](elements ...T) *LinkedHashSet[T] {
+	set := LinkedHashSet[T]{linkedhashmap.New[T, struct{}]()}
+	for _, e := range elements {
+		set.Add(e)
+	}
 	return &set
 }
 
-// modify increments the modification value
-func (set *LinkedHashSet[T]) modify() {
-	set.modifications++
-}
-
-// linkedHashSetIterator type to implement an iterator for a LinkedHashSet.
-type linkedHashSetIterator[T types.Hashable[T]] struct {
-	initialized      bool
-	mapIterator      maps.MapIterator[T, bool]
-	getMapIterator   func() maps.MapIterator[T, bool]
-	modifications    int
-	getModifications func() int
-}
-
-// HasNext checks if the iterator has a next element to yield.
-func (it *linkedHashSetIterator[T]) HasNext() bool {
-	if !it.initialized {
-		it.initialized = true
-		it.modifications = it.getModifications()
-		it.mapIterator = it.getMapIterator()
+// Of creates an immutable set with the given elements.
+func Of[T comparable](elements ...T) ImmutableLinkedHashSet[T] {
+	set := LinkedHashSet[T]{linkedhashmap.New[T, struct{}]()}
+	for i := range elements {
+		set.Add(elements[i])
 	}
+	return ImmutableLinkedHashSet[T]{linkedHashSet: set}
+}
+
+// Add adds the specified element to the set if it is not already present.
+func (set LinkedHashSet[T]) Add(e T) bool {
+	value := set.linkedHashMap.PutIfAbsent(e, struct{}{})
+	return value.Empty()
+}
+
+// AddAll adds all of the elements in the specified iterable to the set.
+func (set LinkedHashSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
+	n := set.linkedHashMap.Len()
+	it := iterable.Iterator()
+	for it.HasNext() {
+		set.Add(it.Next())
+	}
+	return n != set.linkedHashMap.Len()
+}
+
+// AddSlice adds all the elements in the slice to the set.
+func (set LinkedHashSet[T]) AddSlice(s []T) bool {
+	n := set.linkedHashMap.Len()
+	for _, value := range s {
+		set.Add(value)
+	}
+	return n != set.linkedHashMap.Len()
+}
+
+// Remove removes the specified element from this set if it is present.
+func (set LinkedHashSet[T]) Remove(e T) bool {
+	n := set.Len()
+	_ = set.linkedHashMap.Remove(e)
+	return n != set.Len()
+}
+
+// RemoveIf removes all of the elements of this collection that satisfy the given predicate.
+func (set LinkedHashSet[T]) RemoveIf(f func(T) bool) bool {
+	n := set.linkedHashMap.Len()
+	set.linkedHashMap.RemoveIf(f)
+	return n != set.linkedHashMap.Len()
+}
+
+// RetainAll retains only the elements in the set that are contained in the specified collection.
+func (set LinkedHashSet[T]) RetainAll(c collections.Collection[T]) bool {
+	switch c.(type) {
+	case collections.Set[T]:
+		return set.RemoveIf(func(e T) bool { return !c.Contains(e) })
+	default:
+		{
+			otherSet := make(map[T]struct{})
+			it := c.Iterator()
+			for it.HasNext() {
+				e := it.Next()
+				if _, ok := otherSet[e]; !ok {
+					otherSet[e] = struct{}{}
+				}
+			}
+			return set.RemoveIf(func(e T) bool {
+				_, ok := otherSet[e]
+				return !ok
+			})
+		}
+	}
+}
+
+// RemoveAll removes all of the set's elements that are also contained in the specified iterable.
+func (set LinkedHashSet[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
+	n := set.linkedHashMap.Len()
+	it := iterable.Iterator()
+	for it.HasNext() {
+		set.Remove(it.Next())
+	}
+	return n != set.linkedHashMap.Len()
+}
+
+// RemoveSlice removes all of the set's elements that are also contained in the specified slice.
+func (set *LinkedHashSet[T]) RemoveSlice(s []T) bool {
+	n := set.linkedHashMap.Len()
+	for i := range s {
+		set.Remove(s[i])
+	}
+	return n != set.linkedHashMap.Len()
+}
+
+// Clear removes all of the elements from the set.
+func (set *LinkedHashSet[T]) Clear() {
+	set.linkedHashMap.Clear()
+}
+
+// Contains returns true if this set contains the specified element.
+func (set *LinkedHashSet[T]) Contains(e T) bool {
+	return set.linkedHashMap.ContainsKey(e)
+}
+
+// ContainsAll returns true if the set contains all of the elements of the specified iterable.
+func (set *LinkedHashSet[T]) ContainsAll(iterable iterable.Iterable[T]) bool {
+	it := iterable.Iterator()
+	for it.HasNext() {
+		if !set.Contains(it.Next()) {
+			return false
+		}
+	}
+	return true
+}
+
+// Len returns the number of elements in the set.
+func (set LinkedHashSet[T]) Len() int {
+	return set.linkedHashMap.Len()
+}
+
+// Empty returns true if the set contains no elements.
+func (set LinkedHashSet[T]) Empty() bool {
+	return set.linkedHashMap.Len() == 0
+}
+
+// Equals returns true if the set is equivalent to the given set. Two sets are equal if they are the same reference or have the same size and contain
+// the same elements.
+func (set *LinkedHashSet[T]) Equals(otherSet collections.Set[T]) bool {
+	if set == otherSet {
+		return true
+	} else if set.Len() != otherSet.Len() {
+		return false
+	}
+	it := set.Iterator()
+	for it.HasNext() {
+		if !otherSet.Contains(it.Next()) {
+			return false
+		}
+	}
+	return true
+}
+
+// ForEach performs the given action for each element of the set.
+func (set LinkedHashSet[T]) ForEach(f func(T)) {
+	it := set.linkedHashMap.Iterator()
+	for it.HasNext() {
+		f(it.Next().Key())
+	}
+}
+
+// Iterator returns an iterator over the elements in the set.
+func (set *LinkedHashSet[T]) Iterator() iterator.Iterator[T] {
+	return &setIterator[T]{mapIterator: set.linkedHashMap.Iterator()}
+}
+
+// setIterator implememantation for [LinkedHashSet].
+type setIterator[T comparable] struct {
+	mapIterator iterator.Iterator[pair.Pair[T, struct{}]]
+}
+
+// HasNext returns true if the iterator has more elements.
+func (it *setIterator[T]) HasNext() bool {
 	return it.mapIterator.HasNext()
 }
 
-// Next returns the next element in the iterator it. Will panic if iterator has no next element.
-func (it *linkedHashSetIterator[T]) Next() T {
-	if !it.HasNext() {
-		panic(errors.ErrNoNextElement())
-	} else if it.modifications != it.getModifications() {
-		panic(errors.ErrConcurrenModification())
-	}
-	entry := it.mapIterator.Next()
-	return entry.Key
+// Next returns the next element in the iterator.
+func (it setIterator[T]) Next() T {
+	return it.mapIterator.Next().Key()
 }
 
-// Iterator returns an iterator for the set.
-func (set *LinkedHashSet[T]) Iterator() iterator.Iterator[T] {
-	return &linkedHashSetIterator[T]{getMapIterator: set.data.Iterator, getModifications: func() int { return set.modifications }}
-}
-
-// String formats the set for pretty printing.
-func (set *LinkedHashSet[T]) String() string {
-	sb := make([]string, 0, set.data.Len())
-	for _, k := range set.data.Keys() {
-		sb = append(sb, fmt.Sprint(k))
-
-	}
-	return "{" + strings.Join(sb, ", ") + "}"
-}
-
-// Len returns the size of the set.
-func (set *LinkedHashSet[T]) Len() int {
-	return set.data.Len()
-}
-
-// Contains checks if an element is in the set.
-func (set *LinkedHashSet[T]) Contains(element T) bool {
-	_, ok := set.data.Get(element)
-	return ok
-}
-
-// Add adds elements to the set. Only elements that are not already in the set are added.
-func (set *LinkedHashSet[T]) Add(elements ...T) bool {
-	set.modify()
-	n := set.Len()
-	for _, element := range elements {
-		set.data.PutIfAbsent(element, true)
-	}
-	return (n != set.Len())
-}
-
-// AddAll adds all elements from an iterable to the set. Only elements that are not in the set are added.
-func (set *LinkedHashSet[T]) AddAll(iterable iterator.Iterable[T]) {
-	iterator := iterable.Iterator()
-	for iterator.HasNext() {
-		set.Add(iterator.Next())
-	}
-}
-
-// Remove removes elements from the set.
-func (set *LinkedHashSet[T]) Remove(elements ...T) bool {
-	set.modify()
-	n := set.Len()
-	for _, element := range elements {
-		set.data.Remove(element)
-		if set.Empty() {
-			break
-		}
-	}
-	return (n != set.Len())
-}
-
-// RemoveIf removes all elements from the set that satisfy the predicate function f.
-func (set *LinkedHashSet[T]) RemoveIf(f func(element T) bool) bool {
-	set.modify()
-	n := set.Len()
-	elements := set.Collect()
-	for _, element := range elements {
-		if f(element) {
-			set.Remove(element)
-		}
-	}
-	return n != set.Len()
-}
-
-// RemoveAll removes all the elements in the set that appear in the iterable.
-func (set *LinkedHashSet[T]) RemoveAll(iterable iterator.Iterable[T]) {
-	set.data.RemoveAll(iterable)
-}
-
-// RetainAll removes all entries from the set that do not appear in the other collection.
-func (set *LinkedHashSet[T]) RetainAll(collection collections.Collection[T]) bool {
-	set.modify()
-	elements := set.Collect()
-	n := set.Len()
-	for _, element := range elements {
-		if collection.Contains(element) {
-			continue
-		} else {
-			set.Remove(element)
-		}
-	}
-	return n != set.Len()
-}
-
-// Clear removes all elements from the set.
-func (set *LinkedHashSet[T]) Clear() {
-	set.modify()
-	set.data.Clear()
-}
-
-// Empty checks if the set is empty.
-func (set *LinkedHashSet[T]) Empty() bool {
-	return set.data.Empty()
-}
-
-// Collect returns a slice containing all the elements in the set.
-func (set *LinkedHashSet[T]) Collect() []T {
-	data := make([]T, set.data.Len())
+// ToSlice returns a slice containing all the elements in the set.
+func (set *LinkedHashSet[T]) ToSlice() []T {
+	slice := make([]T, set.Len())
 	i := 0
-	for _, e := range set.data.Keys() {
-		data[i] = e
-		i += 1
-	}
-	return data
-}
-
-// Map applies a transformation on an elements of the set , using the function f and returns a new set with the
-// transformed elements.
-func (set *LinkedHashSet[T]) Map(f func(element T) T) *LinkedHashSet[T] {
-	newSet := New[T]()
-	for _, element := range set.data.Keys() { // Should we use the iterator here ??
-		newSet.Add(f(element))
-	}
-	return newSet
-}
-
-// Filter filters the set using the predicate function  f and returns a new set containing only elements that satisfy the predicate.
-func (set *LinkedHashSet[T]) Filter(f func(element T) bool) *LinkedHashSet[T] {
-	newSet := New[T]()
-	for _, element := range set.data.Keys() {
-		if f(element) {
-			newSet.Add(element)
-		}
-	}
-	return newSet
-}
-
-// Union union operation on sets a and b. Will return a new set.
-func (a *LinkedHashSet[T]) Union(b *LinkedHashSet[T]) *LinkedHashSet[T] {
-	c := New[T]()
-	c.AddAll(a)
-	c.AddAll(b)
-	return c
-}
-
-// intersection helper function to perform set intersection the idea is iterate over bigger set and lookup in smaller.
-func intersection[T types.Hashable[T]](a *LinkedHashSet[T], b *LinkedHashSet[T]) *LinkedHashSet[T] {
-	c := New[T]()
-	if a.Len() > b.Len() {
-		it := a.Iterator()
-		for it.HasNext() {
-			e := it.Next()
-			if b.Contains(e) {
-				c.Add(e)
-			}
-		}
-		return c
-	}
-	it := b.Iterator()
+	it := set.Iterator()
 	for it.HasNext() {
-		e := it.Next()
-		if a.Contains(e) {
-			c.Add(e)
-		}
+		slice[i] = it.Next()
+		i++
 	}
-	return c
+	return slice
 }
 
-// Intersection intersection operation on sets a and b. Will return a new set.
-func (a *LinkedHashSet[T]) Intersection(b *LinkedHashSet[T]) *LinkedHashSet[T] {
-	c := New[T]()
-	if a.Empty() || b.Empty() {
-		return c
-	}
-	return intersection(a, b)
+// ImmutableCopy returns an immutable copy of the set.
+func (set *LinkedHashSet[T]) ImmutableCopy() ImmutableLinkedHashSet[T] {
+	return Of(set.ToSlice()...)
 }
 
-// Equals checks if the set is equal to another set. Two sets are equal if they are the same reference or have the same size and contain the same elements.
-func (set *LinkedHashSet[T]) Equals(other *LinkedHashSet[T]) bool {
-	if set == other {
-		return true
-	} else if set.Len() != other.Len() {
-		return false
-	} else {
-		it := set.Iterator()
-		for it.HasNext() {
-			if !other.Contains(it.Next()) {
-				return false
-			}
-		}
-		return true
+// String returns the string representation of a set.
+func (set LinkedHashSet[T]) String() string {
+	var sb strings.Builder
+	if set.Empty() {
+		return "{}"
 	}
+	sb.WriteString("{")
+	it := set.Iterator()
+	sb.WriteString(fmt.Sprint(it.Next()))
+	for it.HasNext() {
+		sb.WriteString(fmt.Sprintf(", %v", it.Next()))
+	}
+	sb.WriteString("}")
+	return sb.String()
 }

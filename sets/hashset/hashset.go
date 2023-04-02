@@ -1,4 +1,4 @@
-// Package hashset provides an implementation of a set that is backed by a HashMap.
+// package hashset defines a set implementation that is backed by a [HashMap].
 package hashset
 
 import (
@@ -6,248 +6,219 @@ import (
 	"strings"
 
 	"github.com/phantom820/collections"
-	"github.com/phantom820/collections/errors"
+	"github.com/phantom820/collections/iterable"
 	"github.com/phantom820/collections/iterator"
-	"github.com/phantom820/collections/maps"
 	"github.com/phantom820/collections/maps/hashmap"
-	"github.com/phantom820/collections/types"
+	"github.com/phantom820/collections/types/pair"
 )
 
-// HashSet an implementation of a hashset based on a HashMap.
-type HashSet[T types.Hashable[T]] struct {
-	data          *hashmap.HashMap[T, bool]
-	modifications int
+// HashSet implementation of a set backed by a HashMap.
+type HashSet[T comparable] struct {
+	hashmap hashmap.HashMap[T, struct{}]
 }
 
-// New creates a HashSet with the specified elements.
-func New[T types.Hashable[T]](elements ...T) *HashSet[T] {
-	data := hashmap.New[T, bool]()
-	set := HashSet[T]{data: data}
-	set.Add(elements...)
+// New creates a mutable set with the given elements.
+func New[T comparable](elements ...T) *HashSet[T] {
+	set := HashSet[T]{hashmap.New[T, struct{}]()}
+	for _, e := range elements {
+		set.Add(e)
+	}
 	return &set
 }
 
-// modify increments the modification value
-func (set *HashSet[T]) modify() {
-	set.modifications++
-}
-
-// hashSetIterator type to implement an iterator for a HashSet.
-type hashSetIterator[T types.Hashable[T]] struct {
-	initialized      bool
-	mapIterator      maps.MapIterator[T, bool]
-	getMapIterator   func() maps.MapIterator[T, bool]
-	modifications    int
-	getModifications func() int
-}
-
-// HasNext checks if the iterator has a next element to yield.
-func (it *hashSetIterator[T]) HasNext() bool {
-	if !it.initialized {
-		it.initialized = true
-		it.modifications = it.getModifications()
-		it.mapIterator = it.getMapIterator()
+// Of creates an immutable set with the given elements.
+func Of[T comparable](elements ...T) ImmutableHashSet[T] {
+	set := HashSet[T]{hashmap.New[T, struct{}]()}
+	for i := range elements {
+		set.Add(elements[i])
 	}
-	return it.mapIterator.HasNext()
+	return ImmutableHashSet[T]{hashSet: set}
 }
 
-// Next returns the next element in the iterator it. Will panic if iterator has no next element.
-func (it *hashSetIterator[T]) Next() T {
-	if !it.HasNext() {
-		panic(errors.ErrNoNextElement())
-	} else if it.modifications != it.getModifications() {
-		panic(errors.ErrConcurrenModification())
-	}
-	entry := it.mapIterator.Next()
-	return entry.Key
+// Add adds the specified element to this set if it is not already present.
+func (set *HashSet[T]) Add(e T) bool {
+	value := set.hashmap.PutIfAbsent(e, struct{}{})
+	return value.Empty()
 }
 
-// Iterator returns an iterator for the set.
-func (set *HashSet[T]) Iterator() iterator.Iterator[T] {
-	return &hashSetIterator[T]{getMapIterator: set.data.Iterator, getModifications: func() int { return set.modifications }}
-}
-
-// String formats the set for pretty printing.
-func (set *HashSet[T]) String() string {
-	sb := make([]string, 0, set.data.Len())
-	for _, k := range set.data.Keys() {
-		sb = append(sb, fmt.Sprint(k))
-
-	}
-	return "{" + strings.Join(sb, ", ") + "}"
-}
-
-// Len returns the size of the set.
-func (set *HashSet[T]) Len() int {
-	return set.data.Len()
-}
-
-// Contains checks if an element is in the set.
-func (set *HashSet[T]) Contains(element T) bool {
-	_, ok := set.data.Get(element)
-	return ok
-}
-
-// Add adds elements to the set. Only elements that are not in the set are added.
-func (set *HashSet[T]) Add(elements ...T) bool {
-	set.modify()
-	n := set.Len()
-	for _, element := range elements {
-		set.data.PutIfAbsent(element, true)
-	}
-	return (n != set.Len())
-}
-
-// AddAll adds all elements from an iterable to the set. Only elements that are not in the set are added.
-func (set *HashSet[T]) AddAll(iterable iterator.Iterable[T]) {
+// AddAll adds all of the elements in the specified iterable to the set.
+func (set *HashSet[T]) AddAll(iterable iterable.Iterable[T]) bool {
+	n := set.hashmap.Len()
 	it := iterable.Iterator()
 	for it.HasNext() {
 		set.Add(it.Next())
 	}
+	return n != set.hashmap.Len()
 }
 
-// Remove removes elements from the set.
-func (set *HashSet[T]) Remove(elements ...T) bool {
-	set.modify()
-	n := set.Len()
-	for _, element := range elements {
-		set.data.Remove(element)
-		if set.Empty() {
-			break
-		}
+// AddSlice adds all the elements in the slice to the set.
+func (set *HashSet[T]) AddSlice(s []T) bool {
+	n := set.hashmap.Len()
+	for _, value := range s {
+		set.Add(value)
 	}
-	return (n != set.Len())
+	return n != set.hashmap.Len()
 }
 
-// RemoveIf removes all elements from the set that satisfy the predicate function f.
-func (set *HashSet[T]) RemoveIf(f func(element T) bool) bool {
-	set.modify()
+// Remove removes the specified element from this set if it is present.
+func (set *HashSet[T]) Remove(e T) bool {
 	n := set.Len()
-	elements := set.Collect()
-	for _, element := range elements {
-		if f(element) {
-			set.Remove(element)
-		}
-	}
+	_ = set.hashmap.Remove(e)
 	return n != set.Len()
 }
 
-// RemoveAll removes all the elements in the set that appear in the iterable.
-func (set *HashSet[T]) RemoveAll(iterable iterator.Iterable[T]) {
-	set.data.RemoveAll(iterable)
+// RemoveIf removes all of the elements of this collection that satisfy the given predicate.
+func (set *HashSet[T]) RemoveIf(f func(T) bool) bool {
+	n := set.hashmap.Len()
+	set.hashmap.RemoveIf(f)
+	return n != set.hashmap.Len()
 }
 
-// RetainAll removes all entries from the set that do not appear in the other collection.
-func (set *HashSet[T]) RetainAll(collection collections.Collection[T]) bool {
-	set.modify()
-	elements := set.Collect()
-	n := set.Len()
-	for _, element := range elements {
-		if collection.Contains(element) {
-			continue
-		} else {
-			set.Remove(element)
-		}
-	}
-	return n != set.Len()
-}
-
-// Clear removes all elements from the set.
-func (set *HashSet[T]) Clear() {
-	set.modify()
-	set.data.Clear()
-}
-
-// Empty checks if the set is empty.
-func (set *HashSet[T]) Empty() bool {
-	return set.data.Empty()
-}
-
-// Collect returns a slice containing all the elements in the set.
-func (set *HashSet[T]) Collect() []T {
-	data := make([]T, set.data.Len())
-	i := 0
-	for _, e := range set.data.Keys() {
-		data[i] = e
-		i += 1
-	}
-	return data
-}
-
-// Map applies a transformation on an elements of the set , using the function f and returns a new set with the
-// transformed elements.
-func (set *HashSet[T]) Map(f func(element T) T) *HashSet[T] {
-	newSet := New[T]()
-	for _, element := range set.data.Keys() { // Should we use the iterator here ??
-		newSet.Add(f(element))
-	}
-	return newSet
-}
-
-// Filter filters the set using the predicate function  f and returns a new set containing only elements that satisfy the predicate.
-func (set *HashSet[T]) Filter(f func(element T) bool) *HashSet[T] {
-	newSet := New[T]()
-	for _, element := range set.data.Keys() {
-		if f(element) {
-			newSet.Add(element)
-		}
-	}
-	return newSet
-}
-
-// Union union operation on sets a and b. Will return a new set.
-func (a *HashSet[T]) Union(b *HashSet[T]) *HashSet[T] {
-	c := New[T]()
-	c.AddAll(a)
-	c.AddAll(b)
-	return c
-}
-
-// intersection helper function to perform set intersection the idea is iterate over bigger set and lookup in smaller.
-func intersection[T types.Hashable[T]](a *HashSet[T], b *HashSet[T]) *HashSet[T] {
-	c := New[T]()
-	if a.Len() > b.Len() {
-		it := a.Iterator()
-		for it.HasNext() {
-			e := it.Next()
-			if b.Contains(e) {
-				c.Add(e)
+// RetainAll retains only the elements in the set that are contained in the specified collection.
+func (set *HashSet[T]) RetainAll(c collections.Collection[T]) bool {
+	switch c.(type) {
+	case collections.Set[T]:
+		return set.RemoveIf(func(e T) bool { return !c.Contains(e) })
+	default:
+		{
+			otherSet := make(map[T]struct{})
+			it := c.Iterator()
+			for it.HasNext() {
+				e := it.Next()
+				if _, ok := otherSet[e]; !ok {
+					otherSet[e] = struct{}{}
+				}
 			}
+			return set.RemoveIf(func(e T) bool {
+				_, ok := otherSet[e]
+				return !ok
+			})
 		}
-		return c
 	}
-	it := b.Iterator()
+}
+
+// RemoveAll removes all of the set's elements that are also contained in the specified iterable.
+func (set *HashSet[T]) RemoveAll(iterable iterable.Iterable[T]) bool {
+	n := set.hashmap.Len()
+	it := iterable.Iterator()
 	for it.HasNext() {
-		e := it.Next()
-		if a.Contains(e) {
-			c.Add(e)
+		set.Remove(it.Next())
+	}
+	return n != set.hashmap.Len()
+}
+
+// RemoveSlice removes all of the set's elements that are also contained in the specified slice.
+func (set *HashSet[T]) RemoveSlice(s []T) bool {
+	n := set.hashmap.Len()
+	for i := range s {
+		set.Remove(s[i])
+	}
+	return n != set.hashmap.Len()
+}
+
+// Clear removes all of the elements from the set.
+func (set *HashSet[T]) Clear() {
+	set.hashmap.Clear()
+}
+
+// Contains returns true if the set contains the specified element.
+func (set *HashSet[T]) Contains(e T) bool {
+	return set.hashmap.ContainsKey(e)
+}
+
+// ContainsAll returns true if the set contains all of the elements of the specified iterable.
+func (set *HashSet[T]) ContainsAll(iterable iterable.Iterable[T]) bool {
+	it := iterable.Iterator()
+	for it.HasNext() {
+		if !set.Contains(it.Next()) {
+			return false
 		}
 	}
-	return c
+	return true
 }
 
-// Intersection intersection operation on sets a and b. Will return a new set.
-func (a *HashSet[T]) Intersection(b *HashSet[T]) *HashSet[T] {
-	c := New[T]()
-	if a.Empty() || b.Empty() {
-		return c
-	}
-	return intersection(a, b)
+// Len returns the number of elements in the set.
+func (set *HashSet[T]) Len() int {
+	return set.hashmap.Len()
 }
 
-// Equals checks if the set is equal to another set. Two sets are equal if they are the same reference or have the same size and contain the same elements.
-func (set *HashSet[T]) Equals(other *HashSet[T]) bool {
-	if set == other {
+// Empty returns true if the set contains no elements.
+func (set *HashSet[T]) Empty() bool {
+	return set.hashmap.Len() == 0
+}
+
+// Equals returns true if the set is equivalent to the given set. Two sets are equal if they are the same reference or have the same size and contain
+// the same elements.
+func (set *HashSet[T]) Equals(otherSet collections.Set[T]) bool {
+	if set == otherSet {
 		return true
-	} else if set.Len() != other.Len() {
+	} else if set.Len() != otherSet.Len() {
 		return false
-	} else {
-		it := set.Iterator()
-		for it.HasNext() {
-			if !other.Contains(it.Next()) {
-				return false
-			}
-		}
-		return true
 	}
+	it := set.Iterator()
+	for it.HasNext() {
+		if !otherSet.Contains(it.Next()) {
+			return false
+		}
+	}
+	return true
+}
+
+// ForEach performs the given action for each element of the set.
+func (set *HashSet[T]) ForEach(f func(T)) {
+	for key := range set.hashmap {
+		f(key)
+	}
+}
+
+// Iterator returns an iterator over the elements in the set.
+func (set *HashSet[T]) Iterator() iterator.Iterator[T] {
+	return &setIterator[T]{iterator: set.hashmap.Iterator()}
+}
+
+// setIterator implememantation for [HashSet].
+type setIterator[T comparable] struct {
+	iterator iterator.Iterator[pair.Pair[T, struct{}]]
+}
+
+// HasNext returns true if the iterator has more elements.
+func (it *setIterator[T]) HasNext() bool {
+	return it.iterator.HasNext()
+}
+
+// Next returns the next element in the iterator.
+func (it setIterator[T]) Next() T {
+	return it.iterator.Next().Key()
+}
+
+// ToSlice returns a slice containing all the elements in the set.
+func (set *HashSet[T]) ToSlice() []T {
+	slice := make([]T, set.Len())
+	i := 0
+	for e, _ := range set.hashmap {
+		slice[i] = e
+		i++
+	}
+	return slice
+}
+
+// ImmutableCopy returns an immutable copy of the set.
+func (set *HashSet[T]) ImmutableCopy() ImmutableHashSet[T] {
+	return Of(set.ToSlice()...)
+}
+
+// String returns the string representation of a set.
+func (set HashSet[T]) String() string {
+	var sb strings.Builder
+	if set.Empty() {
+		return "{}"
+	}
+	sb.WriteString("{")
+	it := set.Iterator()
+	sb.WriteString(fmt.Sprint(it.Next()))
+	for it.HasNext() {
+		sb.WriteString(fmt.Sprintf(", %v", it.Next()))
+	}
+	sb.WriteString("}")
+	return sb.String()
 }

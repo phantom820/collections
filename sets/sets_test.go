@@ -3,79 +3,285 @@ package sets
 import (
 	"testing"
 
+	"github.com/phantom820/collections"
 	"github.com/phantom820/collections/sets/hashset"
-	"github.com/phantom820/collections/types"
+	"github.com/phantom820/collections/sets/linkedhashset"
+	"github.com/phantom820/collections/sets/treeset"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUnion(t *testing.T) {
+func TestIsSet(t *testing.T) {
 
-	a := hashset.New[types.Int]()
-	b := hashset.New[types.Int]()
-	c := hashset.New[types.Int]()
+	type isSetTest struct {
+		input    collections.Collection[int]
+		expected bool
+	}
 
-	// Case 1 : Union of empty sets.
-	_ = Union[types.Int](a, b, c)
-	assert.Equal(t, true, c.Equals(hashset.New[types.Int]()))
+	a := hashset.Of[int]()
+	b := linkedhashset.Of[int]()
+	c := treeset.Of(func(e1, e2 int) bool { return e1 < e2 })
+	isSetTests := []isSetTest{
+		{
+			input:    nil,
+			expected: false,
+		},
+		{
+			input:    hashset.New[int](),
+			expected: true,
+		},
+		{
+			input:    &a,
+			expected: true,
+		},
+		{
+			input:    a,
+			expected: true,
+		},
+		{
+			input:    linkedhashset.New[int](),
+			expected: true,
+		},
+		{
+			input:    &b,
+			expected: true,
+		},
+		{
+			input:    &b,
+			expected: true,
+		},
+		{
+			input:    treeset.New(func(e1, e2 int) bool { return e1 < e2 }),
+			expected: true,
+		},
+		{
+			input:    &c,
+			expected: true,
+		},
+		{
+			input:    &c,
+			expected: true,
+		},
+	}
 
-	// Case 2 : Union of sets with elements.
-	a.Add(1, 2, 3)
-	b.Add(3, 4, 5, 6)
-	_ = Union[types.Int](a, b, c)
-	assert.Equal(t, true, c.Equals(hashset.New[types.Int](1, 2, 3, 4, 5, 6)))
-
-	// Case 3 : Passing a non empty result set.
-	err := Union[types.Int](a, b, c)
-	assert.Equal(t, errInvalidDestinationSet, err)
-
+	for _, test := range isSetTests {
+		assert.Equal(t, test.expected, IsSet[int](test.input))
+	}
 }
 
-func TestIntersection(t *testing.T) {
+func TestUnion(t *testing.T) {
 
-	a := hashset.New[types.Int]()
-	b := hashset.New[types.Int]()
-	c := hashset.New[types.Int]()
+	type unionTest struct {
+		inputs           func() (collections.Set[int], collections.Set[int])
+		element          int
+		expectedSlice    []int
+		expectedLen      int
+		expectedContains bool
+	}
 
-	// Case 1 : Intersection of empty sets.
-	_ = Union[types.Int](a, b, c)
-	assert.Equal(t, true, c.Equals(hashset.New[types.Int]()))
+	unionTests := []unionTest{
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of[int](), linkedhashset.Of[int]()
+				return &a, &b
+			},
+			element:          0,
+			expectedSlice:    []int{},
+			expectedLen:      0,
+			expectedContains: false,
+		},
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(4, 5, 6)
+				return &a, &b
+			},
+			element:          4,
+			expectedSlice:    []int{1, 2, 3, 4, 5, 6},
+			expectedLen:      6,
+			expectedContains: true,
+		},
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of(1, 2, 3), treeset.Of(func(e1, e2 int) bool { return e1 > e2 }, 4, 5, 6)
+				return &a, &b
+			},
+			element:          4,
+			expectedSlice:    []int{1, 2, 3, 4, 5, 6},
+			expectedLen:      6,
+			expectedContains: true,
+		},
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of(1, 2, 3, 4), linkedhashset.Of(4, 5, 6)
+				return &a, &b
+			},
+			element:          10,
+			expectedSlice:    []int{1, 2, 3, 4, 5, 6},
+			expectedLen:      6,
+			expectedContains: false,
+		},
+	}
 
-	// Case 2 : Intersection of sets with elements.
-	a.Add(1, 2, 3)
-	b.Add(3, 4, 5, 6)
-	_ = Intersection[types.Int](a, b, c)
-	assert.Equal(t, true, c.Equals(hashset.New[types.Int](3)))
-
-	// make a the larger set
-	a.Add(4, 11, 12, 13, 14)
-	c.Clear()
-	_ = Intersection[types.Int](a, b, c)
-	assert.Equal(t, true, c.Equals(hashset.New[types.Int](3, 4)))
-
-	// Case 3 : Passing a non empty result set,
-	err := Intersection[types.Int](a, b, c)
-	assert.Equal(t, errInvalidDestinationSet, err)
-
+	for _, test := range unionTests {
+		a, b := test.inputs()
+		c := Union(a, b)
+		assert.ElementsMatch(t, test.expectedSlice, c.ToSlice())
+		assert.Equal(t, test.expectedLen, c.Len())
+		assert.Equal(t, test.expectedContains, c.Contains(test.element))
+	}
 }
 
 func TestDifference(t *testing.T) {
 
-	a := hashset.New[types.Int]()
-	b := hashset.New[types.Int]()
-	c := hashset.New[types.Int]()
+	type differenceTest struct {
+		inputs           func() (collections.Set[int], collections.Set[int])
+		element          int
+		expectedSlice    []int
+		expectedLen      int
+		expectedContains bool
+	}
 
-	// Case 1 : Difference of empty sets.
-	_ = Difference[types.Int](a, b, c)
-	assert.Equal(t, true, c.Equals(hashset.New[types.Int]()))
+	differenceTests := []differenceTest{
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of[int](), linkedhashset.Of[int]()
+				return &a, &b
+			},
+			element:          0,
+			expectedSlice:    []int{},
+			expectedLen:      0,
+			expectedContains: false,
+		},
 
-	// Case 2 : Difference of sets with elements.
-	a.Add(1, 2, 3)
-	b.Add(3, 4, 5, 6)
-	_ = Difference[types.Int](a, b, c)
-	assert.Equal(t, true, c.Equals(hashset.New[types.Int](1, 2)))
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(4, 5, 6)
+				return &a, &b
+			},
+			element:          2,
+			expectedSlice:    []int{1, 2, 3},
+			expectedLen:      3,
+			expectedContains: true,
+		},
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of(1, 2, 3, 4), linkedhashset.Of(1, 2, 3)
+				return &a, &b
+			},
+			element:          3,
+			expectedSlice:    []int{4},
+			expectedLen:      1,
+			expectedContains: false,
+		},
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(1, 2, 3)
+				return &a, &b
+			},
+			element:          3,
+			expectedSlice:    []int{},
+			expectedLen:      0,
+			expectedContains: false,
+		},
+	}
 
-	// Case 3 : Passing a non empty result set,
-	err := Difference[types.Int](a, b, c)
-	assert.Equal(t, errInvalidDestinationSet, err)
+	for _, test := range differenceTests {
+		a, b := test.inputs()
+		c := Difference(a, b)
+		assert.ElementsMatch(t, test.expectedSlice, c.ToSlice())
+		assert.Equal(t, test.expectedLen, c.Len())
+		assert.Equal(t, test.expectedContains, c.Contains(test.element))
+	}
+}
+
+func TestIntersection(t *testing.T) {
+
+	type intersectionTest struct {
+		inputs           func() (collections.Set[int], collections.Set[int])
+		element          int
+		expectedSlice    []int
+		expectedLen      int
+		expectedContains bool
+	}
+
+	intersectionTests := []intersectionTest{
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of[int](), linkedhashset.Of[int]()
+				return &a, &b
+			},
+			element:          0,
+			expectedSlice:    []int{},
+			expectedLen:      0,
+			expectedContains: false,
+		},
+
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(4, 5, 6)
+				return &a, &b
+			},
+			element:          2,
+			expectedSlice:    []int{},
+			expectedLen:      0,
+			expectedContains: false,
+		},
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of(1, 2, 3, 4), linkedhashset.Of(1, 2, 5)
+				return &a, &b
+			},
+			element:          2,
+			expectedSlice:    []int{1, 2},
+			expectedLen:      2,
+			expectedContains: true,
+		},
+		{
+			inputs: func() (collections.Set[int], collections.Set[int]) {
+				a, b := hashset.Of(1, 2, 3), linkedhashset.Of(8, 7, 6, 9, 11, 1, 3)
+				return &a, &b
+			},
+			element:          3,
+			expectedSlice:    []int{1, 3},
+			expectedLen:      2,
+			expectedContains: true,
+		},
+	}
+
+	for _, test := range intersectionTests {
+		a, b := test.inputs()
+		c := Intersection(a, b)
+		assert.ElementsMatch(t, test.expectedSlice, c.ToSlice())
+		assert.Equal(t, test.expectedLen, c.Len())
+		assert.Equal(t, test.expectedContains, c.Contains(test.element))
+	}
+}
+
+func TestToHashSet(t *testing.T) {
+
+	a := hashset.Of(1, 2, 3, 4)
+	b := linkedhashset.Of(5, 6, 7, 8)
+	c := Union[int](&a, &b)
+
+	assert.ElementsMatch(t, []int{1, 2, 3, 4, 5, 6, 7, 8}, c.ToHashSet().ToSlice())
+
+}
+
+func TestToLinkedHashSet(t *testing.T) {
+
+	a := hashset.Of(1, 2, 3, 4)
+	b := linkedhashset.Of(5, 6, 7, 8)
+	c := Union[int](&a, &b)
+
+	assert.ElementsMatch(t, []int{1, 2, 3, 4, 5, 6, 7, 8}, c.ToLinkedHashSet().ToSlice())
+
+}
+
+func TestToTreeSet(t *testing.T) {
+
+	a := hashset.Of(1, 2, 3, 4)
+	b := linkedhashset.Of(5, 6, 7, 8)
+	c := Union[int](&a, &b)
+
+	assert.Equal(t, []int{8, 7, 6, 5, 4, 3, 2, 1}, c.ToTreeSet(func(e1, e2 int) bool { return e1 >= e2 }).ToSlice())
 
 }

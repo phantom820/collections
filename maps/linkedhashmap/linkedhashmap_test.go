@@ -2,286 +2,596 @@ package linkedhashmap
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 
-	"github.com/phantom820/collections/errors"
-	"github.com/phantom820/collections/lists/list"
-	"github.com/phantom820/collections/maps"
-	"github.com/phantom820/collections/testutils"
-	"github.com/phantom820/collections/types"
+	"github.com/phantom820/collections"
+	"github.com/phantom820/collections/iterator"
+	"github.com/phantom820/collections/maps/hashmap"
+	"github.com/phantom820/collections/types/optional"
+	"github.com/phantom820/collections/types/pair"
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNew(t *testing.T) {
+	linkedHashMap := New[string, int]()
+	assert.NotNil(t, linkedHashMap)
+	assert.True(t, linkedHashMap.Empty())
+	assert.Equal(t, 0, linkedHashMap.Len())
+	assert.Nil(t, linkedHashMap.head)
+	assert.Nil(t, linkedHashMap.tail)
+
+}
+
 func TestPut(t *testing.T) {
 
-	m := New[types.String, string]()
+	type putTest struct {
+		input          *LinkedHashMap[string, int]
+		action         func(*LinkedHashMap[string, int])
+		expectedKeys   []string
+		expectedValues []int
+	}
 
-	// Case 1 : Put with a new key.
-	assert.Equal(t, 0, m.Len())
-	assert.Equal(t, false, m.ContainsKey("A"))
-	m.Put("A", "A")
-	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, true, m.ContainsKey("A"))
-	assert.Equal(t, true, m.ContainsValue("A", func(a, b string) bool { return a == b }))
+	putTests := []putTest{
+		{input: New[string, int](),
+			action: func(hm *LinkedHashMap[string, int]) {
+				hm.Put("A", 1)
+			},
+			expectedKeys:   []string{"A"},
+			expectedValues: []int{1},
+		},
+		{input: New[string, int](),
+			action: func(hm *LinkedHashMap[string, int]) {
+				hm.Put("A", 1)
+				hm.Put("A", 2)
+			},
+			expectedKeys:   []string{"A"},
+			expectedValues: []int{2},
+		},
+		{input: New[string, int](),
+			action: func(hm *LinkedHashMap[string, int]) {
+				hm.Put("A", 1)
+				hm.Put("B", 2)
+				hm.Put("C", 3)
+				hm.Put("C", 4)
+			},
+			expectedKeys:   []string{"A", "B", "C"},
+			expectedValues: []int{1, 2, 4},
+		},
+	}
 
-	// Case 2 : Put with an existing key.
-	value := m.Put("A", "B")
-	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, "A", value)
-	assert.Equal(t, true, m.ContainsKey("A"))
-	assert.Equal(t, false, m.ContainsValue("A", func(a, b string) bool { return a == b }))
-	assert.Equal(t, true, m.ContainsValue("B", func(a, b string) bool { return a == b }))
+	for _, test := range putTests {
+		test.action(test.input)
+		keys, values := collect(test.input)
+		assert.Equal(t, test.expectedKeys, keys)
+		assert.Equal(t, test.expectedValues, values)
 
-	// Case 3 : Put with a key that will map to an empty bucket.
-	m.Put("B", "B")
-	assert.Equal(t, 2, m.Len())
-	assert.Equal(t, true, m.ContainsKey("B"))
-
-	// Case 4 : PutAll for keys comming from another map.
-	otherMap := New[types.String, string]()
-	otherMap.Put("A", "D")
-	otherMap.Put("C", "C")
-	otherMap.Put("D", "D")
-	m.PutAll(otherMap)
-
-	assert.Equal(t, 4, m.Len())
-	value, _ = m.Get("A") // Value should have been updated with one in other map.
-	assert.Equal(t, "D", value)
-
+	}
 }
 
 func TestPutIfAbsent(t *testing.T) {
 
-	m := New[types.String, string]()
+	type putIfAbsentTest struct {
+		input          *LinkedHashMap[string, int]
+		action         func(*LinkedHashMap[string, int])
+		expectedKeys   []string
+		expectedValues []int
+	}
 
-	// Case 1 : PutIfAbsent with a new key.
-	assert.Equal(t, true, m.PutIfAbsent("A", "A"))
+	putIfAbsentTests := []putIfAbsentTest{
+		{input: New[string, int](),
+			action: func(hm *LinkedHashMap[string, int]) {
+				hm.PutIfAbsent("A", 1)
+			},
+			expectedKeys:   []string{"A"},
+			expectedValues: []int{1},
+		},
+		{input: New[string, int](),
+			action: func(hm *LinkedHashMap[string, int]) {
+				hm.PutIfAbsent("A", 1)
+				hm.PutIfAbsent("A", 2)
+				hm.PutIfAbsent("B", 3)
 
-	// Case 2 : PutIfAbsent with an already mapped key.
-	assert.Equal(t, false, m.PutIfAbsent("A", "B"))
+			},
+			expectedKeys:   []string{"A", "B"},
+			expectedValues: []int{1, 3},
+		},
+	}
 
-	// Case 3 : PutIfAbsent with a key mapping to non empty bucket.
-	assert.Equal(t, true, m.PutIfAbsent("\x10AAAA", "\x10AAAA"))
-	assert.Equal(t, true, m.PutIfAbsent("\x00AAAA", "\x00AAAA")) // maps to non empty bucket.
+	for _, test := range putIfAbsentTests {
+		test.action(test.input)
+		keys, values := collect(test.input)
+		assert.Equal(t, test.expectedKeys, keys)
+		assert.Equal(t, test.expectedValues, values)
 
+	}
 }
+
+func TestGet(t *testing.T) {
+
+	type getTest struct {
+		input    *LinkedHashMap[string, int]
+		key      string
+		action   func(*LinkedHashMap[string, int])
+		expected optional.Optional[int]
+	}
+
+	getTests := []getTest{
+		{input: New[string, int](),
+			key:      "A",
+			action:   func(lhm *LinkedHashMap[string, int]) {},
+			expected: optional.Empty[int](),
+		},
+		{input: New[string, int](),
+			key: "B",
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+				lhm.Put("B", 2)
+			},
+			expected: optional.Of(2),
+		},
+		{input: New[string, int](),
+			key: "C",
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+				lhm.Put("B", 2)
+			},
+			expected: optional.Empty[int](),
+		},
+	}
+
+	for _, test := range getTests {
+		test.action(test.input)
+		assert.Equal(t, test.expected, test.input.Get(test.key))
+	}
+}
+
+func TestGetIf(t *testing.T) {
+
+	type getIfTest struct {
+		input    *LinkedHashMap[string, int]
+		f        func(string) bool
+		expected []int
+	}
+
+	lhm := New[string, int]()
+	lhm.Put("A", 1)
+	lhm.Put("B", 2)
+	lhm.Put("C", 3)
+	lhm.Put("D", 4)
+
+	getIfTests := []getIfTest{
+		{input: lhm,
+			f:        func(s string) bool { return s == "" },
+			expected: []int{},
+		},
+		{input: lhm,
+			f:        func(s string) bool { return s == "A" || s == "B" },
+			expected: []int{1, 2},
+		},
+		{input: lhm,
+			f:        func(s string) bool { return false },
+			expected: []int{},
+		},
+	}
+
+	for _, test := range getIfTests {
+		assert.Equal(t, test.expected, test.input.GetIf(test.f))
+	}
+}
+
 func TestRemove(t *testing.T) {
 
-	m := New[types.Int, string]()
+	type removeTest struct {
+		input          *LinkedHashMap[string, int]
+		action         func(*LinkedHashMap[string, int])
+		key            string
+		expectedKeys   []string
+		expectedValues []int
+	}
 
-	// Case 1 : Remove an absent key.
-	_, ok := m.Remove(1)
-	assert.Equal(t, false, ok)
+	removeTests := []removeTest{
+		{
+			input:          New[string, int](),
+			key:            "A",
+			action:         func(lhm *LinkedHashMap[string, int]) {},
+			expectedKeys:   []string{},
+			expectedValues: []int{},
+		},
+		{
+			input: New[string, int](),
+			key:   "A",
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+			},
+			expectedKeys:   []string{},
+			expectedValues: []int{},
+		},
+		{
+			input: New[string, int](),
+			key:   "A",
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+				lhm.Put("B", 2)
+				lhm.Put("C", 3)
+				lhm.Put("D", 4)
+				lhm.Put("E", 5)
+			},
+			expectedKeys:   []string{"B", "C", "D", "E"},
+			expectedValues: []int{2, 3, 4, 5},
+		},
+		{
+			input: New[string, int](),
+			key:   "B",
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+				lhm.Put("B", 2)
+				lhm.Put("C", 3)
+				lhm.Put("D", 4)
+			},
+			expectedKeys:   []string{"A", "C", "D"},
+			expectedValues: []int{1, 3, 4},
+		},
+		{
+			input: New[string, int](),
+			key:   "D",
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+				lhm.Put("B", 2)
+				lhm.Put("C", 3)
+				lhm.Put("D", 4)
+			},
+			expectedKeys:   []string{"A", "B", "C"},
+			expectedValues: []int{1, 2, 3},
+		},
+	}
 
-	// Case 2 : Remove a mapped key
-	m.Put(1, "A")
-	value, ok := m.Remove(1)
-	assert.Equal(t, true, ok)
-	assert.Equal(t, "A", value)
+	for _, test := range removeTests {
+		test.action(test.input)
+		test.input.Remove(test.key)
+		keys, values := collect(test.input)
+		assert.Equal(t, test.expectedKeys, keys)
+		assert.Equal(t, test.expectedValues, values)
+	}
+}
 
-	// Case 3 : Remove a number of keys.
-	m.Put(1, "A")
-	m.Put(2, "B")
-	m.Put(3, "C")
-	m.Put(4, "D")
-	m.Put(5, "E")
+func TestRemoveIf(t *testing.T) {
 
-	l := list.New[types.Int](1, 3, 4, 5)
-	m.RemoveAll(l)
+	type removeIfTest struct {
+		input          *LinkedHashMap[string, int]
+		action         func(*LinkedHashMap[string, int])
+		f              func(string) bool
+		expectedKeys   []string
+		expectedValues []int
+	}
 
-	assert.Equal(t, 1, m.Len())
-	assert.Equal(t, false, m.ContainsKey(1))
-	assert.Equal(t, false, m.ContainsKey(3))
-	assert.Equal(t, false, m.ContainsKey(4))
-	assert.Equal(t, false, m.ContainsKey(5))
+	removeIfTests := []removeIfTest{
+		{
+			input:          New[string, int](),
+			f:              func(s string) bool { return s == "" },
+			action:         func(lhm *LinkedHashMap[string, int]) {},
+			expectedKeys:   []string{},
+			expectedValues: []int{},
+		},
+		{
+			input: New[string, int](),
+			f:     func(s string) bool { return s == "A" },
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+			},
+			expectedKeys:   []string{},
+			expectedValues: []int{},
+		},
+		{
+			input: New[string, int](),
+			f:     func(s string) bool { return s == "A" || s == "C" },
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+				lhm.Put("B", 2)
+				lhm.Put("C", 3)
+				lhm.Put("D", 4)
+			},
+			expectedKeys:   []string{"B", "D"},
+			expectedValues: []int{2, 4},
+		},
+		{
+			input: New[string, int](),
+			f:     func(s string) bool { return true },
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+				lhm.Put("B", 2)
+				lhm.Put("C", 3)
+				lhm.Put("D", 4)
+				lhm.Put("E", 4)
+			},
+			expectedKeys:   []string{},
+			expectedValues: []int{},
+		},
+		{
+			input: New[string, int](),
+			f:     func(s string) bool { return s == "A" || s == "B" || s == "C" || s == "D" },
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+				lhm.Put("B", 2)
+				lhm.Put("C", 3)
+				lhm.Put("D", 4)
+				lhm.Put("E", 5)
+			},
+			expectedKeys:   []string{"E"},
+			expectedValues: []int{5},
+		},
+		{
+			input: New[string, int](),
+			f:     func(s string) bool { return s == "B" || s == "C" || s == "D" },
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+				lhm.Put("B", 2)
+				lhm.Put("C", 3)
+				lhm.Put("D", 4)
+			},
+			expectedKeys:   []string{"A"},
+			expectedValues: []int{1},
+		},
+	}
 
+	for _, test := range removeIfTests {
+		test.action(test.input)
+		test.input.RemoveIf(test.f)
+		keys, values := collect(test.input)
+		assert.Equal(t, test.expectedKeys, keys)
+		assert.Equal(t, test.expectedValues, values)
+	}
+}
+
+func TestContainsKey(t *testing.T) {
+
+	type containsKeyTest struct {
+		input    *LinkedHashMap[string, int]
+		action   func(*LinkedHashMap[string, int])
+		key      string
+		expected bool
+	}
+
+	containsKeyTests := []containsKeyTest{
+		{
+			input:    New[string, int](),
+			key:      "A",
+			action:   func(lhm *LinkedHashMap[string, int]) {},
+			expected: false,
+		},
+		{
+			input: New[string, int](),
+			key:   "A",
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("C", 1)
+				lhm.Put("D", 1)
+			},
+			expected: false,
+		},
+		{
+			input: New[string, int](),
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 1)
+			},
+			key:      "A",
+			expected: true,
+		},
+	}
+
+	for _, test := range containsKeyTests {
+		test.action(test.input)
+		assert.Equal(t, test.expected, test.input.ContainsKey(test.key))
+	}
+}
+
+func TestContainsValue(t *testing.T) {
+
+	type containsValueTest struct {
+		input    *LinkedHashMap[string, int]
+		action   func(*LinkedHashMap[string, int])
+		value    int
+		expected bool
+	}
+
+	containsValueTests := []containsValueTest{
+		{
+			input:    New[string, int](),
+			action:   func(lhm *LinkedHashMap[string, int]) {},
+			value:    0,
+			expected: false,
+		},
+		{
+			input: New[string, int](),
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("A", 22)
+				lhm.Put("B", 45)
+				lhm.Put("C", 33)
+			},
+			value:    2,
+			expected: false,
+		},
+		{
+			input: New[string, int](),
+			action: func(lhm *LinkedHashMap[string, int]) {
+				lhm.Put("B", 45)
+				lhm.Put("C", 33)
+				lhm.Put("A", 1)
+			},
+			value:    1,
+			expected: true,
+		},
+	}
+	equals := func(v1, v2 int) bool { return v1 == v2 }
+	for _, test := range containsValueTests {
+		test.action(test.input)
+		assert.Equal(t, test.expected, test.input.ContainsValue(test.value, equals))
+	}
+}
+
+func TestClear(t *testing.T) {
+
+	lhm := New[string, int]()
+	lhm.Put("A", 1)
+	lhm.Put("B", 2)
+
+	lhm.Clear()
+	assert.Nil(t, lhm.head)
+	assert.Nil(t, lhm.tail)
+	assert.True(t, lhm.Empty())
+
+}
+
+func TestKeys(t *testing.T) {
+
+	lhm := New[string, int]()
+	lhm.Put("A", 1)
+	lhm.Put("B", 2)
+	lhm.Put("C", 3)
+	lhm.Put("D", 4)
+
+	assert.Equal(t, []string{"A", "B", "C", "D"}, lhm.Keys())
+}
+
+func TestValues(t *testing.T) {
+
+	lhm := New[string, int]()
+	lhm.Put("A", 1)
+	lhm.Put("B", 2)
+	lhm.Put("C", 3)
+	lhm.Put("D", 4)
+
+	assert.Equal(t, []int{1, 2, 3, 4}, lhm.Values())
+}
+
+func TestForEach(t *testing.T) {
+
+	m := make(map[string]int)
+	lhm := New[string, int]()
+	lhm.Put("A", 1)
+	lhm.Put("B", 2)
+	lhm.Put("C", 3)
+	lhm.Put("D", 4)
+
+	lhm.ForEach(func(s string, i int) {
+		m[s] = i
+	})
+
+	assert.Equal(t, map[string]int{"A": 1, "B": 2, "C": 3, "D": 4}, m)
+}
+
+func collect(linkedHashMap *LinkedHashMap[string, int]) ([]string, []int) {
+	keys := make([]string, 0)
+	values := make([]int, 0)
+	for curr := linkedHashMap.head; curr != nil; curr = curr.next {
+		keys = append(keys, curr.key)
+		values = append(values, curr.value)
+	}
+	return keys, values
 }
 
 func TestIterator(t *testing.T) {
 
-	m := New[types.String, string]()
-
-	// Case 1 : Iterating on a populated map.
-	for i := 1; i < 15; i++ {
-		m.Put(types.String(fmt.Sprint(i)), string(rune(64+i)))
+	iterate := func(it iterator.Iterator[pair.Pair[string, int]]) []pair.Pair[string, int] {
+		entries := make([]pair.Pair[string, int], 0)
+		for it.HasNext() {
+			entries = append(entries, it.Next())
+		}
+		return entries
 	}
 
-	orderedKeys := []types.String{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"}
-	orderedValues := []types.String{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}
+	h := New[string, int]()
+	assert.Equal(t, []pair.Pair[string, int]{}, iterate(h.Iterator()))
 
-	it := m.Iterator()
-	keys := []types.String{}
-	values := []types.String{}
+	h = New[string, int]()
+	h.Put("A", 1)
+	h.Put("B", 2)
+	h.Put("C", 3)
 
-	for it.HasNext() {
-		entry := it.Next()
-		keys = append(keys, entry.Key)
-		values = append(values, types.String(entry.Value))
-	}
+	assert.Equal(t, []pair.Pair[string, int]{
+		pair.Of("A", 1), pair.Of("B", 2), pair.Of("C", 3)}, iterate(h.Iterator()))
 
-	assert.Equal(t, true, testutils.EqualSlices(orderedKeys, keys))
-	assert.Equal(t, true, testutils.EqualSlices(orderedValues, values))
-	assert.Equal(t, true, testutils.EqualSlices(orderedKeys, m.Keys()))
-	assert.ElementsMatch(t, []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"}, m.Values())
+	h = New[string, int]()
+	h.Put("A", 1)
+	h.Put("B", 2)
+	h.Put("C", 3)
+	it := h.Iterator()
+	h.Put("F", 23)
 
-	// Case 2 : Next on exhausted iterator should panic.
-	t.Run("panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				assert.Equal(t, errors.NoNextElement, r.(errors.Error).Code())
-			}
-		}()
-		it.Next()
-	})
+	assert.Equal(t, []pair.Pair[string, int]{
+		pair.Of("A", 1), pair.Of("B", 2), pair.Of("C", 3), pair.Of("F", 23)}, iterate(it))
+
 }
 
-func TestIteratorConcurrentModification(t *testing.T) {
+func TestString(t *testing.T) {
 
-	m := New[types.String, int]()
-	for i := 1; i <= 20; i++ {
-		m.Put(types.String(strconv.Itoa(i)), i)
-	}
-
-	// Recovery for concurrent modifications.
-	recovery := func() {
-		if r := recover(); r != nil {
-			assert.Equal(t, errors.ConcurrentModification, r.(*errors.Error).Code())
-		}
-	}
-	// Case 1 : Put.
-	it := m.Iterator()
-	t.Run("Put while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			m.Put(types.String("D"), 22)
-			it.Next()
-		}
-	})
-	// Case 2 : PutIfAbsent.
-	it = m.Iterator()
-	t.Run("PutIfAbsent while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			m.PutIfAbsent(types.String("D"), 22)
-			it.Next()
-		}
-	})
-	// Case 3 : Remove.
-	it = m.Iterator()
-	t.Run("Remove while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			m.Remove(types.String("D"))
-			it.Next()
-		}
-	})
-	// Case 4 : Clear.
-	it = m.Iterator()
-	t.Run("Clear while iterating", func(t *testing.T) {
-		defer recovery()
-		for it.HasNext() {
-			m.Clear()
-			it.Next()
-		}
-	})
+	assert.Equal(t, "{}", fmt.Sprint(New[string, string]()))
+	m := New[string, int]()
+	m.Put("A", 1)
+	m.Put("B", 2)
+	m.Put("C", 3)
+	assert.Equal(t, "{A=1, B=2, C=3}", m.String())
 
 }
 
 func TestEquals(t *testing.T) {
 
-	m := New[types.Int, string]()
-	other := New[types.Int, string]()
-
-	// Case 1 : Self equivalence and empty maps are equal.
-	assert.Equal(t, true, m.Equals(other, func(a, b string) bool { return a == b }))
-	assert.Equal(t, true, m.Equals(m, func(a, b string) bool { return a == b }))
-
-	// Case 2 : Equals with different sizes should fail.
-	m.Put(1, "A")
-	m.Put(2, "B")
-
-	assert.Equal(t, false, m.Equals(other, func(a, b string) bool { return a == b }))
-
-	// Case 3 : Same sizes with different keys should fail.
-	other.Put(1, "A")
-	other.Put(3, "B")
-	assert.Equal(t, false, m.Equals(other, func(a, b string) bool { return a == b }))
-
-	// Case 4 : Same sizes with different values should fail.
-	other.Remove(3)
-	other.Put(2, "C")
-	assert.Equal(t, false, m.Equals(other, func(a, b string) bool { return a == b }))
-
-	// Case 5 : Same sizes and entries should pass.
-	other.Put(2, "B")
-	assert.Equal(t, true, m.Equals(other, func(a, b string) bool { return a == b }))
-
-}
-
-func TestClear(t *testing.T) {
-
-	m := New[types.Int, int]()
-
-	for i := 0; i < 20; i++ {
-		m.Put(types.Int(i), i)
+	type equalsTest struct {
+		a        *LinkedHashMap[int, int]
+		b        collections.Map[int, int]
+		expected bool
 	}
 
-	assert.Equal(t, 20, m.Len())
-	m.Clear()
-	assert.Equal(t, true, m.Empty())
-	assert.Equal(t, float32(0), m.LoadFactor())
+	equalsTests := []equalsTest{
+		{
+			a:        New[int, int](),
+			b:        New[int, int](),
+			expected: true,
+		},
+		{
+			a:        New[int, int](),
+			b:        New(pair.Of(1, 1)),
+			expected: false,
+		},
+		{
+			a:        New(pair.Of(1, 2)),
+			b:        New(pair.Of(1, 1)),
+			expected: false,
+		},
+		{
+			a:        New(pair.Of(2, 1)),
+			b:        New(pair.Of(1, 1)),
+			expected: false,
+		},
+		{
+			a:        New(pair.Of(2, 2), pair.Of(1, 1)),
+			b:        New(pair.Of(1, 1), pair.Of(2, 2)),
+			expected: true,
+		},
+		{
+			a:        New(pair.Of(2, 2), pair.Of(1, 1)),
+			b:        hashmap.New(pair.Of(1, 1), pair.Of(2, 2)),
+			expected: true,
+		},
+		{
+			a:        New(pair.Of(2, 2)),
+			b:        hashmap.New(pair.Of(1, 1)),
+			expected: false,
+		},
+		{
+			a:        New(pair.Of(2, 2), pair.Of(1, 1)),
+			b:        hashmap.New(pair.Of(1, 1), pair.Of(2, 2)),
+			expected: true,
+		},
+		{
+			a:        New(pair.Of(2, 1), pair.Of(1, 2)),
+			b:        hashmap.New(pair.Of(1, 1), pair.Of(2, 2)),
+			expected: false,
+		},
+	}
 
-}
+	equals := func(i1, i2 int) bool { return i1 == i2 }
+	for _, test := range equalsTests {
+		assert.Equal(t, test.expected, test.a.Equals(test.b, equals))
+		assert.Equal(t, test.expected, test.b.Equals(test.a, equals))
 
-func TestMap(t *testing.T) {
-
-	m := New[types.Int, string]()
-
-	// Case 1 : Mapping an empty map should give an empty map.
-	other := m.Map(func(entry maps.MapEntry[types.Int, string]) maps.MapEntry[types.Int, string] {
-		return maps.MapEntry[types.Int, string]{Key: entry.Key, Value: entry.Value}
-	})
-	assert.Equal(t, true, other.Empty())
-
-	// Case 2 : Mapping a map with entries.
-	m.Put(1, "A")
-	m.Put(2, "B")
-	m.Put(3, "C")
-
-	other = m.Map(func(entry maps.MapEntry[types.Int, string]) maps.MapEntry[types.Int, string] {
-		return maps.MapEntry[types.Int, string]{Key: entry.Key + 1, Value: entry.Value + "$"}
-	})
-
-	assert.Equal(t, 3, other.Len())
-	value, _ := other.Get(2)
-	assert.Equal(t, "A$", value)
-	value, _ = other.Get(3)
-	assert.Equal(t, "B$", value)
-	value, _ = other.Get(4)
-	assert.Equal(t, "C$", value)
-
-}
-
-func TestFilter(t *testing.T) {
-
-	m := New[types.Int, string]()
-
-	// Case 1 : Filtering an empty map should give an empty map.
-	other := m.Filter(func(entry maps.MapEntry[types.Int, string]) bool { return entry.Key%2 == 0 })
-	assert.Equal(t, true, other.Empty())
-
-	// Case 2 : Filtering a map with entries.
-	m.Put(1, "A")
-	m.Put(2, "B")
-	m.Put(3, "C")
-
-	other = m.Filter(func(entry maps.MapEntry[types.Int, string]) bool { return entry.Key%2 == 0 })
-
-	assert.Equal(t, 1, other.Len())
-	assert.Equal(t, false, other.ContainsKey(1))
-	assert.Equal(t, false, other.ContainsKey(3))
-	value, _ := other.Get(2)
-	assert.Equal(t, "B", value)
-
+	}
 }

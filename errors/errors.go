@@ -1,72 +1,61 @@
-// package errors provides custom errors to be used
+// errors defines custom error type [Error] to be used for handling errors on collections.
 package errors
 
 import (
 	"bytes"
-	"html/template"
+	"errors"
+	"text/template"
 )
 
-// error codes.
 const (
-	IndexOutOfBounds       = 1
-	NoSuchElement          = 2
-	NoNextElement          = 3
-	MapKeyRange            = 4
-	ConcurrentModification = 5
+	IndexOutOfBoundsCode      = 1 //  Invalid indexing i.e indexing a buffere outside its range.
+	UnsupportedOperationCode  = 2 //  An operation that is not supported i.e mutating operation on an immutable data structure.
+	IndexBoundsOutOfRangeCode = 3 //  Misconfigured indexing i.e lower index being greater than upper index.
+	NoSuchElementCode         = 4 //  An absent element i.e next on iterator without has next guard.
 )
 
-// error templates.
 var (
-	IndexOutOfBoundsTemplate, _       = template.New("IndexOutOfBounds").Parse("ErrIndexOutOfBounds: Index: {{.index}}, Size: {{.size}}")
-	NoSuchElementTemplate, _          = template.New("NoSuchElement").Parse("ErrNoSuchElement , Size: {{.size}}")
-	NoNextElementTemplate, _          = template.New("NoNextElement").Parse("ErrNoNextElement")
-	MapKeyRangeTemplate, _            = template.New("MapKeyRange").Parse("ErrMapKeyRange  lower key: {{.fromKey}} , upper Key: {{.toKey}}, lower key greater than upper key.")
-	ConcurrentModificationTemplate, _ = template.New("NoNextElement").Parse("ErrConcurrentModification iterator source was modified while iterating.")
+	indexOutOfBoundsTemplate, _      = template.New("IndexOutOfBounds").Parse("ErrorIndexOutOfBounds: Index {{.index}} out of bounds for length {{.length}}.")
+	unsupportedOperationTemplate, _  = template.New("UnsupportedOperation").Parse("ErrorUnsupportedOperation: Unsupported operation {{.operation}} on [{{.type}}].")
+	indexBoundsOutOfRangeTemplate, _ = template.New("IndexBoundsOutOfRange").Parse("ErrorIndexBoundsOutOfRange: Index bounds [{{.start}}:{{.end}}] out of range.")
+	noSuchElementTemplate, _         = template.New("NoSuchElement").Parse("NoSuchElement: No such element to access.")
 )
 
-// Error a custom error type for collections.
+// Error custom error type for collections.
 type Error struct {
-	code int
-	msg  string
-	Err  error
+	code  int // The error code.
+	error     // The actual underlying error.
 }
 
-// Code returns the error code for the error.
-func (err Error) Code() int {
-	return err.code
+// New creates an error with the given code and underlying error.
+func New(code int, err error) Error {
+	return Error{code: code, error: err}
 }
 
-// Error returns the error message.
-func (err *Error) Error() string {
-	return err.msg
-}
-
-func ErrIndexOutOfBounds(index int, size int) Error {
+// IndexOutOfBounds returns an error indicating that a container has been indexed outside of its bounds.
+func IndexOutOfBounds(index int, length int) Error {
 	var buffer bytes.Buffer
-	IndexOutOfBoundsTemplate.Execute(&buffer, map[string]int{"index": index, "size": size})
-	return Error{code: IndexOutOfBounds, msg: buffer.String()}
+	indexOutOfBoundsTemplate.Execute(&buffer, map[string]int{"index": index, "length": length})
+	return New(IndexOutOfBoundsCode, errors.New(buffer.String()))
 }
 
-func ErrNoSuchElement(size int) Error {
+// IndexBoundsOutOfRange returns an error indicating misconfigured indexing.
+func IndexBoundsOutOfRange(start int, end int) Error {
 	var buffer bytes.Buffer
-	NoSuchElementTemplate.Execute(&buffer, map[string]int{"size": size})
-	return Error{code: NoSuchElement, msg: buffer.String()}
+	indexBoundsOutOfRangeTemplate.Execute(&buffer, map[string]int{"start": start, "end": end})
+	return New(IndexBoundsOutOfRangeCode, errors.New(buffer.String()))
 }
 
-func ErrNoNextElement() Error {
+// UnsupportedOperation returns an error indicating that a given operation is not supported on a given type.
+func UnsupportedOperation(operation string, _type string) Error {
 	var buffer bytes.Buffer
-	NoNextElementTemplate.Execute(&buffer, map[string]int{})
-	return Error{code: NoNextElement, msg: buffer.String()}
+	unsupportedOperationTemplate.Execute(&buffer, map[string]string{"operation": operation, "type": _type})
+	return New(UnsupportedOperationCode, errors.New(buffer.String()))
 }
 
-func ErrMapKeyRange[T any](fromKey T, toKey T) Error {
+// NoSuchElement returns an error indicating a requested element is not present.
+func NoSuchElement() Error {
 	var buffer bytes.Buffer
-	MapKeyRangeTemplate.Execute(&buffer, map[string]T{"fromKey": fromKey, "toKey": toKey})
-	return Error{code: MapKeyRange, msg: buffer.String()}
-}
-
-func ErrConcurrenModification() *Error {
-	var buffer bytes.Buffer
-	ConcurrentModificationTemplate.Execute(&buffer, map[string]string{})
-	return &Error{code: ConcurrentModification, msg: buffer.String()}
+	noSuchElementTemplate.Execute(&buffer, nil)
+	return New(NoSuchElementCode, errors.New(buffer.String()))
 }

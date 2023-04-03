@@ -5,7 +5,6 @@ go:
 script:
  - go test ./... -race -covermode=atomic -coverprofile=coverage.out
  - go tool cover -html coverage.out -o coverage.html
-#  - go test -bench=./... -benchmem github.com/phantom820/collections/benchmarks/lists
  
 after_success:
  - bash <(curl -s https://codecov.io/bash)

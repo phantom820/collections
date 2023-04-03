@@ -4,7 +4,7 @@
 collections is a library tht aims to bring common data structures into Go.
 
 ### Install 
-` go get github.com/phantom820/collections@v0.3.0-alpha.2.8`
+` go get github.com/phantom820/collections`
 
 #### Interfaces 
 ```go
